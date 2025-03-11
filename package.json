@@ -1,0 +1,20 @@
+{
+  "name": "chat-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "openai": "^4.86.2"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
