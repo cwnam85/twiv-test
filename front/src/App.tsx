@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import Modal from './components/Modal';
 
 function App() {
   const [messages, setMessages] = useState<Array<{ text: string; isUser: boolean }>>([]);
   const [input, setInput] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,6 +24,9 @@ function App() {
 
         const data = await response.json();
 
+        if (data.isPaid) {
+          setIsModalOpen(true);
+        }
         // 벨라의 응답 추가
         setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
       } catch (error) {
@@ -35,6 +40,23 @@ function App() {
 
       setInput('');
     }
+  };
+
+  const handleConfirm = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleClose = async () => {
+    setIsModalOpen(false);
+    const response = await fetch('http://localhost:3333/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: '미안. 생각해보니까, 지금은 때가 아닌 거 같아.' }),
+    });
+    const data = await response.json();
+    setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
   };
 
   return (
@@ -70,6 +92,13 @@ function App() {
           </button>
         </form>
       </div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleClose}
+        onConfirm={handleConfirm}
+        title="상품 구매"
+        message="이 상품을 구매하시겠습니까?"
+      />
     </div>
   );
 }
