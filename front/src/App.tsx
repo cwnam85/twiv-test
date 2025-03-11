@@ -1,24 +1,39 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 function App() {
-  const [messages, setMessages] = useState<
-    Array<{ text: string; isUser: boolean }>
-  >([]);
-  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Array<{ text: string; isUser: boolean }>>([]);
+  const [input, setInput] = useState('');
 
-  const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (input.trim()) {
       // 사용자 메시지 추가
       setMessages((prev) => [...prev, { text: input, isUser: true }]);
-      // 벨라의 응답 (예시)
-      setTimeout(() => {
+
+      try {
+        // 백엔드 API 호출
+        const response = await fetch('http://localhost:3333/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: input }),
+        });
+
+        const data = await response.json();
+
+        // 벨라의 응답 추가
+        setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
+      } catch (error) {
+        console.error('Error:', error);
+        // 에러 발생시 에러 메시지 표시
         setMessages((prev) => [
           ...prev,
-          { text: "안녕하세요! 무엇을 도와드릴까요?", isUser: false },
+          { text: '죄송합니다. 오류가 발생했습니다.', isUser: false },
         ]);
-      }, 1000);
-      setInput("");
+      }
+
+      setInput('');
     }
   };
 
@@ -29,15 +44,10 @@ function App() {
         {/* 채팅 메시지 영역 */}
         <div className="bg-gray-100 rounded-lg p-4 h-[400px] overflow-y-auto mb-4">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`mb-2 ${message.isUser ? "text-right" : "text-left"}`}
-            >
+            <div key={index} className={`mb-2 ${message.isUser ? 'text-right' : 'text-left'}`}>
               <span
                 className={`inline-block rounded-lg px-4 py-2 ${
-                  message.isUser
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-800"
+                  message.isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
                 }`}
               >
                 {message.text}

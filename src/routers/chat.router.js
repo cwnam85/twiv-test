@@ -2,10 +2,10 @@ import express from 'express';
 import { OpenAI } from 'openai';
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
-dotenv.config(); // 환경 변수 로드
+// dotenv.config(); // 환경 변수 로드
 
 const router = express.Router();
 
