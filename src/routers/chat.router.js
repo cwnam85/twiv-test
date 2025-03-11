@@ -58,7 +58,14 @@ router.post('/chat', async (req, res) => {
     });
 
     if (completion && completion.choices && completion.choices.length > 0) {
-      const responseLLM = completion.choices[0].message.content;
+      let responseLLM = completion.choices[0].message.content;
+      responseLLM = responseLLM.replace(/\[TTS\]:/g, '').trim();
+      // 포즈 변경 여부로 과금 판단(임시)
+      const poseChangeMatch = responseLLM.match(/\[Pose\]:\s*(.*)/);
+      const isPaid = !!poseChangeMatch;
+      if (poseChangeMatch) {
+        responseLLM = responseLLM.replace(poseChangeMatch[0], '').trim();
+      }
 
       // LLM 응답 메시지를 대화 기록에 추가
       const assistantMessage = {
@@ -68,7 +75,7 @@ router.post('/chat', async (req, res) => {
       grokConversationHistory.push(assistantMessage);
 
       // 클라이언트에 응답 전송
-      res.json({ message: responseLLM });
+      res.json({ message: responseLLM, isPaid });
     } else {
       res.status(500).json({ error: 'Grok API 응답이 유효하지 않습니다.' });
     }
