@@ -87,7 +87,7 @@ router.post('/chat', async (req, res) => {
     // TTS 호출
     playTTSSupertone(responseLLM)
       .then(() => {
-        console.log('TTS playback successful');
+        //console.log('TTS playback successful');
       })
       .catch((error) => {
         console.error('Error during TTS playback:', error);

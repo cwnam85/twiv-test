@@ -50,7 +50,7 @@ export async function playTTSSupertone(response, mode = 'sync') {
         console.error('Error during playback:', err.message);
       })
       .on('end', () => {
-        console.log(`[${mode}] Playback finished.`);
+        //console.log(`[${mode}] Playback finished.`);
         resolve();
       })
       .pipe(speaker);
