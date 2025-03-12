@@ -47,12 +47,12 @@ router.post('/chat', async (req, res) => {
   grokConversationHistory.push(userMessageObj);
 
   const userMessages = grokConversationHistory.filter((message) => message.role === 'user');
-  console.log('(/chat) LLM Input:', userMessages);
+  console.log('(/chat) LLM Input:\n', userMessages);
 
   try {
     let responseLLM = await getLLMResponse(grokConversationHistory);
 
-    console.log('(/chat) LLM Output:', responseLLM);
+    console.log('(/chat) LLM Output:\n', responseLLM);
 
     // [TTS]: 태그 제거
     responseLLM = responseLLM.replace(/\[TTS\]:/g, '').trim();
@@ -118,13 +118,13 @@ router.post('/purchase', async (req, res) => {
       role: 'system',
       content: `[Pose]: ${tmpPurchase.action}\n[Purchase]: Yes\n[Action]: ${tmpPurchase.action}\n[Item]: ${tmpPurchase.item}`,
     };
-    console.log('(/purchase) LLM Input:', llmInput);
+    console.log('(/purchase) LLM Input:\n', llmInput.content);
 
     // LLM에 유료 구매 확인 요청 보내기
     try {
       const llmResponse = await getLLMResponse([...grokConversationHistory, llmInput]);
 
-      console.log('(/purchase) LLM Output:', llmResponse);
+      console.log('(/purchase) LLM Output:\n', llmResponse);
 
       // LLM 응답에서 메시지만 추출
       const responseTTSMessage = llmResponse
