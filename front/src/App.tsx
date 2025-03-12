@@ -8,6 +8,7 @@ function App() {
 
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setInput('');
     if (input.trim()) {
       // 사용자 메시지 추가
       setMessages((prev) => [...prev, { text: input, isUser: true }]);
@@ -37,26 +38,33 @@ function App() {
           { text: '죄송합니다. 오류가 발생했습니다.', isUser: false },
         ]);
       }
-
-      setInput('');
     }
   };
 
-  const handleConfirm = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleClose = async () => {
-    setIsModalOpen(false);
-    const response = await fetch('http://localhost:3333/chat', {
+  const handleConfirm = async () => {
+    await fetch('http://localhost:3333/purchase', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ message: '미안. 생각해보니까, 지금은 때가 아닌 거 같아.' }),
+      body: JSON.stringify({
+        purchase: true,
+      }),
     });
-    const data = await response.json();
-    setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
+    setIsModalOpen(false);
+  };
+
+  const handleClose = async () => {
+    await fetch('http://localhost:3333/purchase', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        purchase: false,
+      }),
+    });
+    setIsModalOpen(false);
   };
 
   return (
