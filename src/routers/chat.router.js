@@ -84,16 +84,16 @@ router.post('/chat', async (req, res) => {
     // 클라이언트에 응답 전송
     res.json({ message: responseLLM, isPaid });
 
-    if (!isPaid) {
-      // TTS 호출
-      playTTSSupertone(responseLLM)
-        .then(() => {
-          console.log('TTS playback successful');
-        })
-        .catch((error) => {
-          console.error('Error during TTS playback:', error);
-        });
+    // TTS 호출
+    playTTSSupertone(responseLLM)
+      .then(() => {
+        console.log('TTS playback successful');
+      })
+      .catch((error) => {
+        console.error('Error during TTS playback:', error);
+      });
 
+    if (!isPaid) {
       // Warudo에 동작 변화 메시지 전송
       const poseChangeMatch = responseLLM.match(/\[Pose\]:\s*(.*)/);
       if (poseChangeMatch) {
