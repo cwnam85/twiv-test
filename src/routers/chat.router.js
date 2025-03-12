@@ -46,8 +46,13 @@ router.post('/chat', async (req, res) => {
   };
   grokConversationHistory.push(userMessageObj);
 
+  const userMessages = grokConversationHistory.filter((message) => message.role === 'user');
+  console.log('(/chat) LLM Input:', userMessages);
+
   try {
     let responseLLM = await getLLMResponse(grokConversationHistory);
+
+    console.log('(/chat) LLM Output:', responseLLM);
 
     // [TTS]: 태그 제거
     responseLLM = responseLLM.replace(/\[TTS\]:/g, '').trim();
@@ -60,7 +65,8 @@ router.post('/chat', async (req, res) => {
       // 유료 구매 항목 저장
       tmpPurchase = {
         ttsMessage: responseLLM,
-        action: itemMatch[1],
+        action: actionMatch ? actionMatch[1] : null,
+        item: itemMatch ? itemMatch[1] : null,
       };
 
       // [Action]과 [Item] 항목 제거
@@ -108,21 +114,47 @@ router.post('/purchase', async (req, res) => {
   const purchaseConfirmed = req.body.purchase;
 
   if (purchaseConfirmed && tmpPurchase) {
-    // 저장된 유료 구매 TTS 및 Warudo 행동 실행
-    playTTSSupertone(tmpPurchase.ttsMessage)
-      .then(() => {
-        console.log('Purchase TTS playback successful');
-      })
-      .catch((error) => {
-        console.error('Error during purchase TTS playback:', error);
-      });
+    const llmInput = {
+      role: 'system',
+      content: `[Pose]: ${tmpPurchase.action}\n[Purchase]: Yes\n[Action]: ${tmpPurchase.action}\n[Item]: ${tmpPurchase.item}`,
+    };
+    console.log('(/purchase) LLM Input:', llmInput);
 
-    // Warudo에 유료 동작 변화 메시지 전송
-    const messageWarudo = JSON.stringify({ action: tmpPurchase.action });
-    sendMessageToWarudo(messageWarudo);
+    // LLM에 유료 구매 확인 요청 보내기
+    try {
+      const llmResponse = await getLLMResponse([...grokConversationHistory, llmInput]);
 
-    res.json({ message: tmpPurchase.ttsMessage });
-    tmpPurchase = null; // 처리 후 초기화
+      console.log('(/purchase) LLM Output:', llmResponse);
+
+      // LLM 응답에서 메시지만 추출
+      const responseTTSMessage = llmResponse
+        .replace(/\[TTS\]:\s*/g, '')
+        .replace(/\[Pose\]:\s*.*\n?/g, '')
+        .trim();
+
+      playTTSSupertone(responseTTSMessage)
+        .then(() => {
+          console.log('Purchase LLM TTS playback successful');
+        })
+        .catch((error) => {
+          console.error('Error during LLM TTS playback:', error);
+        });
+
+      // Warudo에 유료 동작 변화 메시지 전송
+      const poseChangeMatch = llmResponse.match(/\[Pose\]:\s*(.*)/);
+      if (poseChangeMatch) {
+        const poseAction = poseChangeMatch[1];
+        const messageWarudo = JSON.stringify({ action: poseAction });
+        sendMessageToWarudo(messageWarudo);
+      }
+
+      res.json({ message: responseTTSMessage });
+    } catch (error) {
+      console.error('Error calling LLM after purchase:', error);
+      res.status(500).json({ error: 'Error processing purchase with LLM.' });
+    } finally {
+      tmpPurchase = null;
+    }
   } else {
     // 구매 취소 시 메시지 전송
     const cancelMessage = '취소';
