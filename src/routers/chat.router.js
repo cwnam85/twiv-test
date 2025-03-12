@@ -68,11 +68,18 @@ router.post('/chat', async (req, res) => {
     };
     grokConversationHistory.push(assistantMessage);
 
-    // TTS 호출
-    await playTTSSupertone(responseLLM);
-
     // 클라이언트에 응답 전송
     res.json({ message: responseLLM, isPaid });
+
+    // TTS 호출
+    playTTSSupertone(responseLLM)
+      .then(() => {
+        console.log('TTS playback successful');
+      })
+      .catch((error) => {
+        console.error('Error during TTS playback:', error);
+        // 에러 처리 로직 추가
+      });
   } catch (error) {
     console.error('Error calling Grok API:', error);
     res.status(500).json({ error: 'Grok API 호출 중 오류가 발생했습니다.' });
