@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getLLMResponse } from '../services/llmService.js';
 import { playTTSSupertone } from '../services/ttsService.js';
+import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService.js';
 
 const router = express.Router();
 
@@ -13,6 +14,9 @@ const __dirname = path.dirname(__filename);
 
 // 대화 기록을 저장할 배열
 let grokConversationHistory = [];
+
+// 서버 시작 시 WebSocket 연결
+const webSocket = connectWebSocket();
 
 // 시스템 지시사항 로드
 let systemInstruction = null;
@@ -50,6 +54,11 @@ router.post('/chat', async (req, res) => {
     const isPaid = !!poseChangeMatch;
     if (poseChangeMatch) {
       responseLLM = responseLLM.replace(poseChangeMatch[0], '').trim();
+
+      // Warudo에 동작 변화 메시지 전송
+      const poseAction = poseChangeMatch[1];
+      const messageWarudo = JSON.stringify({ action: poseAction });
+      sendMessageToWarudo(messageWarudo);
     }
 
     // LLM 응답 메시지를 대화 기록에 추가
