@@ -15,13 +15,15 @@ const __dirname = path.dirname(__filename);
 let grokConversationHistory = []; // 대화 기록을 저장할 배열
 let tmpPurchase = null; // 구매 임시 변수
 
+let currentPose = 'CasualProne';
+
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
 
 // 시스템 지시사항 로드
 let systemInstruction = null;
 try {
-  const filePath = path.join(__dirname, '../../test_system_instructions.md');
+  const filePath = path.join(__dirname, '../../test_system_instructions.txt');
   systemInstruction = fs.readFileSync(filePath, 'utf8');
 } catch (error) {
   console.error('Error loading system instructions:', error);
@@ -37,7 +39,7 @@ if (systemInstruction) {
 }
 
 router.post('/chat', async (req, res) => {
-  const userMessage = req.body.message;
+  const userMessage = `pose: ${currentPose}\nchat: ${req.body.message}\nnotes: 1.응답 대사를 생성할 때 사용자의 채팅 메시지를 그대로 반복하거나 의문형으로 확인하지 마세요. 사용자의 채팅 메시지를 "하다고?", "했다고?", "라고?" 같은 표현으로 다시 확인하지 마세요.\n 2. 호칭(꼬물이, 꼬물아)은 대화에서 사용자를 직접 지칭할 필요가 있을 때에에만 사용하며, 다른 경우에는 사용하지 마세요.\n 3. 같은 표현을 연속적인 응답에 사용하지 마세요(Do not use the same expression in consecutive responses).`;
 
   // 사용자 메시지를 대화 기록에 추가
   const userMessageObj = {
@@ -46,17 +48,28 @@ router.post('/chat', async (req, res) => {
   };
   grokConversationHistory.push(userMessageObj);
 
-  const userMessages = grokConversationHistory.filter((message) => message.role === 'user');
-  console.log('(/chat) LLM Input:\n', userMessages);
+  console.log('(/chat) LLM Input:\n', userMessage);
 
   try {
     let responseLLM = await getLLMResponse(grokConversationHistory);
+    console.log('LLM Output:\n', responseLLM);
 
-    console.log('(/chat) LLM Output:\n', responseLLM);
+    let responseTTS = null;
+    
+    // TTS 추출
+    const matchTTS = responseLLM.match(/tts:\s*([^pose]+)(?:\s*pose:.*)?/);
+    if (matchTTS) {
+      responseTTS = matchTTS[1]; // 첫 번째 캡처 그룹 (TTS용 대사)
+    } else {
+      console.log("TTS 대사를 찾을 수 없습니다.");
+    }
 
-    // [TTS]: 태그 제거
-    responseLLM = responseLLM.replace(/\[TTS\]:/g, '').trim();
-
+    // Pose 추출
+    const matchPose = responseLLM.match(/pose:\s*(.+)/);
+    if (matchPose) {
+      currentPose = matchPose[1]; // 첫 번째 캡처 그룹 (Pose)
+    }     
+    
     // Action과 Item 여부로 과금 판단
     const actionMatch = responseLLM.match(/\[Action\]:\s*(.*)/);
     const itemMatch = responseLLM.match(/\[Item\]:\s*(.*)/);
@@ -82,10 +95,10 @@ router.post('/chat', async (req, res) => {
     grokConversationHistory.push(assistantMessage);
 
     // 클라이언트에 응답 전송
-    res.json({ message: responseLLM, isPaid });
+    res.json({ message: responseTTS, isPaid });
 
     // TTS 호출
-    playTTSSupertone(responseLLM)
+    playTTSSupertone(responseTTS)
       .then(() => {
         //console.log('TTS playback successful');
       })
@@ -93,15 +106,10 @@ router.post('/chat', async (req, res) => {
         console.error('Error during TTS playback:', error);
       });
 
-    if (!isPaid) {
-      // Warudo에 동작 변화 메시지 전송
-      const poseChangeMatch = responseLLM.match(/\[Pose\]:\s*(.*)/);
-      if (poseChangeMatch) {
-        const poseAction = poseChangeMatch[1];
-        const messageWarudo = JSON.stringify({ action: poseAction });
+      if (matchPose) {
+        const messageWarudo = JSON.stringify({ action: currentPose });
         sendMessageToWarudo(messageWarudo);
       }
-    }
   } catch (error) {
     console.error('Error calling Grok API:', error);
     if (!res.headersSent) {
