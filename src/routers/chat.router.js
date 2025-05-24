@@ -12,46 +12,46 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let grokConversationHistory = []; // 대화 기록을 저장할 배열
+let conversationHistory = []; // 대화 기록을 저장할 배열
 let tmpPurchase = null; // 구매 임시 변수
-
 let currentPose = 'CasualProne';
+let currentModel = 'grok'; // 현재 사용 중인 모델 (기본값: grok)
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
 
 // 시스템 지시사항 로드
-let systemInstruction = null;
+let systemPrompt = null;
 try {
   const filePath = path.join(__dirname, '../../test_system_instructions.txt');
-  systemInstruction = fs.readFileSync(filePath, 'utf8');
+  systemPrompt = fs.readFileSync(filePath, 'utf8');
 } catch (error) {
   console.error('Error loading system instructions:', error);
 }
 
-// 시스템 메시지를 대화 기록에 추가
-if (systemInstruction) {
+// 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
+if (systemPrompt && currentModel === 'grok') {
   const systemMessage = {
     role: 'system',
-    content: systemInstruction,
+    content: systemPrompt,
   };
-  grokConversationHistory.push(systemMessage);
+  conversationHistory.push(systemMessage);
 }
 
 router.post('/chat', async (req, res) => {
   const userMessage = `pose: ${currentPose}\nchat: ${req.body.message}\nnotes: 1.응답 대사를 생성할 때 사용자의 채팅 메시지를 그대로 반복하거나 의문형으로 확인하지 마세요. 사용자의 채팅 메시지를 "하다고?", "했다고?", "라고?" 같은 표현으로 다시 확인하지 마세요.\n 2. 호칭(꼬물이, 꼬물아)은 대화에서 사용자를 직접 지칭할 필요가 있을 때에에만 사용하며, 다른 경우에는 사용하지 마세요.\n 3. 같은 표현을 연속적인 응답에 사용하지 마세요(Do not use the same expression in consecutive responses).`;
-
+  
   // 사용자 메시지를 대화 기록에 추가
   const userMessageObj = {
     role: 'user',
     content: userMessage,
   };
-  grokConversationHistory.push(userMessageObj);
+  conversationHistory.push(userMessageObj);
 
   console.log('(/chat) LLM Input:\n', userMessage);
 
   try {
-    let responseLLM = await getLLMResponse(grokConversationHistory);
+    let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
     console.log('LLM Output:\n', responseLLM);
 
     let responseTTS = null;
@@ -92,7 +92,7 @@ router.post('/chat', async (req, res) => {
       role: 'assistant',
       content: responseLLM,
     };
-    grokConversationHistory.push(assistantMessage);
+    conversationHistory.push(assistantMessage);
 
     // 클라이언트에 응답 전송
     res.json({ message: responseTTS, isPaid });
@@ -111,9 +111,9 @@ router.post('/chat', async (req, res) => {
         sendMessageToWarudo(messageWarudo);
       }
   } catch (error) {
-    console.error('Error calling Grok API:', error);
+    console.error(`Error calling ${currentModel} API:`, error);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Grok API 호출 중 오류가 발생했습니다.' });
+      res.status(500).json({ error: `${currentModel === 'claude' ? 'Claude' : 'Grok'} API 호출 중 오류가 발생했습니다.` });
     }
   }
 });
@@ -130,7 +130,7 @@ router.post('/purchase', async (req, res) => {
 
     // LLM에 유료 구매 확인 요청 보내기
     try {
-      const llmResponse = await getLLMResponse([...grokConversationHistory, llmInput]);
+      const llmResponse = await getLLMResponse([...conversationHistory, llmInput], currentModel);
 
       console.log('(/purchase) LLM Output:\n', llmResponse);
 
@@ -158,8 +158,8 @@ router.post('/purchase', async (req, res) => {
 
       res.json({ message: responseTTSMessage });
     } catch (error) {
-      console.error('Error calling LLM after purchase:', error);
-      res.status(500).json({ error: 'Error processing purchase with LLM.' });
+      console.error(`Error calling ${currentModel} API after purchase:`, error);
+      res.status(500).json({ error: `Error processing purchase with ${currentModel === 'claude' ? 'Claude' : 'Grok'}.` });
     } finally {
       tmpPurchase = null;
     }
