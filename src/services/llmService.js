@@ -36,15 +36,23 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
         content: msg.content
       }));
 
-      const completion = await claudeClient.messages.create({
+      const stream = await claudeClient.messages.create({
         model: "claude-3-5-sonnet-20240620",
         messages: claudeMessages,
-        max_tokens: 30000,
-        system: systemPrompt
+        max_tokens: 400,
+        system: systemPrompt,
+        stream: true
       });
 
-      if (completion && completion.content) {
-        return completion.content[0].text;
+      let fullResponse = '';
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
+          fullResponse += chunk.delta.text;
+        }
+      }
+
+      if (fullResponse) {
+        return fullResponse;
       } else {
         throw new Error('Claude API 응답이 유효하지 않습니다.');
       }
