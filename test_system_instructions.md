@@ -272,7 +272,7 @@ affectionate
 annoyed
 sad
 embarrassed
-Dominating
+dominating
 List of poses(Output only the poses in the list.):
 stand
 sit

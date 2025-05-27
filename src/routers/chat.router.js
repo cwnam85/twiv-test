@@ -22,7 +22,7 @@ const webSocket = connectWebSocket();
 // 시스템 지시사항 로드
 let systemPrompt = null;
 try {
-  const filePath = path.join(__dirname, '../../test_system_instructions.txt');
+  const filePath = path.join(__dirname, '../../test_system_instructions.md');
   systemPrompt = fs.readFileSync(filePath, 'utf8');
 } catch (error) {
   console.error('Error loading system instructions:', error);

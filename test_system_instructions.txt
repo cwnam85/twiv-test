@@ -276,8 +276,6 @@ Dominating
 List of poses(Output only the poses in the list.):
 stand
 sit
-doggy
-spreadlegs
 </Dialogue Format Guidelines>
 </references>
 
