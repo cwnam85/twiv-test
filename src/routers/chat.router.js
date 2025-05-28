@@ -57,29 +57,36 @@ router.post('/chat', async (req, res) => {
     let emotion = null;
     let pose = null;
 
-    // JSON 형식에서 값 추출
-    const matchEmotion = responseLLM.match(/emotion:\s*["']?([^"',}]+)["']?/i);
-    if (matchEmotion) {
-      emotion = matchEmotion[1].trim();
-    } else {
-      console.log("Emotion을 찾을 수 없습니다.");
-    }
+    try {
+      // JSON 형식 파싱
+      const responseData = JSON.parse(responseLLM);
+      dialogue = responseData.dialogue;
+      emotion = responseData.emotion;
+      pose = responseData.pose;
+    } catch (error) {
+      console.error('JSON 파싱 중 오류 발생:', error);
+      // 기존 정규식 방식으로 폴백
+      const matchEmotion = responseLLM.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+      if (matchEmotion) {
+        emotion = matchEmotion[1].trim();
+      } else {
+        console.log("Emotion을 찾을 수 없습니다.");
+      }
 
-    // Dialogue 추출
-    const matchDialogue = responseLLM.match(/dialogue:\s*["']([^"']+)["']/i);
-    if (matchDialogue) {
-      dialogue = matchDialogue[1].trim();
-    } else {
-      console.log("Dialogue를 찾을 수 없습니다.");
-    }
+      const matchDialogue = responseLLM.match(/dialogue:\s*["']([^"']+)["']/i);
+      if (matchDialogue) {
+        dialogue = matchDialogue[1].trim();
+      } else {
+        console.log("Dialogue를 찾을 수 없습니다.");
+      }
 
-    // Pose 추출
-    const matchPose = responseLLM.match(/pose:\s*["']?([^"',}]+)["']?/i);
-    if (matchPose) {
-      pose = matchPose[1].trim();
-    } else {
-      console.log("Pose를 찾을 수 없습니다.");
-    }     
+      const matchPose = responseLLM.match(/pose:\s*["']?([^"',}]+)["']?/i);
+      if (matchPose) {
+        pose = matchPose[1].trim();
+      } else {
+        console.log("Pose를 찾을 수 없습니다.");
+      }
+    }
     
     // LLM 응답 메시지를 대화 기록에 추가
     const assistantMessage = {

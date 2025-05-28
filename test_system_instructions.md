@@ -273,6 +273,7 @@ annoyed
 sad
 embarrassed
 dominating
+aroused
 List of poses(Output only the poses in the list.):
 stand
 sit

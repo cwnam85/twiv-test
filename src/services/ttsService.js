@@ -13,11 +13,12 @@ export async function playTTSSupertone(response, emotion) {
     'annoyed': '3WecMGvANcdunskVJNZyez',
     'sad': '1ZGUVjuoNk52se64NfSpVN',
     'embarrassed': 'ob4wAp1heaDzEqDepEpJ5Z',
-    'dominating': 'axwTSPmp7hCxS4r5HmV8aP'
+    'dominating': 'axwTSPmp7hCxS4r5HmV8aP',
+    'aroused': '4YzPr4g1EKLp2HDiZdPgDA'
   };
 
   const voiceId = voiceIdMap[emotion] || '1ZGUVjuoNk52se64NfSpVN';  // 기본값은 neutral
-  const url = `https://supertoneapi.com/sandbox/text-to-speech/${voiceId}?output_format=mp3`;
+  const url = `https://supertoneapi.com/v1/text-to-speech/${voiceId}?output_format=mp3`;
 
   const data = {
     text: response,
