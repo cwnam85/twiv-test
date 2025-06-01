@@ -69,15 +69,25 @@ if (systemPrompt && currentModel === 'grok') {
   conversationHistory.push(systemMessage);
 }
 
-router.post('/chat', async (req, res) => {
-  const userMessage = `${req.body.message}`;
-
-  // 사용자 메시지를 대화 기록에 추가
-  const userMessageObj = {
-    role: 'user',
-    content: userMessage,
+// 대화 기록 관리 함수
+function addToHistory(role, content) {
+  const message = {
+    role: role,
+    content: [
+      {
+        type: 'text',
+        text: content,
+      },
+    ],
   };
-  conversationHistory.push(userMessageObj);
+  conversationHistory.push(message);
+}
+
+router.post('/chat', async (req, res) => {
+  const userMessage = `${req.body.history}`;
+
+  // 사용자 메시지 추가 (Risu AI 형식)
+  addToHistory('user', userMessage);
 
   console.log('(/chat) LLM Input:\n', userMessage);
 
@@ -101,7 +111,7 @@ router.post('/chat', async (req, res) => {
         const affinityChange = parseInt(responseData.affinity);
         if (!isNaN(affinityChange)) {
           affinity += affinityChange;
-          saveAffinity(affinity); // 호감도 변경 시 파일에 저장
+          saveAffinity(affinity);
           console.log(`Affinity changed by ${affinityChange}. Current affinity: ${affinity}`);
         }
       }
@@ -130,12 +140,8 @@ router.post('/chat', async (req, res) => {
       }
     }
 
-    // LLM 응답 메시지를 대화 기록에 추가
-    const assistantMessage = {
-      role: 'assistant',
-      content: responseLLM,
-    };
-    conversationHistory.push(assistantMessage);
+    // 응답 메시지 추가 (Risu AI 형식)
+    addToHistory('assistant', responseLLM);
 
     // 클라이언트에 응답 전송
     res.json({
