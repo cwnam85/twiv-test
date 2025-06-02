@@ -2,12 +2,40 @@ import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
 
 function App() {
-  const { messages, input, setInput, isModalOpen, handleSend, handleConfirm, handleClose } = useChatting();
+  const {
+    messages,
+    input,
+    setInput,
+    isModalOpen,
+    handleSend,
+    handleConfirm,
+    handleClose,
+    affinity,
+    pose,
+    emotion,
+  } = useChatting();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Chat with Bella</h1>
       <div className="w-full max-w-md">
+        {/* 상태 표시 영역 */}
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Chat with Shaki</h1>
+            <div className="bg-blue-100 px-4 py-2 rounded-lg">
+              <span className="text-blue-800 font-semibold">호감도: {affinity / 10}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-green-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-green-800 font-semibold">감정: {emotion}</span>
+            </div>
+            <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-purple-800 font-semibold">포즈: {pose}</span>
+            </div>
+          </div>
+        </div>
+
         {/* 채팅 메시지 영역 */}
         <div className="bg-gray-100 rounded-lg p-4 h-[400px] overflow-y-auto mb-4">
           {messages.map((message, index) => (

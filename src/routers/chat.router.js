@@ -12,9 +12,41 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 호감도 데이터 파일 경로
+const AFFINITY_FILE_PATH = path.join(__dirname, '../data/affinity.json');
+
+// 호감도 데이터 로드 함수
+function loadAffinity() {
+  try {
+    if (fs.existsSync(AFFINITY_FILE_PATH)) {
+      const data = fs.readFileSync(AFFINITY_FILE_PATH, 'utf8');
+      return JSON.parse(data).affinity;
+    }
+  } catch (error) {
+    console.error('Error loading affinity data:', error);
+  }
+  return 0;
+}
+
+// 호감도 데이터 저장 함수
+function saveAffinity(affinity) {
+  try {
+    // data 디렉토리가 없으면 생성
+    const dataDir = path.dirname(AFFINITY_FILE_PATH);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    fs.writeFileSync(AFFINITY_FILE_PATH, JSON.stringify({ affinity }, null, 2));
+  } catch (error) {
+    console.error('Error saving affinity data:', error);
+  }
+}
+
 let conversationHistory = []; // 대화 기록을 저장할 배열
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
+let affinity = loadAffinity(); // 호감도 변수 초기화
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -37,15 +69,25 @@ if (systemPrompt && currentModel === 'grok') {
   conversationHistory.push(systemMessage);
 }
 
-router.post('/chat', async (req, res) => {
-  const userMessage = `${req.body.message}`;
-  
-  // 사용자 메시지를 대화 기록에 추가
-  const userMessageObj = {
-    role: 'user',
-    content: userMessage,
+// 대화 기록 관리 함수
+function addToHistory(role, content) {
+  const message = {
+    role: role,
+    content: [
+      {
+        type: 'text',
+        text: content,
+      },
+    ],
   };
-  conversationHistory.push(userMessageObj);
+  conversationHistory.push(message);
+}
+
+router.post('/chat', async (req, res) => {
+  const userMessage = `${req.body.history}`;
+
+  // 사용자 메시지 추가 (Risu AI 형식)
+  addToHistory('user', userMessage);
 
   console.log('(/chat) LLM Input:\n', userMessage);
 
@@ -63,6 +105,16 @@ router.post('/chat', async (req, res) => {
       dialogue = responseData.dialogue;
       emotion = responseData.emotion;
       pose = responseData.pose;
+
+      // affinity 처리 추가
+      if (responseData.affinity) {
+        const affinityChange = parseInt(responseData.affinity);
+        if (!isNaN(affinityChange)) {
+          affinity += affinityChange;
+          saveAffinity(affinity);
+          console.log(`Affinity changed by ${affinityChange}. Current affinity: ${affinity}`);
+        }
+      }
     } catch (error) {
       console.error('JSON 파싱 중 오류 발생:', error);
       // 기존 정규식 방식으로 폴백
@@ -70,33 +122,35 @@ router.post('/chat', async (req, res) => {
       if (matchEmotion) {
         emotion = matchEmotion[1].trim();
       } else {
-        console.log("Emotion을 찾을 수 없습니다.");
+        console.log('Emotion을 찾을 수 없습니다.');
       }
 
       const matchDialogue = responseLLM.match(/dialogue:\s*["']([^"']+)["']/i);
       if (matchDialogue) {
         dialogue = matchDialogue[1].trim();
       } else {
-        console.log("Dialogue를 찾을 수 없습니다.");
+        console.log('Dialogue를 찾을 수 없습니다.');
       }
 
       const matchPose = responseLLM.match(/pose:\s*["']?([^"',}]+)["']?/i);
       if (matchPose) {
         pose = matchPose[1].trim();
       } else {
-        console.log("Pose를 찾을 수 없습니다.");
+        console.log('Pose를 찾을 수 없습니다.');
       }
     }
-    
-    // LLM 응답 메시지를 대화 기록에 추가
-    const assistantMessage = {
-      role: 'assistant',
-      content: responseLLM,
-    };
-    conversationHistory.push(assistantMessage);
+
+    // 응답 메시지 추가 (Risu AI 형식)
+    addToHistory('assistant', responseLLM);
 
     // 클라이언트에 응답 전송
-    res.json({ message: dialogue, isPaid: false });
+    res.json({
+      message: dialogue,
+      isPaid: false,
+      affinity: affinity,
+      pose: pose,
+      emotion: emotion,
+    });
 
     // TTS 호출
     playTTSSupertone(dialogue, emotion)
@@ -109,15 +163,17 @@ router.post('/chat', async (req, res) => {
 
     if (pose) {
       const messageWarudo = JSON.stringify({
-        action: "Pose",
-        data: pose
+        action: 'Pose',
+        data: pose,
       });
       sendMessageToWarudo(messageWarudo);
     }
   } catch (error) {
     console.error(`Error calling ${currentModel} API:`, error);
     if (!res.headersSent) {
-      res.status(500).json({ error: `${currentModel === 'claude' ? 'Claude' : 'Grok'} API 호출 중 오류가 발생했습니다.` });
+      res.status(500).json({
+        error: `${currentModel === 'claude' ? 'Claude' : 'Grok'} API 호출 중 오류가 발생했습니다.`,
+      });
     }
   }
 });

@@ -19,10 +19,16 @@ const claudeClient = new Anthropic({
 export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
   try {
     if (model === 'grok') {
-      const completion = await grokClient.chat.completions.create({
+      const requestBody = {
         model: 'grok-2-1212',
-        messages,
-      });
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content[0].text,
+        })),
+      };
+      console.log('Grok API Request:', JSON.stringify(requestBody, null, 2));
+
+      const completion = await grokClient.chat.completions.create(requestBody);
 
       if (completion && completion.choices && completion.choices.length > 0) {
         return completion.choices[0].message.content;
@@ -30,19 +36,19 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
         throw new Error('Grok API 응답이 유효하지 않습니다.');
       }
     } else if (model === 'claude') {
-      // Claude API 형식에 맞게 메시지 변환
-      const claudeMessages = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: msg.content
-      }));
-
-      const stream = await claudeClient.messages.create({
-        model: "claude-3-5-sonnet-20240620",
-        messages: claudeMessages,
-        max_tokens: 400,
+      const requestBody = {
+        model: 'claude-3-5-sonnet-20240620',
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content[0].text,
+        })),
         system: systemPrompt,
-        stream: true
-      });
+        max_tokens: 400,
+        stream: true,
+      };
+      console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));
+
+      const stream = await claudeClient.messages.create(requestBody);
 
       let fullResponse = '';
       for await (const chunk of stream) {
