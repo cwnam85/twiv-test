@@ -1,5 +1,6 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
+import { useEffect, useRef } from 'react';
 
 function App() {
   const {
@@ -14,6 +15,16 @@ function App() {
     pose,
     emotion,
   } = useChatting();
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -49,6 +60,7 @@ function App() {
               </span>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* 입력 영역 */}
