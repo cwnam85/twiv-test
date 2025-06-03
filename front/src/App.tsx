@@ -23,7 +23,7 @@ function App() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Chat with Shaki</h1>
             <div className="bg-blue-100 px-4 py-2 rounded-lg">
-              <span className="text-blue-800 font-semibold">호감도: {affinity / 10}</span>
+              <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
             </div>
           </div>
           <div className="flex gap-2">
