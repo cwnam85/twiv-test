@@ -5,6 +5,10 @@ import { fileURLToPath } from 'url';
 import { getLLMResponse } from '../services/llmService.js';
 import { playTTSSupertone } from '../services/ttsService.js';
 import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService.js';
+import {
+  SHAKI_INITIAL_CONVERSATION_HISTORY,
+  MEUAENG_INITIAL_CONVERSATION_HISTORY,
+} from '../data/initialConversation.js';
 
 const router = express.Router();
 
@@ -48,7 +52,29 @@ router.get('/affinity', (req, res) => {
   res.json({ affinity, level });
 });
 
-let conversationHistory = []; // 대화 기록을 저장할 배열
+// 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
+const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase();
+console.log('activeCharacter', activeCharacter);
+
+// 현재 활성화된 캐릭터 정보를 반환하는 엔드포인트
+router.get('/active-character', (req, res) => {
+  res.json({ activeCharacter });
+});
+
+let initialHistory;
+switch (activeCharacter) {
+  case 'meuaeng':
+    initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
+    break;
+  case 'shaki':
+    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+    break;
+  default:
+    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+    break;
+}
+
+let conversationHistory = initialHistory;
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
@@ -59,8 +85,20 @@ const webSocket = connectWebSocket();
 // 시스템 지시사항 로드
 let systemPrompt = null;
 try {
-  const filePath = path.join(__dirname, '../../test_system_instructions.md');
-  systemPrompt = fs.readFileSync(filePath, 'utf8');
+  // 현재 활성화된 캐릭터 설정
+  if (activeCharacter) {
+    // 특정 캐릭터가 지정된 경우 해당 캐릭터의 지시사항 로드
+    const characterPath = path.join(__dirname, `../../${activeCharacter}.md`);
+    if (fs.existsSync(characterPath)) {
+      systemPrompt = fs.readFileSync(characterPath, 'utf8');
+    }
+  }
+
+  // 캐릭터가 지정되지 않았거나 해당 캐릭터 파일이 없는 경우 기본 샤키 지시사항 사용
+  if (!systemPrompt) {
+    const defaultFilePath = path.join(__dirname, '../../test_system_instructions.md');
+    systemPrompt = fs.readFileSync(defaultFilePath, 'utf8');
+  }
 } catch (error) {
   console.error('Error loading system instructions:', error);
 }

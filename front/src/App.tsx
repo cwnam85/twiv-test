@@ -1,6 +1,6 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function App() {
   const {
@@ -16,8 +16,21 @@ function App() {
     emotion,
     level,
   } = useChatting();
-
+  const [currentCharacter, setCurrentCharacter] = useState('Loading...');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 백엔드에서 activeCharacter 가져오기
+    fetch('/active-character')
+      .then((response) => response.json())
+      .then((data) => {
+        setCurrentCharacter(data.activeCharacter || 'Default Character');
+      })
+      .catch((error) => {
+        console.error('Error fetching active character:', error);
+        setCurrentCharacter('Default Character');
+      });
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,14 +39,14 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}
         <div className="flex flex-col gap-2 mb-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Chat with Shaki</h1>
+            <h1 className="text-2xl font-bold">Chat with {currentCharacter}</h1>
             <div className="bg-blue-100 px-4 py-2 rounded-lg">
               <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
               <span className="text-blue-800 font-semibold ml-2">Lv.{level}</span>
