@@ -14,6 +14,7 @@ function App() {
     affinity,
     pose,
     emotion,
+    level,
   } = useChatting();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -35,6 +36,7 @@ function App() {
             <h1 className="text-2xl font-bold">Chat with Shaki</h1>
             <div className="bg-blue-100 px-4 py-2 rounded-lg">
               <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
+              <span className="text-blue-800 font-semibold ml-2">Lv.{level}</span>
             </div>
           </div>
           <div className="flex gap-2">

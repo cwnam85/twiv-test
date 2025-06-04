@@ -16,3 +16,6 @@ logs
 
 # TTS 파일
 *.mp3
+
+#호감도 데이터
+affinity.json

@@ -20,16 +20,16 @@ function loadAffinity() {
   try {
     if (fs.existsSync(AFFINITY_FILE_PATH)) {
       const data = fs.readFileSync(AFFINITY_FILE_PATH, 'utf8');
-      return JSON.parse(data).affinity;
+      return JSON.parse(data);
     }
   } catch (error) {
     console.error('Error loading affinity data:', error);
   }
-  return 0;
+  return { affinity: 0, level: 1 };
 }
 
 // 호감도 데이터 저장 함수
-function saveAffinity(affinity) {
+function saveAffinity(affinity, level) {
   try {
     // data 디렉토리가 없으면 생성
     const dataDir = path.dirname(AFFINITY_FILE_PATH);
@@ -37,16 +37,21 @@ function saveAffinity(affinity) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    fs.writeFileSync(AFFINITY_FILE_PATH, JSON.stringify({ affinity }, null, 2));
+    fs.writeFileSync(AFFINITY_FILE_PATH, JSON.stringify({ affinity, level }, null, 2));
   } catch (error) {
     console.error('Error saving affinity data:', error);
   }
 }
 
+// 현재 호감도와 레벨 가져오기
+router.get('/affinity', (req, res) => {
+  res.json({ affinity, level });
+});
+
 let conversationHistory = []; // 대화 기록을 저장할 배열
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
-let affinity = loadAffinity(); // 호감도 변수 초기화
+let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -85,11 +90,13 @@ function addToHistory(role, content) {
 
 router.post('/chat', async (req, res) => {
   const userMessage = `${req.body.history}`;
+  const realMessage = `${req.body.message}`;
 
   // 사용자 메시지 추가 (Risu AI 형식)
   addToHistory('user', userMessage);
 
-  console.log('(/chat) LLM Input:\n', userMessage);
+  // console.log('(/chat) LLM Input:\n', userMessage);
+  console.log('(/chat) LLM Input:\n', realMessage);
 
   try {
     let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
@@ -111,8 +118,18 @@ router.post('/chat', async (req, res) => {
         const affinityChange = parseInt(responseData.affinity);
         if (!isNaN(affinityChange)) {
           affinity += affinityChange;
-          saveAffinity(affinity);
-          console.log(`Affinity changed by ${affinityChange}. Current affinity: ${affinity}`);
+
+          // 레벨업 체크
+          if (affinity >= 100 && level < 5) {
+            level += 1;
+            affinity = 0;
+            console.log(`Level up! Current level: ${level}`);
+          }
+
+          saveAffinity(affinity, level);
+          console.log(
+            `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
+          );
         }
       }
     } catch (error) {
@@ -148,6 +165,7 @@ router.post('/chat', async (req, res) => {
       message: dialogue,
       isPaid: false,
       affinity: affinity,
+      level: level,
       pose: pose,
       emotion: emotion,
     });
