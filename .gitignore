@@ -18,4 +18,4 @@ logs
 *.mp3
 
 #호감도 데이터
-data/affinity.json
+src/data/affinity.json
