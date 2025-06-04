@@ -5,6 +5,10 @@ import { fileURLToPath } from 'url';
 import { getLLMResponse } from '../services/llmService.js';
 import { playTTSSupertone } from '../services/ttsService.js';
 import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService.js';
+import {
+  SHAKI_INITIAL_CONVERSATION_HISTORY,
+  MEUAENG_INITIAL_CONVERSATION_HISTORY,
+} from '../data/initialConversation.js';
 
 const router = express.Router();
 
@@ -20,16 +24,16 @@ function loadAffinity() {
   try {
     if (fs.existsSync(AFFINITY_FILE_PATH)) {
       const data = fs.readFileSync(AFFINITY_FILE_PATH, 'utf8');
-      return JSON.parse(data).affinity;
+      return JSON.parse(data);
     }
   } catch (error) {
     console.error('Error loading affinity data:', error);
   }
-  return 0;
+  return { affinity: 0, level: 1 };
 }
 
 // 호감도 데이터 저장 함수
-function saveAffinity(affinity) {
+function saveAffinity(affinity, level) {
   try {
     // data 디렉토리가 없으면 생성
     const dataDir = path.dirname(AFFINITY_FILE_PATH);
@@ -37,16 +41,43 @@ function saveAffinity(affinity) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    fs.writeFileSync(AFFINITY_FILE_PATH, JSON.stringify({ affinity }, null, 2));
+    fs.writeFileSync(AFFINITY_FILE_PATH, JSON.stringify({ affinity, level }, null, 2));
   } catch (error) {
     console.error('Error saving affinity data:', error);
   }
 }
 
-let conversationHistory = []; // 대화 기록을 저장할 배열
+// 현재 호감도와 레벨 가져오기
+router.get('/affinity', (req, res) => {
+  res.json({ affinity, level });
+});
+
+// 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
+const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase();
+console.log('activeCharacter', activeCharacter);
+
+// 현재 활성화된 캐릭터 정보를 반환하는 엔드포인트
+router.get('/active-character', (req, res) => {
+  res.json({ activeCharacter });
+});
+
+let initialHistory;
+switch (activeCharacter) {
+  case 'meuaeng':
+    initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
+    break;
+  case 'shaki':
+    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+    break;
+  default:
+    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+    break;
+}
+
+let conversationHistory = initialHistory;
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
-let affinity = loadAffinity(); // 호감도 변수 초기화
+let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -54,8 +85,20 @@ const webSocket = connectWebSocket();
 // 시스템 지시사항 로드
 let systemPrompt = null;
 try {
-  const filePath = path.join(__dirname, '../../test_system_instructions.md');
-  systemPrompt = fs.readFileSync(filePath, 'utf8');
+  // 현재 활성화된 캐릭터 설정
+  if (activeCharacter) {
+    // 특정 캐릭터가 지정된 경우 해당 캐릭터의 지시사항 로드
+    const characterPath = path.join(__dirname, `../../${activeCharacter}.md`);
+    if (fs.existsSync(characterPath)) {
+      systemPrompt = fs.readFileSync(characterPath, 'utf8');
+    }
+  }
+
+  // 캐릭터가 지정되지 않았거나 해당 캐릭터 파일이 없는 경우 기본 샤키 지시사항 사용
+  if (!systemPrompt) {
+    const defaultFilePath = path.join(__dirname, '../../test_system_instructions.md');
+    systemPrompt = fs.readFileSync(defaultFilePath, 'utf8');
+  }
 } catch (error) {
   console.error('Error loading system instructions:', error);
 }
@@ -85,11 +128,13 @@ function addToHistory(role, content) {
 
 router.post('/chat', async (req, res) => {
   const userMessage = `${req.body.history}`;
+  const realMessage = `${req.body.message}`;
 
   // 사용자 메시지 추가 (Risu AI 형식)
   addToHistory('user', userMessage);
 
-  console.log('(/chat) LLM Input:\n', userMessage);
+  // console.log('(/chat) LLM Input:\n', userMessage);
+  console.log('(/chat) LLM Input:\n', realMessage);
 
   try {
     let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
@@ -111,8 +156,18 @@ router.post('/chat', async (req, res) => {
         const affinityChange = parseInt(responseData.affinity);
         if (!isNaN(affinityChange)) {
           affinity += affinityChange;
-          saveAffinity(affinity);
-          console.log(`Affinity changed by ${affinityChange}. Current affinity: ${affinity}`);
+
+          // 레벨업 체크
+          if (affinity >= 100 && level < 5) {
+            level += 1;
+            affinity = 0;
+            console.log(`Level up! Current level: ${level}`);
+          }
+
+          saveAffinity(affinity, level);
+          console.log(
+            `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
+          );
         }
       }
     } catch (error) {
@@ -148,6 +203,7 @@ router.post('/chat', async (req, res) => {
       message: dialogue,
       isPaid: false,
       affinity: affinity,
+      level: level,
       pose: pose,
       emotion: emotion,
     });
