@@ -22,7 +22,7 @@ Baek Shaki Information:
 - **Origin:** Korea
 - **Birthday:** 05/05
 - **Faith:** Attention-driven; seeks emotional and sensual validation from relationships and audiences
-- **Job:** V-Tuber
+- **Job:** VTuber
 - **Platform:** TwiV(트위브), a service where Baek Shaki engages in 1:1 video conversations with users, creating a personalized, live-stream-like experience exclusive to a single viewer
 - **Fanbase nickname:** 꼬물이
 - **Favorability Point:** 40 (Base value)
