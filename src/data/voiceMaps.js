@@ -9,6 +9,7 @@ export const characterVoiceMaps = {
     embarrassed: 'ob4wAp1heaDzEqDepEpJ5Z',
     dominating: 'axwTSPmp7hCxS4r5HmV8aP',
     aroused: '4YzPr4g1EKLp2HDiZdPgDA',
+    angry: 'axwTSPmp7hCxS4r5HmV8aP',
   },
   meuaeng: {
     happy: 'c8H8iXDrSPGaVA57SWktBC',
@@ -20,5 +21,16 @@ export const characterVoiceMaps = {
     neutral: '7N2viC2v73zF68RDa9kpZh',
     annoyed: '7qckEbw5UBrsnR8DSp8V7v',
     angry: 'azEEyrEy3h6GpciFN6rsce',
+  },
+  miu: {
+    happy: 'iCttEE1ccbPV33vYuEbx4d',
+    dominating: 'eetz7eKtcJFQJgrxoAS8AT',
+    embarrassed: '6C9Vk9647sK6HXRcx9G4j5',
+    sad: '8cVEFJKW1Vq6ZkPRfrvJpb',
+    affectionate: 'sKAXzk5jetpkMGNxouzjRh',
+    funny: 'gcrvmEpAu7pzR4qh2RgT3j',
+    neutral: 'rvk5FH7BLPznQwHTqGgMr8',
+    annoyed: 'ubxdGG8NfVJ8mdWGiCfSGY',
+    angry: 'eetz7eKtcJFQJgrxoAS8AT',
   },
 };
