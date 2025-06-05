@@ -9,6 +9,7 @@ import {
   NSFW_INITIAL_CONVERSATION_HISTORY,
   SFW_INITIAL_CONVERSATION_HISTORY,
 } from '../data/initialConversation.js';
+import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
 
 const router = express.Router();
 
@@ -166,8 +167,8 @@ router.post('/chat', async (req, res) => {
             affinity = 0;
             console.log(`Level up! Current level: ${level}`);
 
-            // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다. 
-            if (level === 2) {
+            // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
+            if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
               const levelUpMessages = [
                 {
                   role: 'assistant',
@@ -197,7 +198,7 @@ router.post('/chat', async (req, res) => {
                   ],
                 },
               ];
-              // 탈옥 프롬프트를 추가. 
+              // 탈옥 프롬프트를 추가.
               conversationHistory.push(...levelUpMessages);
             }
 
