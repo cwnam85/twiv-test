@@ -66,8 +66,8 @@ switch (activeCharacter) {
   case 'meuaeng':
     initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
     break;
-  case 'shaki':
-    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+  case 'leda':
+    initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
     break;
   default:
     initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
@@ -88,7 +88,7 @@ try {
   // 현재 활성화된 캐릭터 설정
   if (activeCharacter) {
     // 특정 캐릭터가 지정된 경우 해당 캐릭터의 지시사항 로드
-    const characterPath = path.join(__dirname, `../../${activeCharacter}.md`);
+    const characterPath = path.join(__dirname, `../../vtuber_prompts/${activeCharacter}.md`);
     if (fs.existsSync(characterPath)) {
       systemPrompt = fs.readFileSync(characterPath, 'utf8');
     }
@@ -96,7 +96,10 @@ try {
 
   // 캐릭터가 지정되지 않았거나 해당 캐릭터 파일이 없는 경우 기본 샤키 지시사항 사용
   if (!systemPrompt) {
-    const defaultFilePath = path.join(__dirname, '../../test_system_instructions.md');
+    const defaultFilePath = path.join(
+      __dirname,
+      '../../vtuber_prompts/test_system_instructions.md',
+    );
     systemPrompt = fs.readFileSync(defaultFilePath, 'utf8');
   }
 } catch (error) {
