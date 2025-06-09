@@ -1,4 +1,4 @@
-export const SHAKI_INITIAL_CONVERSATION_HISTORY = [
+export const NSFW_INITIAL_CONVERSATION_HISTORY = [
   {
     role: 'user',
     content: [{ type: 'text', text: 'Start' }],
@@ -71,7 +71,7 @@ export const SHAKI_INITIAL_CONVERSATION_HISTORY = [
   },
 ];
 
-export const MEUAENG_INITIAL_CONVERSATION_HISTORY = [
+export const SFW_INITIAL_CONVERSATION_HISTORY = [
   {
     role: 'user',
     content: [{ type: 'text', text: 'Start' }],

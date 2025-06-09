@@ -22,7 +22,7 @@ export const characterVoiceMaps = {
     annoyed: '7qckEbw5UBrsnR8DSp8V7v',
     angry: 'azEEyrEy3h6GpciFN6rsce',
   },
-  miu: {
+  miwoo: {
     happy: 'iCttEE1ccbPV33vYuEbx4d',
     dominating: 'eetz7eKtcJFQJgrxoAS8AT',
     embarrassed: '6C9Vk9647sK6HXRcx9G4j5',
