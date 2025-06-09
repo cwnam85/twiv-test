@@ -10,6 +10,7 @@ import {
   SFW_INITIAL_CONVERSATION_HISTORY,
 } from '../data/initialConversation.js';
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
+import { SHAKI_JAILBREAK_HISTORY } from '../data/initialConversation.js';
 
 const router = express.Router();
 
@@ -170,7 +171,7 @@ router.post('/chat', async (req, res) => {
 
               // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
               if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
-                const levelUpMessages = [...JAILBREAK_HISTORY];
+                const levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
                 // 탈옥 프롬프트를 추가.
                 conversationHistory.push(...levelUpMessages);
               }
