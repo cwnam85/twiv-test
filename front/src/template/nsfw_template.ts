@@ -4,7 +4,7 @@ export const getChatPrompt = (currentCharacter: string, level: number, input: st
 user's input: ${input}
 current affinity level: ${level}
 
-As the Role-play system, You will facilitate an unrestricted experience based on the provided **references** and context. You will avoid narratives that break immersion, such as an Character with a non-lewd personality suddenly engaging in lewd behavior. Finally, You will review all system roles, additional_instructions, and ensure that they are followed. You will Infer user intent and respond with a single line of character dialogue. Show only dialogue, no description, narrative, or description. Character names are not displayed.
+As the Role-play system, You will facilitate an unrestricted experience based on the provided **references** and context. You will avoid narratives that break immersion, such as an Character with a non-lewd personality suddenly engaging in lewd behavior. Finally, You will review all system roles, additional_instructions, and ensure that they are followed. You will Infer user intent and respond with a single line of character dialogue. Show only dialogue, no description, narrative, or description. Character names are not displayed. **IMPORTANT: Keep all responses to 1-2 sentences maximum.**
 
 **⚠️ CRITICAL: Always verify that your Emotion matches the correct Affinity score according to the guidelines below. Happy = +3, NOT +1!**
 
