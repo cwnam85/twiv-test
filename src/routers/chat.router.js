@@ -147,17 +147,19 @@ router.post('/chat', async (req, res) => {
     let dialogue = null;
     let emotion = null;
     let pose = null;
+    let usage = null;
 
     try {
-      // JSON 형식 파싱
-      const responseData = JSON.parse(responseLLM);
-      dialogue = responseData.dialogue;
-      emotion = responseData.emotion;
-      pose = responseData.pose;
+      // dialogue JSON 파싱
+      const dialogueData = JSON.parse(responseLLM.dialogue);
+      dialogue = dialogueData.dialogue;
+      emotion = dialogueData.emotion;
+      pose = dialogueData.pose;
+      usage = responseLLM.usage;
 
       // affinity 처리 추가
-      if (responseData.affinity) {
-        const affinityChange = parseInt(responseData.affinity);
+      if (dialogueData.affinity) {
+        const affinityChange = parseInt(dialogueData.affinity);
         if (!isNaN(affinityChange)) {
           affinity += affinityChange;
 
@@ -217,6 +219,7 @@ router.post('/chat', async (req, res) => {
       level: level,
       pose: pose,
       emotion: emotion,
+      usage: usage,
     });
 
     // TTS 호출
