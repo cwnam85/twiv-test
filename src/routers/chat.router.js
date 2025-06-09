@@ -150,57 +150,80 @@ router.post('/chat', async (req, res) => {
     let usage = null;
 
     try {
-      // dialogue JSON 파싱
-      const dialogueData = JSON.parse(responseLLM.dialogue);
-      dialogue = dialogueData.dialogue;
-      emotion = dialogueData.emotion;
-      pose = dialogueData.pose;
-      usage = responseLLM.usage;
+      // dialogue is now already parsed JSON
+      if (typeof responseLLM.dialogue === 'object') {
+        dialogue = responseLLM.dialogue.dialogue;
+        emotion = responseLLM.dialogue.emotion;
+        pose = responseLLM.dialogue.pose;
 
-      // affinity 처리 추가
-      if (dialogueData.affinity) {
-        const affinityChange = parseInt(dialogueData.affinity);
-        if (!isNaN(affinityChange)) {
-          affinity += affinityChange;
+        // affinity 처리 추가
+        if (responseLLM.dialogue.affinity) {
+          const affinityChange = parseInt(responseLLM.dialogue.affinity);
+          if (!isNaN(affinityChange)) {
+            affinity += affinityChange;
 
-          // 레벨업 체크
-          if (affinity >= 100 && level < 5) {
-            level += 1;
-            affinity = 0;
-            console.log(`Level up! Current level: ${level}`);
+            // 레벨업 체크
+            if (affinity >= 100 && level < 5) {
+              level += 1;
+              affinity = 0;
+              console.log(`Level up! Current level: ${level}`);
 
-            // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
-            if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
-              const levelUpMessages = [...JAILBREAK_HISTORY];
-              // 탈옥 프롬프트를 추가.
-              conversationHistory.push(...levelUpMessages);
+              // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
+              if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
+                const levelUpMessages = [...JAILBREAK_HISTORY];
+                // 탈옥 프롬프트를 추가.
+                conversationHistory.push(...levelUpMessages);
+              }
+
+              saveAffinity(affinity, level);
+              console.log(
+                `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
+              );
             }
-
-            saveAffinity(affinity, level);
-            console.log(
-              `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
-            );
           }
         }
+      } else {
+        // Fallback to regex parsing for non-JSON responses
+        const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+        if (matchEmotion) {
+          emotion = matchEmotion[1].trim();
+        } else {
+          console.log('Emotion을 찾을 수 없습니다.');
+        }
+
+        const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
+        if (matchDialogue) {
+          dialogue = matchDialogue[1].trim();
+        } else {
+          console.log('Dialogue를 찾을 수 없습니다.');
+        }
+
+        const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
+        if (matchPose) {
+          pose = matchPose[1].trim();
+        } else {
+          console.log('Pose를 찾을 수 없습니다.');
+        }
       }
+      usage = responseLLM.usage;
     } catch (error) {
       console.error('JSON 파싱 중 오류 발생:', error);
       // 기존 정규식 방식으로 폴백
-      const matchEmotion = responseLLM.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+      const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
       if (matchEmotion) {
         emotion = matchEmotion[1].trim();
       } else {
         console.log('Emotion을 찾을 수 없습니다.');
       }
 
-      const matchDialogue = responseLLM.match(/dialogue:\s*["']([^"']+)["']/i);
+      const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
       if (matchDialogue) {
         dialogue = matchDialogue[1].trim();
       } else {
         console.log('Dialogue를 찾을 수 없습니다.');
       }
 
-      const matchPose = responseLLM.match(/pose:\s*["']?([^"',}]+)["']?/i);
+      const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
       if (matchPose) {
         pose = matchPose[1].trim();
       } else {
@@ -209,7 +232,7 @@ router.post('/chat', async (req, res) => {
     }
 
     // 응답 메시지 추가 (Risu AI 형식)
-    addToHistory('assistant', responseLLM);
+    addToHistory('assistant', dialogue);
 
     // 클라이언트에 응답 전송
     res.json({

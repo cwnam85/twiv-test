@@ -60,12 +60,20 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
 
       if (response && response.content) {
         const content = response.content[0].text;
+        // Parse the content if it's a JSON string
+        let parsedContent = content;
+        try {
+          parsedContent = JSON.parse(content);
+        } catch (e) {
+          // If parsing fails, keep the original content
+          console.log('Content is not JSON, using as is');
+        }
         const usage = {
           input_tokens: response.usage.input_tokens,
           output_tokens: response.usage.output_tokens,
         };
         return {
-          dialogue: content,
+          dialogue: parsedContent,
           usage: usage,
         };
       } else {
