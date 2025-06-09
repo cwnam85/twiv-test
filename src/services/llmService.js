@@ -31,7 +31,15 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
       const completion = await grokClient.chat.completions.create(requestBody);
 
       if (completion && completion.choices && completion.choices.length > 0) {
-        return completion.choices[0].message.content;
+        const response = completion.choices[0].message.content;
+        const usage = {
+          input_tokens: completion.usage.input_tokens,
+          output_tokens: completion.usage.output_tokens,
+        };
+        return {
+          dialogue: response,
+          usage: usage,
+        };
       } else {
         throw new Error('Grok API 응답이 유효하지 않습니다.');
       }
@@ -44,21 +52,30 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
         })),
         system: systemPrompt,
         max_tokens: 400,
-        stream: true,
+        stream: false,
       };
-      console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));
+      // console.log('Claude API Request:', JSON.stringify(requestBody, null, 2)); 클로드 api 실제 요청 콘솔
 
-      const stream = await claudeClient.messages.create(requestBody);
+      const response = await claudeClient.messages.create(requestBody);
 
-      let fullResponse = '';
-      for await (const chunk of stream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
-          fullResponse += chunk.delta.text;
+      if (response && response.content) {
+        const content = response.content[0].text;
+        // Parse the content if it's a JSON string
+        let parsedContent = content;
+        try {
+          parsedContent = JSON.parse(content);
+        } catch (e) {
+          // If parsing fails, keep the original content
+          console.log('Content is not JSON, using as is');
         }
-      }
-
-      if (fullResponse) {
-        return fullResponse;
+        const usage = {
+          input_tokens: response.usage.input_tokens,
+          output_tokens: response.usage.output_tokens,
+        };
+        return {
+          dialogue: parsedContent,
+          usage: usage,
+        };
       } else {
         throw new Error('Claude API 응답이 유효하지 않습니다.');
       }
