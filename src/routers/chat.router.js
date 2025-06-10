@@ -10,6 +10,7 @@ import {
   SFW_INITIAL_CONVERSATION_HISTORY,
 } from '../data/initialConversation.js';
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
+import { SHAKI_JAILBREAK_HISTORY } from '../data/initialConversation.js';
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ const __dirname = path.dirname(__filename);
 
 // 호감도 데이터 파일 경로
 const AFFINITY_FILE_PATH = path.join(__dirname, '../data/affinity.json');
+const POINT_FILE_PATH = path.join(__dirname, '../data/point.json');
 
 // 호감도 데이터 로드 함수
 function loadAffinity() {
@@ -31,6 +33,19 @@ function loadAffinity() {
     console.error('Error loading affinity data:', error);
   }
   return { affinity: 0, level: 1 };
+}
+
+// 포인트 데이터 로드 함수
+function loadPoint() {
+  try {
+    if (fs.existsSync(POINT_FILE_PATH)) {
+      const data = fs.readFileSync(POINT_FILE_PATH, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading point data:', error);
+  }
+  return { point: 100 };
 }
 
 // 호감도 데이터 저장 함수
@@ -48,9 +63,24 @@ function saveAffinity(affinity, level) {
   }
 }
 
+// 포인트 데이터 저장 함수
+function savePoint(point) {
+  try {
+    // data 디렉토리가 없으면 생성
+    const dataDir = path.dirname(POINT_FILE_PATH);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    fs.writeFileSync(POINT_FILE_PATH, JSON.stringify({ point }, null, 2));
+  } catch (error) {
+    console.error('Error saving point data:', error);
+  }
+}
+
 // 현재 호감도와 레벨 가져오기
 router.get('/affinity', (req, res) => {
-  res.json({ affinity, level });
+  res.json({ affinity, level, point });
 });
 
 // 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
@@ -79,6 +109,7 @@ let conversationHistory = initialHistory;
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
+let { point } = loadPoint(); // 포인트 변수 초기화
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -137,12 +168,13 @@ router.post('/chat', async (req, res) => {
   // 사용자 메시지 추가 (Risu AI 형식)
   addToHistory('user', userMessage);
 
-  // console.log('(/chat) LLM Input:\n', userMessage);
-  // console.log('(/chat) LLM Input:\n', realMessage);
-
   try {
     let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
     console.log('LLM Output:\n', responseLLM);
+
+    // LLM 응답을 받은 후 포인트 차감
+    point = Math.max(0, point - 1);
+    savePoint(point);
 
     let dialogue = null;
     let emotion = null;
@@ -170,7 +202,7 @@ router.post('/chat', async (req, res) => {
 
               // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
               if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
-                const levelUpMessages = [...JAILBREAK_HISTORY];
+                const levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
                 // 탈옥 프롬프트를 추가.
                 conversationHistory.push(...levelUpMessages);
               }
@@ -240,6 +272,7 @@ router.post('/chat', async (req, res) => {
       isPaid: false,
       affinity: affinity,
       level: level,
+      point: point,
       pose: pose,
       emotion: emotion,
       usage: usage,

@@ -66,4 +66,15 @@ export const characterVoiceMaps = {
     annoyed: 'mhAtQKQpexDHMvzftRTiE3',
     angry: 'mhAtQKQpexDHMvzftRTiE3',
   },
+  yuara: {
+    happy: 'igcT5MJBoJCcxXeXZ1u2ky',
+    dominating: 'byga593Do9KBvuPMmAcXNu',
+    embarrassed: '4KgKZwuVaSfnKGNJobF8PZ',
+    sad: '3mifttC1ZnwKu1FEBV1Uce',
+    affectionate: '2zV2PrYa18MefR38niCMLf',
+    funny: 'wLLd1r3zeJSbc6cstccAea',
+    neutral: '4xDzPVnmBvDaXARi8NNrXN',
+    annoyed: 'wK9jwRnqyeVL1izKJ5LE5Q',
+    angry: 'byga593Do9KBvuPMmAcXNu',
+  },
 };

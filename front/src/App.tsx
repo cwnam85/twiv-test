@@ -15,6 +15,7 @@ function App() {
     pose,
     emotion,
     level,
+    point,
   } = useChatting();
   const [currentCharacter, setCurrentCharacter] = useState('Loading...');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,7 @@ function App() {
             <div className="bg-blue-100 px-4 py-2 rounded-lg">
               <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
               <span className="text-blue-800 font-semibold ml-2">Lv.{level}</span>
+              <span className="text-blue-800 font-semibold ml-2">포인트: {point}</span>
             </div>
           </div>
           <div className="flex gap-2">
