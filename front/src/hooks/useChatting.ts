@@ -8,6 +8,7 @@ const useChatting = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [affinity, setAffinity] = useState(0);
   const [level, setLevel] = useState(1);
+  const [point, setPoint] = useState(100);
   const [pose, setPose] = useState('stand');
   const [emotion, setEmotion] = useState('Neutral');
   const [currentCharacter, setCurrentCharacter] = useState('Default Character');
@@ -29,6 +30,9 @@ const useChatting = () => {
         }
         if (affinityData.level !== undefined) {
           setLevel(affinityData.level);
+        }
+        if (affinityData.point !== undefined) {
+          setPoint(affinityData.point);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -75,6 +79,10 @@ const useChatting = () => {
         if (data.level !== undefined) {
           setLevel(data.level);
         }
+        // 포인트 업데이트
+        if (data.point !== undefined) {
+          setPoint(data.point);
+        }
         // pose와 emotion 업데이트
         if (data.pose) {
           setPose(data.pose);
@@ -112,6 +120,7 @@ const useChatting = () => {
     handleClose,
     affinity,
     level,
+    point,
     pose,
     emotion,
     currentCharacter,

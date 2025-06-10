@@ -19,3 +19,4 @@ logs
 
 #호감도 데이터
 src/data/affinity.json
+src/data/point.json
