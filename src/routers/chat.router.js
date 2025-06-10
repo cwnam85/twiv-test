@@ -8,9 +8,12 @@ import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService
 import {
   NSFW_INITIAL_CONVERSATION_HISTORY,
   SFW_INITIAL_CONVERSATION_HISTORY,
+  SHAKI_JAILBREAK_HISTORY,
+  MIWOO_JAILBREAK_HISTORY,
+  DIA_JAILBREAK_HISTORY,
+  HARIO_JAILBREAK_HISTORY,
 } from '../data/initialConversation.js';
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
-import { SHAKI_JAILBREAK_HISTORY } from '../data/initialConversation.js';
 
 const router = express.Router();
 
@@ -83,6 +86,31 @@ router.get('/affinity', (req, res) => {
   res.json({ affinity, level, point });
 });
 
+// 호감도와 포인트 업데이트
+router.post('/affinity', (req, res) => {
+  const { point: newPoint } = req.body;
+  if (newPoint !== undefined) {
+    const oldPoint = point; // 이전 포인트 값 저장
+    point = newPoint;
+    savePoint(point);
+
+    // 포인트가 증가했을 때만 감사 인사 추가
+    if (point > oldPoint) {
+      const message = {
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: '시스템: 포인트가 충전되었습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요.',
+          },
+        ],
+      };
+      conversationHistory.push(message);
+    }
+  }
+  res.json({ affinity, level, point });
+});
+
 // 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
 const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase();
 console.log('activeCharacter', activeCharacter);
@@ -110,6 +138,7 @@ let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
 let { point } = loadPoint(); // 포인트 변수 초기화
+let zeroPointRequestCount = 0; // 포인트가 0일 때의 요청 카운트
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -158,12 +187,40 @@ function addToHistory(role, content) {
       },
     ],
   };
+
+  // 포인트가 0일 때 시스템 컨텍스트 추가
+  if (point === 0) {
+    const systemMessage = {
+      role: 'system',
+      content: [
+        {
+          type: 'text',
+          text: '시스템: 현재 포인트가 0입니다. 사용자에게 포인트 충전이 필요하다는 것을 자연스럽게 알려주세요.',
+        },
+      ],
+    };
+    conversationHistory.push(systemMessage);
+  }
+
   conversationHistory.push(message);
 }
 
 router.post('/chat', async (req, res) => {
   const userMessage = `${req.body.history}`;
   const realMessage = `${req.body.message}`;
+
+  // 포인트가 0이고 요청 카운트가 2 이상이면 요청 거부
+  if (point === 0 && zeroPointRequestCount >= 2) {
+    return res.json({
+      message: '포인트가 부족합니다. 포인트를 충전해주세요.',
+      isPaid: false,
+      affinity: affinity,
+      level: level,
+      point: point,
+      pose: 'stand',
+      emotion: 'Neutral',
+    });
+  }
 
   // 사용자 메시지 추가 (Risu AI 형식)
   addToHistory('user', userMessage);
@@ -175,6 +232,13 @@ router.post('/chat', async (req, res) => {
     // LLM 응답을 받은 후 포인트 차감
     point = Math.max(0, point - 1);
     savePoint(point);
+
+    // 포인트가 0이면 요청 카운트 증가
+    if (point === 0) {
+      zeroPointRequestCount++;
+    } else {
+      zeroPointRequestCount = 0; // 포인트가 다시 생기면 카운트 리셋
+    }
 
     let dialogue = null;
     let emotion = null;
@@ -200,9 +264,25 @@ router.post('/chat', async (req, res) => {
               affinity = 0;
               console.log(`Level up! Current level: ${level}`);
 
-              // 레벨 2가 되었을 때 탈옥 프롬프트를 history에 추가합니다.
-              if (level === 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
-                const levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+              // 레벨 2 이상일 때 탈옥 프롬프트를 history에 추가합니다.
+              if (level >= 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
+                let levelUpMessages;
+                switch (activeCharacter) {
+                  case 'shaki':
+                    levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+                    break;
+                  case 'miwoo':
+                    levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
+                    break;
+                  case 'dia':
+                    levelUpMessages = [...DIA_JAILBREAK_HISTORY];
+                    break;
+                  case 'hario':
+                    levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
+                    break;
+                  default:
+                    levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+                }
                 // 탈옥 프롬프트를 추가.
                 conversationHistory.push(...levelUpMessages);
               }

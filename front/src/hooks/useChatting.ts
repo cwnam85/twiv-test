@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { purchaseRequest } from '../api/api';
 import { getChatPrompt } from '../template/nsfw_template';
 
 const useChatting = () => {
@@ -65,9 +64,11 @@ const useChatting = () => {
 
         const data = await response.json();
 
-        if (data.isPaid) {
+        // 포인트 부족 메시지를 받았을 때만 모달 표시
+        if (data.message === '포인트가 부족합니다. 포인트를 충전해주세요.') {
           setIsModalOpen(true);
         }
+
         // 벨라의 응답 추가
         setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
 
@@ -102,8 +103,22 @@ const useChatting = () => {
   };
 
   const handlePurchaseAction = async (purchase: boolean) => {
-    const data = await purchaseRequest(purchase);
-    setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
+    console.log(`확인메시지, ${purchase}`);
+    if (purchase) {
+      try {
+        const response = await fetch('http://localhost:3333/affinity', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ point: point + 100 }),
+        });
+        const data = await response.json();
+        setPoint(data.point);
+      } catch (error) {
+        console.error('Error updating point:', error);
+      }
+    }
     setIsModalOpen(false);
   };
 

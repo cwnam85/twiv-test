@@ -98,8 +98,8 @@ function App() {
         isOpen={isModalOpen}
         onClose={handleClose}
         onConfirm={handleConfirm}
-        title="상품 구매"
-        message="이 상품을 구매하시겠습니까?"
+        title="포인트 구매"
+        message="100포인트를 구매하시겠습니까?"
       />
     </div>
   );
