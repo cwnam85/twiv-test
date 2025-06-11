@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getChatPrompt } from '../template/nsfw_template';
+import { getChatPrompt, ThankYouPrompt } from '../template/nsfw_template';
+import { CHARACTER_MESSAGES } from '../data/characterMessages';
 
 const useChatting = () => {
   const [messages, setMessages] = useState<Array<{ text: string; isUser: boolean }>>([]);
@@ -64,8 +65,8 @@ const useChatting = () => {
 
         const data = await response.json();
 
-        // 포인트 부족 메시지를 받았을 때만 모달 표시
-        if (data.message === '포인트가 부족합니다. 포인트를 충전해주세요.') {
+        // 포인트 부족 플래그를 확인하여 모달 표시
+        if (data.isPointDepleted) {
           setIsModalOpen(true);
         }
 
@@ -103,7 +104,6 @@ const useChatting = () => {
   };
 
   const handlePurchaseAction = async (purchase: boolean) => {
-    console.log(`확인메시지, ${purchase}`);
     if (purchase) {
       try {
         const response = await fetch('http://localhost:3333/affinity', {
@@ -115,6 +115,24 @@ const useChatting = () => {
         });
         const data = await response.json();
         setPoint(data.point);
+
+        // 포인트 충전 후 캐릭터별 감사 인사 메시지 전송
+        const characterMessages = CHARACTER_MESSAGES[currentCharacter.toLowerCase()];
+        const randomThankYou =
+          characterMessages.thankYou[Math.floor(Math.random() * characterMessages.thankYou.length)];
+
+        const chatResponse = await fetch('http://localhost:3333/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: ThankYouPrompt(currentCharacter, level, randomThankYou.message),
+            history: randomThankYou.message,
+          }),
+        });
+        const chatData = await chatResponse.json();
+        setMessages((prev) => [...prev, { text: chatData.message, isUser: false }]);
       } catch (error) {
         console.error('Error updating point:', error);
       }

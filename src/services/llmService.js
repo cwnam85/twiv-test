@@ -51,10 +51,10 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
           content: msg.content[0].text,
         })),
         system: systemPrompt,
-        max_tokens: 200,
+        max_tokens: 150,
         stream: false,
       };
-      console.log('Claude API Request:', JSON.stringify(requestBody, null, 2)); 
+      console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));
       // 클로드 api 실제 요청 콘솔
 
       const response = await claudeClient.messages.create(requestBody);

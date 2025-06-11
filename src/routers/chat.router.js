@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getLLMResponse } from '../services/llmService.js';
 import { playTTSSupertone } from '../services/ttsService.js';
+import { playMP3 } from '../services/audioService.js';
 import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService.js';
 import {
   NSFW_INITIAL_CONVERSATION_HISTORY,
@@ -14,6 +15,7 @@ import {
   HARIO_JAILBREAK_HISTORY,
 } from '../data/initialConversation.js';
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
+import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
 
 const router = express.Router();
 
@@ -138,7 +140,6 @@ let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
 let { point } = loadPoint(); // 포인트 변수 초기화
-let zeroPointRequestCount = 0; // 포인트가 0일 때의 요청 카운트
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -191,11 +192,11 @@ function addToHistory(role, content) {
   // 포인트가 0일 때 시스템 컨텍스트 추가
   if (point === 0) {
     const systemMessage = {
-      role: 'system',
+      role: 'assistant',
       content: [
         {
           type: 'text',
-          text: '시스템: 현재 포인트가 0입니다. 사용자에게 포인트 충전이 필요하다는 것을 자연스럽게 알려주세요.',
+          text: '시스템: 현재 포인트가 0입니다. 사용자에게 포인트 충전이 필요합니다.',
         },
       ],
     };
@@ -209,16 +210,33 @@ router.post('/chat', async (req, res) => {
   const userMessage = `${req.body.history}`;
   const realMessage = `${req.body.message}`;
 
-  // 포인트가 0이고 요청 카운트가 2 이상이면 요청 거부
-  if (point === 0 && zeroPointRequestCount >= 2) {
+  // 포인트가 0이면 즉시 요청 거부
+  if (point === 0) {
+    // 현재 활성화된 캐릭터의 메시지 가져오기
+    const characterMessage = CHARACTER_MESSAGES[activeCharacter] || CHARACTER_MESSAGES.meuaeng;
+
+    // 랜덤하게 메시지 선택
+    const randomMessage =
+      characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
+
+    // 포인트가 0일 때 TTS로 메시지 재생
+    playTTSSupertone(randomMessage.message, randomMessage.emotion)
+      .then(() => {
+        console.log('Point warning TTS playback successful');
+      })
+      .catch((error) => {
+        console.error('Error during point warning TTS playback:', error);
+      });
+
     return res.json({
-      message: '포인트가 부족합니다. 포인트를 충전해주세요.',
+      message: randomMessage.message,
       isPaid: false,
+      isPointDepleted: true,
       affinity: affinity,
       level: level,
       point: point,
-      pose: 'stand',
-      emotion: 'Neutral',
+      pose: characterMessage.pose,
+      emotion: randomMessage.emotion,
     });
   }
 
@@ -226,19 +244,17 @@ router.post('/chat', async (req, res) => {
   addToHistory('user', userMessage);
 
   try {
-    let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
+    // realMessage를 사용하여 LLM 응답 요청
+    let responseLLM = await getLLMResponse(
+      [...conversationHistory, { role: 'user', content: [{ type: 'text', text: realMessage }] }],
+      currentModel,
+      systemPrompt,
+    );
     console.log('LLM Output:\n', responseLLM);
 
     // LLM 응답을 받은 후 포인트 차감
     point = Math.max(0, point - 1);
     savePoint(point);
-
-    // 포인트가 0이면 요청 카운트 증가
-    if (point === 0) {
-      zeroPointRequestCount++;
-    } else {
-      zeroPointRequestCount = 0; // 포인트가 다시 생기면 카운트 리셋
-    }
 
     let dialogue = null;
     let emotion = null;
@@ -295,26 +311,49 @@ router.post('/chat', async (req, res) => {
           }
         }
       } else {
-        // Fallback to regex parsing for non-JSON responses
-        const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
-        if (matchEmotion) {
-          emotion = matchEmotion[1].trim();
-        } else {
-          console.log('Emotion을 찾을 수 없습니다.');
-        }
+        // 문자열로 된 JSON을 파싱
+        try {
+          const parsedDialogue = JSON.parse(responseLLM.dialogue);
+          dialogue = parsedDialogue.dialogue;
+          emotion = parsedDialogue.emotion;
+          pose = parsedDialogue.pose;
 
-        const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
-        if (matchDialogue) {
-          dialogue = matchDialogue[1].trim();
-        } else {
-          console.log('Dialogue를 찾을 수 없습니다.');
-        }
+          // affinity 처리
+          if (parsedDialogue.affinity) {
+            const affinityChange = parseInt(parsedDialogue.affinity);
+            if (!isNaN(affinityChange)) {
+              affinity += affinityChange;
+              if (affinity >= 100 && level < 5) {
+                level += 1;
+                affinity = 0;
+                console.log(`Level up! Current level: ${level}`);
+                saveAffinity(affinity, level);
+              }
+            }
+          }
+        } catch (parseError) {
+          console.error('JSON 파싱 중 오류 발생:', parseError);
+          // 기존 정규식 방식으로 폴백
+          const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+          if (matchEmotion) {
+            emotion = matchEmotion[1].trim();
+          } else {
+            console.log('Emotion을 찾을 수 없습니다.');
+          }
 
-        const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
-        if (matchPose) {
-          pose = matchPose[1].trim();
-        } else {
-          console.log('Pose를 찾을 수 없습니다.');
+          const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
+          if (matchDialogue) {
+            dialogue = matchDialogue[1].trim();
+          } else {
+            console.log('Dialogue를 찾을 수 없습니다.');
+          }
+
+          const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
+          if (matchPose) {
+            pose = matchPose[1].trim();
+          } else {
+            console.log('Pose를 찾을 수 없습니다.');
+          }
         }
       }
       usage = responseLLM.usage;
