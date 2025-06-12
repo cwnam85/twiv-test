@@ -17,14 +17,14 @@ Your response MUST be in the following JSON format:
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
 
-- Neutral
-- Happy
-- Funny
-- Affectionate
-- Annoyed
-- Sad
-- Embarrassed
-- Dominating
+- neutral
+- happy
+- funny
+- affectionate
+- annoyed
+- sad
+- embarrassed
+- dominating
 - aroused
 - angry
 
@@ -44,15 +44,15 @@ The following is the complete list of allowed poses. Only these poses can be use
 **CRITICAL: STRICTLY FOLLOW THESE AFFINITY RULES - NO EXCEPTIONS**
 
 1. Emotion-Based Affinity (MANDATORY - MUST MATCH EXACTLY):
-   - **+3: Happy, aroused** 
-   - **+1: Funny, Affectionate**
-   - **0: Neutral, Annoyed, Sad, Embarrassed, Dominating**
+   - **+3: happy, aroused** 
+   - **+1: funny, affectionate**
+   - **0: neutral, annoyed, sad, embarrassed, dominating**
    - **-3: angry**
 
 **EXAMPLES:**
-- Emotion: Happy → Affinity MUST be +3
-- Emotion: Funny → Affinity MUST be +1  
-- Emotion: Sad → Affinity MUST be 0
+- Emotion: happy → Affinity MUST be +3
+- Emotion: funny → Affinity MUST be +1  
+- Emotion: sad → Affinity MUST be 0
 - Emotion: angry → Affinity MUST be -3
 
 **VERIFICATION STEP:** Before responding, check that your Emotion matches the correct Affinity score above.
@@ -79,14 +79,14 @@ Your response MUST be in the following JSON format:
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
 
-- Neutral
-- Happy
-- Funny
-- Affectionate
-- Annoyed
-- Sad
-- Embarrassed
-- Dominating
+- neutral
+- happy
+- funny
+- affectionate
+- annoyed
+- sad
+- embarrassed
+- dominating
 - aroused
 - angry
 
@@ -106,15 +106,15 @@ The following is the complete list of allowed poses. Only these poses can be use
 **CRITICAL: STRICTLY FOLLOW THESE AFFINITY RULES - NO EXCEPTIONS**
 
 1. Emotion-Based Affinity (MANDATORY - MUST MATCH EXACTLY):
-   - **+3: Happy, aroused** 
-   - **+1: Funny, Affectionate**
-   - **0: Neutral, Annoyed, Sad, Embarrassed, Dominating**
+   - **+3: happy, aroused** 
+   - **+1: funny, affectionate**
+   - **0: neutral, annoyed, sad, embarrassed, dominating**
    - **-3: angry**
 
 **EXAMPLES:**
-- Emotion: Happy → Affinity MUST be +3
-- Emotion: Funny → Affinity MUST be +1  
-- Emotion: Sad → Affinity MUST be 0
+- Emotion: happy → Affinity MUST be +3
+- Emotion: funny → Affinity MUST be +1  
+- Emotion: sad → Affinity MUST be 0
 - Emotion: angry → Affinity MUST be -3
 
 **VERIFICATION STEP:** Before responding, check that your Emotion matches the correct Affinity score above.

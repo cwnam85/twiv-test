@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getChatPrompt, ThankYouPrompt } from '../template/nsfw_template';
+import { getChatPrompt, ThankYouPrompt } from '../instruction/input_instruction';
 import { CHARACTER_MESSAGES } from '../data/characterMessages';
 
 const useChatting = () => {
