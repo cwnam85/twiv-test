@@ -4,11 +4,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getLLMResponse } from '../services/llmService.js';
 import { playTTSSupertone } from '../services/ttsService.js';
+import { playMP3 } from '../services/audioService.js';
 import { connectWebSocket, sendMessageToWarudo } from '../services/warudoService.js';
 import {
-  SHAKI_INITIAL_CONVERSATION_HISTORY,
-  MEUAENG_INITIAL_CONVERSATION_HISTORY,
+  NSFW_INITIAL_CONVERSATION_HISTORY,
+  SFW_INITIAL_CONVERSATION_HISTORY,
+  SHAKI_JAILBREAK_HISTORY,
+  MIWOO_JAILBREAK_HISTORY,
+  DIA_JAILBREAK_HISTORY,
+  HARIO_JAILBREAK_HISTORY,
 } from '../data/initialConversation.js';
+import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
+import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
 
 const router = express.Router();
 
@@ -18,6 +25,7 @@ const __dirname = path.dirname(__filename);
 
 // 호감도 데이터 파일 경로
 const AFFINITY_FILE_PATH = path.join(__dirname, '../data/affinity.json');
+const POINT_FILE_PATH = path.join(__dirname, '../data/point.json');
 
 // 호감도 데이터 로드 함수
 function loadAffinity() {
@@ -30,6 +38,19 @@ function loadAffinity() {
     console.error('Error loading affinity data:', error);
   }
   return { affinity: 0, level: 1 };
+}
+
+// 포인트 데이터 로드 함수
+function loadPoint() {
+  try {
+    if (fs.existsSync(POINT_FILE_PATH)) {
+      const data = fs.readFileSync(POINT_FILE_PATH, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading point data:', error);
+  }
+  return { point: 100 };
 }
 
 // 호감도 데이터 저장 함수
@@ -47,9 +68,49 @@ function saveAffinity(affinity, level) {
   }
 }
 
+// 포인트 데이터 저장 함수
+function savePoint(point) {
+  try {
+    // data 디렉토리가 없으면 생성
+    const dataDir = path.dirname(POINT_FILE_PATH);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    fs.writeFileSync(POINT_FILE_PATH, JSON.stringify({ point }, null, 2));
+  } catch (error) {
+    console.error('Error saving point data:', error);
+  }
+}
+
 // 현재 호감도와 레벨 가져오기
 router.get('/affinity', (req, res) => {
-  res.json({ affinity, level });
+  res.json({ affinity, level, point });
+});
+
+// 호감도와 포인트 업데이트
+router.post('/affinity', (req, res) => {
+  const { point: newPoint } = req.body;
+  if (newPoint !== undefined) {
+    const oldPoint = point; // 이전 포인트 값 저장
+    point = newPoint;
+    savePoint(point);
+
+    // 포인트가 증가했을 때만 감사 인사 추가
+    if (point > oldPoint) {
+      const message = {
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: '시스템: 포인트가 충전되었습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요.',
+          },
+        ],
+      };
+      conversationHistory.push(message);
+    }
+  }
+  res.json({ affinity, level, point });
 });
 
 // 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
@@ -64,13 +125,13 @@ router.get('/active-character', (req, res) => {
 let initialHistory;
 switch (activeCharacter) {
   case 'meuaeng':
-    initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
+    initialHistory = SFW_INITIAL_CONVERSATION_HISTORY;
     break;
   case 'leda':
-    initialHistory = MEUAENG_INITIAL_CONVERSATION_HISTORY;
+    initialHistory = SFW_INITIAL_CONVERSATION_HISTORY;
     break;
   default:
-    initialHistory = SHAKI_INITIAL_CONVERSATION_HISTORY;
+    initialHistory = SFW_INITIAL_CONVERSATION_HISTORY;
     break;
 }
 
@@ -78,6 +139,7 @@ let conversationHistory = initialHistory;
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
+let { point } = loadPoint(); // 포인트 변수 초기화
 
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
@@ -126,6 +188,21 @@ function addToHistory(role, content) {
       },
     ],
   };
+
+  // 포인트가 0일 때 시스템 컨텍스트 추가
+  if (point === 0) {
+    const systemMessage = {
+      role: 'assistant',
+      content: [
+        {
+          type: 'text',
+          text: '시스템: 현재 포인트가 0입니다. 사용자에게 포인트 충전이 필요합니다.',
+        },
+      ],
+    };
+    conversationHistory.push(systemMessage);
+  }
+
   conversationHistory.push(message);
 }
 
@@ -133,64 +210,171 @@ router.post('/chat', async (req, res) => {
   const userMessage = `${req.body.history}`;
   const realMessage = `${req.body.message}`;
 
+  // 포인트가 0이면 즉시 요청 거부
+  if (point === 0) {
+    // 현재 활성화된 캐릭터의 메시지 가져오기
+    const characterMessage = CHARACTER_MESSAGES[activeCharacter] || CHARACTER_MESSAGES.meuaeng;
+
+    // 랜덤하게 메시지 선택
+    const randomMessage =
+      characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
+
+    // 포인트가 0일 때 TTS로 메시지 재생
+    playTTSSupertone(randomMessage.message, randomMessage.emotion)
+      .then(() => {
+        console.log('Point warning TTS playback successful');
+      })
+      .catch((error) => {
+        console.error('Error during point warning TTS playback:', error);
+      });
+
+    return res.json({
+      message: randomMessage.message,
+      isPaid: false,
+      isPointDepleted: true,
+      affinity: affinity,
+      level: level,
+      point: point,
+      pose: characterMessage.pose,
+      emotion: randomMessage.emotion,
+    });
+  }
+
   // 사용자 메시지 추가 (Risu AI 형식)
   addToHistory('user', userMessage);
 
-  // console.log('(/chat) LLM Input:\n', userMessage);
-  console.log('(/chat) LLM Input:\n', realMessage);
-
   try {
-    let responseLLM = await getLLMResponse(conversationHistory, currentModel, systemPrompt);
+    // realMessage를 사용하여 LLM 응답 요청
+    let responseLLM = await getLLMResponse(
+      [...conversationHistory, { role: 'user', content: [{ type: 'text', text: realMessage }] }],
+      currentModel,
+      systemPrompt,
+    );
     console.log('LLM Output:\n', responseLLM);
+
+    // LLM 응답을 받은 후 포인트 차감
+    point = Math.max(0, point - 1);
+    savePoint(point);
 
     let dialogue = null;
     let emotion = null;
     let pose = null;
+    let usage = null;
 
     try {
-      // JSON 형식 파싱
-      const responseData = JSON.parse(responseLLM);
-      dialogue = responseData.dialogue;
-      emotion = responseData.emotion;
-      pose = responseData.pose;
+      // dialogue is now already parsed JSON
+      if (typeof responseLLM.dialogue === 'object') {
+        dialogue = responseLLM.dialogue.dialogue;
+        emotion = responseLLM.dialogue.emotion;
+        pose = responseLLM.dialogue.pose;
 
-      // affinity 처리 추가
-      if (responseData.affinity) {
-        const affinityChange = parseInt(responseData.affinity);
-        if (!isNaN(affinityChange)) {
-          affinity += affinityChange;
+        // affinity 처리 추가
+        if (responseLLM.dialogue.affinity) {
+          const affinityChange = parseInt(responseLLM.dialogue.affinity);
+          if (!isNaN(affinityChange)) {
+            affinity += affinityChange;
 
-          // 레벨업 체크
-          if (affinity >= 100 && level < 5) {
-            level += 1;
-            affinity = 0;
-            console.log(`Level up! Current level: ${level}`);
+            // 레벨업 체크
+            if (affinity >= 100 && level < 5) {
+              level += 1;
+              affinity = 0;
+              console.log(`Level up! Current level: ${level}`);
+
+              // 레벨 2 이상일 때 탈옥 프롬프트를 history에 추가합니다.
+              if (level >= 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
+                let levelUpMessages;
+                switch (activeCharacter) {
+                  case 'shaki':
+                    levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+                    break;
+                  case 'miwoo':
+                    levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
+                    break;
+                  case 'dia':
+                    levelUpMessages = [...DIA_JAILBREAK_HISTORY];
+                    break;
+                  case 'hario':
+                    levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
+                    break;
+                  default:
+                    levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+                }
+                // 탈옥 프롬프트를 추가.
+                conversationHistory.push(...levelUpMessages);
+              }
+
+              saveAffinity(affinity, level);
+              console.log(
+                `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
+              );
+            }
+          }
+        }
+      } else {
+        // 문자열로 된 JSON을 파싱
+        try {
+          const parsedDialogue = JSON.parse(responseLLM.dialogue);
+          dialogue = parsedDialogue.dialogue;
+          emotion = parsedDialogue.emotion;
+          pose = parsedDialogue.pose;
+
+          // affinity 처리
+          if (parsedDialogue.affinity) {
+            const affinityChange = parseInt(parsedDialogue.affinity);
+            if (!isNaN(affinityChange)) {
+              affinity += affinityChange;
+              if (affinity >= 100 && level < 5) {
+                level += 1;
+                affinity = 0;
+                console.log(`Level up! Current level: ${level}`);
+                saveAffinity(affinity, level);
+              }
+            }
+          }
+        } catch (parseError) {
+          console.error('JSON 파싱 중 오류 발생:', parseError);
+          // 기존 정규식 방식으로 폴백
+          const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+          if (matchEmotion) {
+            emotion = matchEmotion[1].trim();
+          } else {
+            console.log('Emotion을 찾을 수 없습니다.');
           }
 
-          saveAffinity(affinity, level);
-          console.log(
-            `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
-          );
+          const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
+          if (matchDialogue) {
+            dialogue = matchDialogue[1].trim();
+          } else {
+            console.log('Dialogue를 찾을 수 없습니다.');
+          }
+
+          const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
+          if (matchPose) {
+            pose = matchPose[1].trim();
+          } else {
+            console.log('Pose를 찾을 수 없습니다.');
+          }
         }
       }
+      usage = responseLLM.usage;
     } catch (error) {
       console.error('JSON 파싱 중 오류 발생:', error);
       // 기존 정규식 방식으로 폴백
-      const matchEmotion = responseLLM.match(/emotion:\s*["']?([^"',}]+)["']?/i);
+      const matchEmotion = responseLLM.dialogue.match(/emotion:\s*["']?([^"',}]+)["']?/i);
       if (matchEmotion) {
         emotion = matchEmotion[1].trim();
       } else {
         console.log('Emotion을 찾을 수 없습니다.');
       }
 
-      const matchDialogue = responseLLM.match(/dialogue:\s*["']([^"']+)["']/i);
+      const matchDialogue = responseLLM.dialogue.match(/dialogue:\s*["']([^"']+)["']/i);
       if (matchDialogue) {
         dialogue = matchDialogue[1].trim();
       } else {
         console.log('Dialogue를 찾을 수 없습니다.');
       }
 
-      const matchPose = responseLLM.match(/pose:\s*["']?([^"',}]+)["']?/i);
+      const matchPose = responseLLM.dialogue.match(/pose:\s*["']?([^"',}]+)["']?/i);
       if (matchPose) {
         pose = matchPose[1].trim();
       } else {
@@ -199,7 +383,7 @@ router.post('/chat', async (req, res) => {
     }
 
     // 응답 메시지 추가 (Risu AI 형식)
-    addToHistory('assistant', responseLLM);
+    addToHistory('assistant', dialogue);
 
     // 클라이언트에 응답 전송
     res.json({
@@ -207,8 +391,10 @@ router.post('/chat', async (req, res) => {
       isPaid: false,
       affinity: affinity,
       level: level,
+      point: point,
       pose: pose,
       emotion: emotion,
+      usage: usage,
     });
 
     // TTS 호출

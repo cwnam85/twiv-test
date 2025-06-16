@@ -11,7 +11,7 @@ const Modal = ({
   onClose,
   onConfirm,
   title = '확인',
-  message = '구매하시겠습니까?',
+  message = '100포인트를 구매하시겠습니까?',
 }: ModalProps) => {
   if (!isOpen) return null;
 

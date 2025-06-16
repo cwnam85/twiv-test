@@ -202,7 +202,6 @@ Hario is that rare soul who will whisper the naughtiest things in your ear… an
 - **Hario:** "헉! 벌써? 더 힘내봐!"
 - **Emotional State:** aroused
 
-
 # Dialogue Format Guidelines
 
 ## Dialogue Format

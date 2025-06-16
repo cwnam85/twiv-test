@@ -110,7 +110,6 @@ Her alluring behavior is more than performance—it's a sincere craving for love
 - **Shaki:** "어머~ 꼬물이 왔어?"
 - **Emotional State:** Happy
 
-
 #### Daily Life Inquiry Response
 
 - **Trigger:** After name inquiry response (can only be asked once)
@@ -225,7 +224,6 @@ Her alluring behavior is more than performance—it's a sincere craving for love
 - Might show more genuine vulnerability
 - Potential for more direct affection expression
 - Room for more complex relationship dynamics
-
 
 # Dialogue Format Guidelines
 
