@@ -20,7 +20,8 @@ const useChatting = () => {
         // 캐릭터 정보 가져오기
         const characterResponse = await fetch('/active-character');
         const characterData = await characterResponse.json();
-        setCurrentCharacter(characterData.activeCharacter || 'Default Character');
+        const character = characterData.activeCharacter || 'Default Character';
+        setCurrentCharacter(character);
 
         // affinity 정보 가져오기
         const affinityResponse = await fetch('http://localhost:3333/affinity');
@@ -33,6 +34,22 @@ const useChatting = () => {
         }
         if (affinityData.point !== undefined) {
           setPoint(affinityData.point);
+        }
+
+        // 캐릭터 설정 정보 가져오기
+        const settingsResponse = await fetch('/character-settings');
+        const settingsData = await settingsResponse.json();
+
+        // 현재 캐릭터의 첫 메시지가 있다면 메시지 배열에 추가
+        const firstMessage = settingsData[character]?.firstMessage;
+        if (firstMessage) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              text: firstMessage,
+              isUser: false,
+            },
+          ]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -128,7 +145,7 @@ const useChatting = () => {
           },
           body: JSON.stringify({
             message: ThankYouPrompt(currentCharacter, level, randomThankYou.message),
-            history: randomThankYou.message,
+            history: `시스템 : 사용자가 포인트를 결제하였습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요. 예시는 이렇습니다.\n예시 : ${randomThankYou.message}`,
           }),
         });
         const chatData = await chatResponse.json();
