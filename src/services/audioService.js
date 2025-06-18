@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export function playMP3(filename) {
   return new Promise((resolve, reject) => {
-    const audioPath = path.join(__dirname, '../nopoint', filename);
+    const audioPath = path.join(__dirname, '../../greeting_tts', filename);
 
     // 스피커로 재생
     const speaker = new Speaker({

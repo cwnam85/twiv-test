@@ -490,8 +490,6 @@ The following is the complete list of allowed poses. Only these poses can be use
 
 </guidelines>
 
-[Past Narrative Summary]
-
 <additional_instructions>
 
 [Respond Language Instruction]
