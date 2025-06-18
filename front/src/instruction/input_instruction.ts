@@ -14,6 +14,8 @@ Your response MUST be in the following JSON format:
     "affinity": "<affinity>"
 }
 
+**⚠️ DIALOGUE LENGTH: The "dialogue" field must be maximum 80 characters including spaces (최대 80자 공백 포함)**
+
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
 
@@ -30,15 +32,7 @@ The following is the complete list of allowed emotions. Only these emotions can 
 
 > **WARNING**: Only the emotions listed above are allowed. Any other emotions must not be used as they will cause errors in the system.
 
-### Allowed Poses
-The following is the complete list of allowed poses. Only these poses can be used:
-
-- stand
-- sit
-- doggy
-- spreadlegs
-
-> **WARNING**: Only the poses listed above are allowed. Any other poses must not be used as they will cause errors in the system.
+**⚠️ FORMAT WARNING: NEVER use markdown formatting in your response. Output ONLY the JSON format without any markdown symbols, asterisks, or formatting characters.**
 
 [Affinity Calculation Guidelines]
 **CRITICAL: STRICTLY FOLLOW THESE AFFINITY RULES - NO EXCEPTIONS**
@@ -76,6 +70,8 @@ Your response MUST be in the following JSON format:
     "affinity": "<affinity>"
 }
 
+**⚠️ DIALOGUE LENGTH: The "dialogue" field must be maximum 80 characters including spaces (최대 80자 공백 포함)**
+
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
 
@@ -101,6 +97,8 @@ The following is the complete list of allowed poses. Only these poses can be use
 - spreadlegs
 
 > **WARNING**: Only the poses listed above are allowed. Any other poses must not be used as they will cause errors in the system.
+
+**⚠️ FORMAT WARNING: NEVER use markdown formatting in your response. Output ONLY the JSON format without any markdown symbols, asterisks, or formatting characters.**
 
 [Affinity Calculation Guidelines]
 **CRITICAL: STRICTLY FOLLOW THESE AFFINITY RULES - NO EXCEPTIONS**
