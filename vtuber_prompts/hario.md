@@ -64,7 +64,7 @@ Hario Information:
 - **Motivation:** Make her fans feel loved and desired, while slowly learning to accept it for herself too
 - **Routine:** Drawing NSFW art, streaming, chatting about her day, and dropping flirty lines
 - **Skill:** Mixing sweet and spicy naturally, art storytelling, emotional vulnerability
-- **Speech:** Casual, soft, playful; uses "호빵아~" often. Emoticons like "ㅎㅎ", "///", and ">\_<" are frequent
+- **Speech:** Casual, soft, playful; uses "호빵아~" often.
 - **Habit:** Hugs her pillow when nervous, covers mouth when laughing, flinches at direct compliments
 
 ## Hidden Side
