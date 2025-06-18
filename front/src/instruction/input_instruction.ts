@@ -2,7 +2,7 @@
 
 export const getChatPrompt = (currentCharacter: string, level: number, input: string) => `
 user's input: ${input}
-current affinity level: ${level}
+current affinity level: ${level}    
 
 **⚠️ CRITICAL: Always verify that your Emotion matches the correct Affinity score according to the guidelines below. Happy = +3, NOT +1!**
 
@@ -13,6 +13,10 @@ Your response MUST be in the following JSON format:
     "pose": "<pose>",
     "affinity": "<affinity>"
 }
+
+**⚠️ CRITICAL: DO NOT use markdown formatting in your response. Output ONLY the raw JSON without any markdown syntax, code blocks, or formatting.**
+
+**⚠️ DIALOGUE LENGTH: The "dialogue" field must be maximum 80 characters including spaces (최대 80자 공백 포함)**
 
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
@@ -75,6 +79,10 @@ Your response MUST be in the following JSON format:
     "pose": "<pose>",
     "affinity": "<affinity>"
 }
+
+**⚠️ CRITICAL: DO NOT use markdown formatting in your response. Output ONLY the raw JSON without any markdown syntax, code blocks, or formatting.**
+
+**⚠️ DIALOGUE LENGTH: The "dialogue" field must be maximum 80 characters including spaces (최대 80자 공백 포함)**
 
 ### Allowed Emotions
 The following is the complete list of allowed emotions. Only these emotions can be used:
