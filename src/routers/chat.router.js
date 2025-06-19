@@ -130,7 +130,6 @@ switch (activeCharacter) {
 }
 
 let conversationHistory = initialHistory;
-let jailbreakAdded = false; // jailbreak 추가 여부를 추적하는 변수 추가
 
 // 현재 활성화된 캐릭터의 첫 메시지 추가
 if (activeCharacter && CHARACTER_SETTINGS[activeCharacter]?.firstMessage) {
@@ -251,8 +250,33 @@ router.post('/chat', async (req, res) => {
 
   // realMessage만으로 LLM 응답 요청
   try {
+    // LLM 요청 시에만 임시로 jailbreak history 추가
+    let requestHistory = [...conversationHistory];
+
+    // 레벨 2 이상이고 jailbreak 캐릭터인 경우에만 임시로 추가
+    if (level >= 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
+      let levelUpMessages;
+      switch (activeCharacter) {
+        case 'shaki':
+          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+          break;
+        case 'miwoo':
+          levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
+          break;
+        case 'dia':
+          levelUpMessages = [...DIA_JAILBREAK_HISTORY];
+          break;
+        case 'hario':
+          levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
+          break;
+        default:
+          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+      }
+      requestHistory.push(...levelUpMessages);
+    }
+
     let responseLLM = await getLLMResponse(
-      [...conversationHistory, { role: 'user', content: [{ type: 'text', text: realMessage }] }],
+      [...requestHistory, { role: 'user', content: [{ type: 'text', text: realMessage }] }],
       currentModel,
       systemPrompt,
     );
@@ -290,6 +314,20 @@ router.post('/chat', async (req, res) => {
                 `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
               );
             }
+            // 레벨다운 체크
+            else if (affinity < 0 && level > 1) {
+              level -= 1;
+              affinity = 100 + affinity; // 100에서 부족한 만큼을 뺀 값
+              console.log(`Level down! Current level: ${level}`);
+              saveAffinity(affinity, level);
+            } else {
+              // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
+              if (level === 1) {
+                affinity = Math.max(0, affinity);
+              }
+              // 일반적인 affinity 변경 (레벨업/다운이 아닌 경우)
+              saveAffinity(affinity, level);
+            }
           }
         }
       } else {
@@ -309,6 +347,20 @@ router.post('/chat', async (req, res) => {
                 level += 1;
                 affinity = 0;
                 console.log(`Level up! Current level: ${level}`);
+                saveAffinity(affinity, level);
+              }
+              // 레벨다운 체크
+              else if (affinity < 0 && level > 1) {
+                level -= 1;
+                affinity = 100 + affinity; // 100에서 부족한 만큼을 뺀 값
+                console.log(`Level down! Current level: ${level}`);
+                saveAffinity(affinity, level);
+              } else {
+                // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
+                if (level === 1) {
+                  affinity = Math.max(0, affinity);
+                }
+                // 일반적인 affinity 변경 (레벨업/다운이 아닌 경우)
                 saveAffinity(affinity, level);
               }
             }
@@ -367,30 +419,6 @@ router.post('/chat', async (req, res) => {
     // 응답 처리 후에 실제 사용자 메시지만 history에 추가
     addToHistory('user', userMessage);
     addToHistory('assistant', dialogue);
-
-    // 레벨 2 이상이고 jailbreak 캐릭터인 경우, 아직 추가되지 않았다면 한 번만 jailbreak history 추가
-    if (level >= 2 && JAILBREAK_CHARACTERS.includes(activeCharacter) && !jailbreakAdded) {
-      let levelUpMessages;
-      switch (activeCharacter) {
-        case 'shaki':
-          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
-          break;
-        case 'miwoo':
-          levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
-          break;
-        case 'dia':
-          levelUpMessages = [...DIA_JAILBREAK_HISTORY];
-          break;
-        case 'hario':
-          levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
-          break;
-        default:
-          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
-      }
-      // 탈옥 프롬프트를 추가
-      conversationHistory.push(...levelUpMessages);
-      jailbreakAdded = true; // jailbreak가 추가되었음을 표시
-    }
 
     // 클라이언트에 응답 전송
     res.json({
