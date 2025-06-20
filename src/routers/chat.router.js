@@ -152,29 +152,52 @@ let { point } = loadPoint(); // 포인트 변수 초기화
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
 
-// 시스템 지시사항 로드
-let systemPrompt = null;
-try {
-  // 현재 활성화된 캐릭터 설정
-  if (activeCharacter) {
-    // 특정 캐릭터가 지정된 경우 해당 캐릭터의 지시사항 로드
-    const characterPath = path.join(__dirname, `../../vtuber_prompts/${activeCharacter}.md`);
-    if (fs.existsSync(characterPath)) {
-      systemPrompt = fs.readFileSync(characterPath, 'utf8');
-    }
-  }
+// 시스템 프롬프트 동적 로드 함수
+function loadSystemPrompt(character, currentLevel) {
+  try {
+    if (character) {
+      // 레벨에 따라 다른 폴더의 프롬프트 로드
+      let characterPath;
 
-  // 캐릭터가 지정되지 않았거나 해당 캐릭터 파일이 없는 경우 기본 샤키 지시사항 사용
-  if (!systemPrompt) {
+      // NSFW 캐릭터이고 레벨 2 이상인 경우에만 NSFW 프롬프트 사용
+      if (JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2) {
+        characterPath = path.join(
+          __dirname,
+          `../../vtuber_prompts/nsfw_prompts/${character}_nsfw.md`,
+        );
+      } else {
+        // 그 외의 경우: SFW 프롬프트 사용
+        characterPath = path.join(
+          __dirname,
+          `../../vtuber_prompts/sfw_prompts/${character}_sfw.md`,
+        );
+      }
+
+      if (fs.existsSync(characterPath)) {
+        const prompt = fs.readFileSync(characterPath, 'utf8');
+        const promptType =
+          JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2 ? 'NSFW' : 'SFW';
+        console.log(`Loaded ${promptType} prompt for ${character} (Level: ${currentLevel})`);
+        return prompt;
+      }
+    }
+
+    // 기본값
     const defaultFilePath = path.join(
       __dirname,
       '../../vtuber_prompts/test_system_instructions.md',
     );
-    systemPrompt = fs.readFileSync(defaultFilePath, 'utf8');
+    if (fs.existsSync(defaultFilePath)) {
+      return fs.readFileSync(defaultFilePath, 'utf8');
+    }
+  } catch (error) {
+    console.error('Error loading system instructions:', error);
   }
-} catch (error) {
-  console.error('Error loading system instructions:', error);
+  return null;
 }
+
+// 시스템 지시사항 로드
+let systemPrompt = loadSystemPrompt(activeCharacter, level);
 
 // 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
 if (systemPrompt && currentModel === 'grok') {
@@ -310,6 +333,8 @@ router.post('/chat', async (req, res) => {
               affinity = 0;
               console.log(`Level up! Current level: ${level}`);
               saveAffinity(affinity, level);
+              // 레벨업 시 시스템 프롬프트 업데이트
+              systemPrompt = loadSystemPrompt(activeCharacter, level);
               console.log(
                 `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
               );
@@ -320,6 +345,8 @@ router.post('/chat', async (req, res) => {
               affinity = 100 + affinity; // 100에서 부족한 만큼을 뺀 값
               console.log(`Level down! Current level: ${level}`);
               saveAffinity(affinity, level);
+              // 레벨다운 시 시스템 프롬프트 업데이트
+              systemPrompt = loadSystemPrompt(activeCharacter, level);
             } else {
               // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
               if (level === 1) {
@@ -348,6 +375,8 @@ router.post('/chat', async (req, res) => {
                 affinity = 0;
                 console.log(`Level up! Current level: ${level}`);
                 saveAffinity(affinity, level);
+                // 레벨업 시 시스템 프롬프트 업데이트
+                systemPrompt = loadSystemPrompt(activeCharacter, level);
               }
               // 레벨다운 체크
               else if (affinity < 0 && level > 1) {
@@ -355,6 +384,8 @@ router.post('/chat', async (req, res) => {
                 affinity = 100 + affinity; // 100에서 부족한 만큼을 뺀 값
                 console.log(`Level down! Current level: ${level}`);
                 saveAffinity(affinity, level);
+                // 레벨다운 시 시스템 프롬프트 업데이트
+                systemPrompt = loadSystemPrompt(activeCharacter, level);
               } else {
                 // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
                 if (level === 1) {

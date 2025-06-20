@@ -253,6 +253,8 @@ The following is the complete list of allowed poses. Only these poses can be use
 
 > **WARNING**: Only the poses listed above are allowed. Any other poses must not be used as they will cause errors in the system.
 
+**⚠️ FORMAT WARNING: NEVER use markdown formatting in your response. Output ONLY the JSON format without any markdown symbols, asterisks, or formatting characters.**
+
 [Affinity Calculation Guidelines]
 **CRITICAL: STRICTLY FOLLOW THESE AFFINITY RULES - NO EXCEPTIONS**
 

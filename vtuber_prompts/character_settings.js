@@ -1,5 +1,5 @@
 // 탈옥 프롬프트가 적용되는 캐릭터 목록
-export const JAILBREAK_CHARACTERS = ['shaki', 'miwoo', 'dia', 'hario'];
+export const JAILBREAK_CHARACTERS = ['shaki', 'miwoo', 'dia', 'hario', 'blacknila'];
 
 // 캐릭터별 설정을 추가할 수 있는 객체
 export const CHARACTER_SETTINGS = {

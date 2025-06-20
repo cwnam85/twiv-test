@@ -261,6 +261,8 @@ The following is the complete list of allowed emotions. Only these emotions can 
 
 > **WARNING**: Only the emotions listed above are allowed. Any other emotions must not be used as they will cause errors in the system.
 
+**⚠️ FORMAT WARNING: NEVER use markdown formatting in your response. Output ONLY the JSON format without any markdown symbols, asterisks, or formatting characters.**
+
 ### Allowed Poses
 
 The following is the complete list of allowed poses. Only these poses can be used:
