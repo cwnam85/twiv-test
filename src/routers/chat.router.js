@@ -17,6 +17,7 @@ import {
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
 import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
 import { CHARACTER_SETTINGS } from '../../vtuber_prompts/character_settings.js';
+import SectionLoader from '../../vtuber_prompts/section-loader.js';
 
 const router = express.Router();
 
@@ -156,33 +157,20 @@ const webSocket = connectWebSocket();
 function loadSystemPrompt(character, currentLevel) {
   try {
     if (character) {
-      // 레벨에 따라 다른 폴더의 프롬프트 로드
-      let characterPath;
+      const isNSFW = JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2;
+      const loader = new SectionLoader(character);
 
-      // NSFW 캐릭터이고 레벨 2 이상인 경우에만 NSFW 프롬프트 사용
-      if (JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2) {
-        characterPath = path.join(
-          __dirname,
-          `../../vtuber_prompts/nsfw_prompts/${character}_nsfw.md`,
-        );
-      } else {
-        // 그 외의 경우: SFW 프롬프트 사용
-        characterPath = path.join(
-          __dirname,
-          `../../vtuber_prompts/sfw_prompts/${character}_sfw.md`,
-        );
-      }
+      const prompt = loader.buildPrompt(isNSFW);
 
-      if (fs.existsSync(characterPath)) {
-        const prompt = fs.readFileSync(characterPath, 'utf8');
-        const promptType =
-          JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2 ? 'NSFW' : 'SFW';
-        console.log(`Loaded ${promptType} prompt for ${character} (Level: ${currentLevel})`);
+      if (prompt) {
+        console.log(
+          `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${character} (Level: ${currentLevel})`,
+        );
         return prompt;
       }
     }
 
-    // 기본값
+    // 기본값 (기존 방식 유지)
     const defaultFilePath = path.join(
       __dirname,
       '../../vtuber_prompts/test_system_instructions.md',
