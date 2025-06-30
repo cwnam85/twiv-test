@@ -101,6 +101,119 @@ router.post('/affinity', (req, res) => {
   res.json({ affinity, level, point });
 });
 
+// 구매 완료 처리
+router.post('/purchase', async (req, res) => {
+  const { requestedContent, userMessage } = req.body;
+
+  try {
+    // 포인트 차감 (예: 10포인트)
+    const purchaseCost = 100;
+    if (point < purchaseCost) {
+      return res.status(400).json({ error: '포인트가 부족합니다.' });
+    }
+
+    point = Math.max(0, point - purchaseCost);
+    savePoint(point);
+
+    // 구매 완료 후 원래 요청된 콘텐츠 제공
+    const purchaseCompleteMessage = `사용자가 ${requestedContent} 구매를 완료했습니다. 원래 요청 "${userMessage}"에 따라 해당 콘텐츠를 제공해주세요.`;
+
+    let requestHistory = [...conversationHistory];
+
+    // 레벨 2 이상이고 jailbreak 캐릭터인 경우에만 임시로 추가
+    if (level >= 2 && JAILBREAK_CHARACTERS.includes(activeCharacter)) {
+      let levelUpMessages;
+      switch (activeCharacter) {
+        case 'shaki':
+          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+          break;
+        case 'miwoo':
+          levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
+          break;
+        case 'dia':
+          levelUpMessages = [...DIA_JAILBREAK_HISTORY];
+          break;
+        case 'hario':
+          levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
+          break;
+        default:
+          levelUpMessages = [...SHAKI_JAILBREAK_HISTORY];
+      }
+      requestHistory.push(...levelUpMessages);
+    }
+
+    const purchaseResponse = await getLLMResponse(
+      [
+        ...requestHistory,
+        { role: 'user', content: [{ type: 'text', text: purchaseCompleteMessage }] },
+      ],
+      currentModel,
+      systemPrompt,
+    );
+
+    // 구매 완료 응답 파싱
+    let purchaseDialogue = null;
+    let purchaseEmotion = null;
+    let purchasePose = null;
+
+    if (typeof purchaseResponse.dialogue === 'object') {
+      purchaseDialogue = purchaseResponse.dialogue.dialogue;
+      purchaseEmotion = purchaseResponse.dialogue.emotion;
+      purchasePose = purchaseResponse.dialogue.pose;
+    } else {
+      try {
+        const parsedPurchase = JSON.parse(purchaseResponse.dialogue);
+        purchaseDialogue = parsedPurchase.dialogue;
+        purchaseEmotion = parsedPurchase.emotion;
+        purchasePose = parsedPurchase.pose;
+      } catch (parseError) {
+        console.error('Purchase completion response JSON 파싱 오류:', parseError);
+      }
+    }
+
+    // 대화 기록에 추가
+    addToHistory('user', userMessage);
+    addToHistory('assistant', purchaseDialogue);
+
+    console.log(
+      `Purchase completed: Added to conversation history - User: "${userMessage}", Assistant: "${purchaseDialogue}"`,
+    );
+    console.log(`Current conversation history length: ${conversationHistory.length}`);
+
+    res.json({
+      message: purchaseDialogue,
+      emotion: purchaseEmotion,
+      pose: purchasePose,
+      affinity: affinity,
+      level: level,
+      point: point,
+      purchaseCompleted: true,
+      purchasedContent: requestedContent,
+    });
+
+    // TTS 호출
+    playTTSSupertone(purchaseDialogue, purchaseEmotion)
+      .then(() => {
+        //console.log('Purchase TTS playback successful');
+      })
+      .catch((error) => {
+        console.error('Error during purchase TTS playback:', error);
+      });
+
+    // Warudo에 포즈 변경 메시지 전송
+    if (purchasePose) {
+      const messageWarudo = JSON.stringify({
+        action: 'Pose',
+        data: purchasePose,
+      });
+      sendMessageToWarudo(messageWarudo);
+    }
+  } catch (error) {
+    console.error('구매 완료 처리 중 오류가 발생했습니다.', error);
+    res.status(500).json({ error: '구매 완료 처리 중 오류가 발생했습니다.' });
+  }
+});
+
 // 현재 활성화된 캐릭터에 따라 초기 대화 기록 선택
 const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase();
 console.log('activeCharacter', activeCharacter);
@@ -117,6 +230,105 @@ router.get('/active-character', (req, res) => {
   res.json({ activeCharacter });
 });
 
+// 현재 복장 정보를 반환하는 엔드포인트
+router.get('/current-outfit', (req, res) => {
+  try {
+    if (activeCharacter && initialOutfitData) {
+      res.json({
+        outfitName: initialOutfit,
+        outfitData: initialOutfitData,
+      });
+    } else {
+      res.json({
+        outfitName: 'default',
+        outfitData: null,
+      });
+    }
+  } catch (error) {
+    console.error('Error getting current outfit:', error);
+    res.status(500).json({ error: 'Failed to get current outfit' });
+  }
+});
+
+// 복장 변경 API
+router.post('/change-outfit', (req, res) => {
+  try {
+    const { action, category, item } = req.body;
+
+    if (!activeCharacter || !initialOutfitData) {
+      return res.status(400).json({ error: 'No active character or outfit data' });
+    }
+
+    // outfits.json 파일 경로
+    const outfitPath = path.join(
+      __dirname,
+      `../../vtuber_prompts/characters/${activeCharacter}/outfits.json`,
+    );
+
+    if (!fs.existsSync(outfitPath)) {
+      return res.status(404).json({ error: 'Outfit file not found' });
+    }
+
+    // 현재 outfits.json 읽기
+    const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+    const currentOutfit = allOutfits[initialOutfit];
+
+    if (!currentOutfit || !currentOutfit.parts[category] || !currentOutfit.parts[category][item]) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    // 복장 상태 변경
+    if (action === 'remove') {
+      currentOutfit.parts[category][item].enabled = false;
+    } else if (action === 'wear') {
+      currentOutfit.parts[category][item].enabled = true;
+    } else {
+      return res.status(400).json({ error: 'Invalid action. Use "remove" or "wear"' });
+    }
+
+    // outfits.json 파일 업데이트
+    fs.writeFileSync(outfitPath, JSON.stringify(allOutfits, null, 2));
+
+    // 메모리상의 initialOutfitData도 업데이트
+    initialOutfitData = currentOutfit;
+
+    // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
+    systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
+
+    console.log(`Outfit changed: ${action} ${category}.${item} for ${activeCharacter}`);
+
+    res.json({
+      success: true,
+      message: `Successfully ${action}ed ${item}`,
+      updatedOutfit: currentOutfit,
+    });
+  } catch (error) {
+    console.error('Error changing outfit:', error);
+    res.status(500).json({ error: 'Failed to change outfit' });
+  }
+});
+
+// 캐릭터별 초기 outfit 환경변수 읽기
+const outfitEnvKey = `${activeCharacter?.toUpperCase()}_OUTFIT`;
+const initialOutfit = process.env[outfitEnvKey] || 'casual';
+
+// outfits.json에서 해당 outfit 정보 불러오기
+let initialOutfitData = null;
+try {
+  const outfitPath = path.join(
+    __dirname,
+    `../../vtuber_prompts/characters/${activeCharacter}/outfits.json`,
+  );
+  if (fs.existsSync(outfitPath)) {
+    const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+    if (allOutfits[initialOutfit]) {
+      initialOutfitData = allOutfits[initialOutfit];
+    }
+  }
+} catch (e) {
+  console.error('outfits.json 로드 오류:', e);
+}
+
 let initialHistory;
 switch (activeCharacter) {
   case 'meuaeng':
@@ -130,7 +342,23 @@ switch (activeCharacter) {
     break;
 }
 
-let conversationHistory = initialHistory;
+let conversationHistory = [...initialHistory];
+
+// 복장 정보 history에 추가 (assistant role, 자연어만)
+if (activeCharacter && initialOutfitData) {
+  conversationHistory.push({
+    role: 'assistant',
+    content: [
+      {
+        type: 'text',
+        text: `현재 ${activeCharacter}는 "${initialOutfit}" 복장을 입고 있습니다.`,
+      },
+    ],
+  });
+
+  // 복장 정보를 별도로 저장 (필요시 사용)
+  console.log(`Loaded outfit data for ${activeCharacter}:`, initialOutfitData);
+}
 
 // 현재 활성화된 캐릭터의 첫 메시지 추가
 if (activeCharacter && CHARACTER_SETTINGS[activeCharacter]?.firstMessage) {
@@ -145,6 +373,11 @@ if (activeCharacter && CHARACTER_SETTINGS[activeCharacter]?.firstMessage) {
   });
 }
 
+// content 필드가 없는 메시지 필터링
+conversationHistory = conversationHistory.filter(
+  (message) => message.content && Array.isArray(message.content) && message.content.length > 0,
+);
+
 let tmpPurchase = null; // 구매 임시 변수
 let currentModel = 'claude'; // 현재 사용 중인 모델 (기본값: claude)
 let { affinity, level } = loadAffinity(); // 호감도와 레벨 변수 초기화
@@ -154,17 +387,17 @@ let { point } = loadPoint(); // 포인트 변수 초기화
 const webSocket = connectWebSocket();
 
 // 시스템 프롬프트 동적 로드 함수
-function loadSystemPrompt(character, currentLevel) {
+function loadSystemPrompt(character, currentLevel, currentOutfit = null) {
   try {
     if (character) {
       const isNSFW = JAILBREAK_CHARACTERS.includes(character) && currentLevel >= 2;
       const loader = new SectionLoader(character);
 
-      const prompt = loader.buildPrompt(isNSFW);
+      const prompt = loader.buildPrompt(isNSFW, currentOutfit);
 
       if (prompt) {
         console.log(
-          `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${character} (Level: ${currentLevel})`,
+          `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${character} (Level: ${currentLevel}, Outfit: ${currentOutfit?.current_outfit || 'default'})`,
         );
         return prompt;
       }
@@ -185,7 +418,7 @@ function loadSystemPrompt(character, currentLevel) {
 }
 
 // 시스템 지시사항 로드
-let systemPrompt = loadSystemPrompt(activeCharacter, level);
+let systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
 
 // 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
 if (systemPrompt && currentModel === 'grok') {
@@ -301,6 +534,9 @@ router.post('/chat', async (req, res) => {
     let emotion = null;
     let pose = null;
     let usage = null;
+    let purchaseRequired = false;
+    let requestedContent = null;
+    let outfitChange = null;
 
     try {
       // dialogue is now already parsed JSON
@@ -308,6 +544,11 @@ router.post('/chat', async (req, res) => {
         dialogue = responseLLM.dialogue.dialogue;
         emotion = responseLLM.dialogue.emotion;
         pose = responseLLM.dialogue.pose;
+        purchaseRequired =
+          responseLLM.dialogue.purchaseRequired === 'true' ||
+          responseLLM.dialogue.purchaseRequired === true;
+        requestedContent = responseLLM.dialogue.requestedContent;
+        outfitChange = responseLLM.dialogue.outfitChange;
 
         // affinity 처리 추가
         if (responseLLM.dialogue.affinity) {
@@ -322,7 +563,7 @@ router.post('/chat', async (req, res) => {
               console.log(`Level up! Current level: ${level}`);
               saveAffinity(affinity, level);
               // 레벨업 시 시스템 프롬프트 업데이트
-              systemPrompt = loadSystemPrompt(activeCharacter, level);
+              systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
               console.log(
                 `Affinity changed by ${affinityChange}. Current affinity: ${affinity}, Level: ${level}`,
               );
@@ -334,7 +575,7 @@ router.post('/chat', async (req, res) => {
               console.log(`Level down! Current level: ${level}`);
               saveAffinity(affinity, level);
               // 레벨다운 시 시스템 프롬프트 업데이트
-              systemPrompt = loadSystemPrompt(activeCharacter, level);
+              systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
             } else {
               // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
               if (level === 1) {
@@ -352,6 +593,10 @@ router.post('/chat', async (req, res) => {
           dialogue = parsedDialogue.dialogue;
           emotion = parsedDialogue.emotion;
           pose = parsedDialogue.pose;
+          purchaseRequired =
+            parsedDialogue.purchaseRequired === 'true' || parsedDialogue.purchaseRequired === true;
+          requestedContent = parsedDialogue.requestedContent;
+          outfitChange = parsedDialogue.outfitChange;
 
           // affinity 처리
           if (parsedDialogue.affinity) {
@@ -364,7 +609,7 @@ router.post('/chat', async (req, res) => {
                 console.log(`Level up! Current level: ${level}`);
                 saveAffinity(affinity, level);
                 // 레벨업 시 시스템 프롬프트 업데이트
-                systemPrompt = loadSystemPrompt(activeCharacter, level);
+                systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
               }
               // 레벨다운 체크
               else if (affinity < 0 && level > 1) {
@@ -373,7 +618,7 @@ router.post('/chat', async (req, res) => {
                 console.log(`Level down! Current level: ${level}`);
                 saveAffinity(affinity, level);
                 // 레벨다운 시 시스템 프롬프트 업데이트
-                systemPrompt = loadSystemPrompt(activeCharacter, level);
+                systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
               } else {
                 // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
                 if (level === 1) {
@@ -435,6 +680,116 @@ router.post('/chat', async (req, res) => {
       }
     }
 
+    // outfitChange 처리
+    if (outfitChange && outfitChange.action && outfitChange.category && outfitChange.item) {
+      console.log(
+        `Processing outfit change: ${outfitChange.action} ${outfitChange.category}.${outfitChange.item}`,
+      );
+
+      try {
+        // outfits.json 파일 경로
+        const outfitPath = path.join(
+          __dirname,
+          `../../vtuber_prompts/characters/${activeCharacter}/outfits.json`,
+        );
+
+        if (fs.existsSync(outfitPath)) {
+          // 현재 outfits.json 읽기
+          const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+          const currentOutfit = allOutfits[initialOutfit];
+
+          if (
+            currentOutfit &&
+            currentOutfit.parts[outfitChange.category] &&
+            currentOutfit.parts[outfitChange.category][outfitChange.item]
+          ) {
+            // 복장 상태 변경
+            if (outfitChange.action === 'remove') {
+              currentOutfit.parts[outfitChange.category][outfitChange.item].enabled = false;
+            } else if (outfitChange.action === 'wear') {
+              currentOutfit.parts[outfitChange.category][outfitChange.item].enabled = true;
+            }
+
+            // outfits.json 파일 업데이트
+            fs.writeFileSync(outfitPath, JSON.stringify(allOutfits, null, 2));
+
+            // 메모리상의 initialOutfitData도 업데이트
+            initialOutfitData = currentOutfit;
+
+            // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
+            systemPrompt = loadSystemPrompt(activeCharacter, level, initialOutfitData);
+
+            console.log(
+              `Outfit changed: ${outfitChange.action} ${outfitChange.category}.${outfitChange.item} for ${activeCharacter}`,
+            );
+          } else {
+            console.error(`Item not found: ${outfitChange.category}.${outfitChange.item}`);
+          }
+        } else {
+          console.error('Outfit file not found');
+        }
+      } catch (outfitError) {
+        console.error('Error changing outfit:', outfitError);
+      }
+    }
+
+    // 구매 필요 감지 및 처리
+    if (purchaseRequired && requestedContent) {
+      console.log(`Purchase required for: ${requestedContent}`);
+
+      // 구매 확인 메시지 생성 요청
+      const purchaseMessage = `사용자가 "${userMessage}"라고 바로 전에 언급했으며, ${requestedContent}를 구매하려고 합니다. 맥락에 맞는 구매 확인 메시지를 생성해주세요.`;
+
+      try {
+        const purchaseResponse = await getLLMResponse(
+          [...requestHistory, { role: 'user', content: [{ type: 'text', text: purchaseMessage }] }],
+          currentModel,
+          systemPrompt,
+        );
+
+        // 구매 확인 응답 파싱
+        let purchaseDialogue = null;
+        let purchaseEmotion = null;
+        let purchasePose = null;
+
+        if (typeof purchaseResponse.dialogue === 'object') {
+          purchaseDialogue = purchaseResponse.dialogue.dialogue;
+          purchaseEmotion = purchaseResponse.dialogue.emotion;
+          purchasePose = purchaseResponse.dialogue.pose;
+        } else {
+          try {
+            const parsedPurchase = JSON.parse(purchaseResponse.dialogue);
+            purchaseDialogue = parsedPurchase.dialogue;
+            purchaseEmotion = parsedPurchase.emotion;
+            purchasePose = parsedPurchase.pose;
+          } catch (parseError) {
+            console.error('Purchase response JSON 파싱 오류:', parseError);
+          }
+        }
+
+        // 구매 확인 메시지로 대체
+        if (purchaseDialogue) {
+          dialogue = purchaseDialogue;
+          emotion = purchaseEmotion || emotion;
+          pose = purchasePose || pose; // 현재 포즈 유지
+        }
+
+        // 포인트 추가 차감 (구매 확인 메시지 생성 비용)
+        point = Math.max(0, point - 1);
+        savePoint(point);
+      } catch (purchaseError) {
+        console.error('구매 확인 메시지 생성 오류:', purchaseError);
+      }
+    }
+
+    // 프리미엄 콘텐츠 자동 감지 및 수정
+    if (requestedContent && !purchaseRequired) {
+      console.log(
+        `Auto-detected premium content: ${requestedContent}, forcing purchaseRequired to true`,
+      );
+      purchaseRequired = true;
+    }
+
     // 응답 처리 후에 실제 사용자 메시지만 history에 추가
     addToHistory('user', userMessage);
     addToHistory('assistant', dialogue);
@@ -449,6 +804,9 @@ router.post('/chat', async (req, res) => {
       pose: pose,
       emotion: emotion,
       usage: usage,
+      purchaseRequired: purchaseRequired,
+      requestedContent: requestedContent,
+      outfitChange: outfitChange,
     });
 
     // TTS 호출

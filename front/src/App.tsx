@@ -1,6 +1,7 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
+import OutfitStatus from './components/OutfitStatus';
 
 function App() {
   const {
@@ -8,41 +9,26 @@ function App() {
     input,
     setInput,
     isModalOpen,
+    isPurchaseModalOpen,
+    purchaseContent,
     handleSend,
     handleConfirm,
     handleClose,
+    handlePurchaseConfirm,
+    handlePurchaseClose,
     affinity,
     pose,
     emotion,
     level,
     point,
+    currentCharacter,
+    outfitData,
   } = useChatting();
-  const [currentCharacter, setCurrentCharacter] = useState('Loading...');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // 백엔드에서 activeCharacter 가져오기
-    fetch('/active-character')
-      .then((response) => response.json())
-      .then((data) => {
-        setCurrentCharacter(data.activeCharacter || 'Default Character');
-      })
-      .catch((error) => {
-        console.error('Error fetching active character:', error);
-        setCurrentCharacter('Default Character');
-      });
-  }, []);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <OutfitStatus outfitData={outfitData} />
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}
         <div className="flex flex-col gap-2 mb-4">
@@ -100,6 +86,13 @@ function App() {
         onConfirm={handleConfirm}
         title="포인트 구매"
         message="100포인트를 구매하시겠습니까?"
+      />
+      <Modal
+        isOpen={isPurchaseModalOpen}
+        onClose={handlePurchaseClose}
+        onConfirm={handlePurchaseConfirm}
+        title="프리미엄 콘텐츠 구매"
+        message={`${purchaseContent}를 구매하시겠습니까?`}
       />
     </div>
   );
