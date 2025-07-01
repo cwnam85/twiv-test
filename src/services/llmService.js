@@ -45,7 +45,7 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
       }
     } else if (model === 'claude') {
       const requestBody = {
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-20250514',
         messages: messages.map((msg) => ({
           role: msg.role,
           content: msg.content[0].text,

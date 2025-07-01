@@ -1,6 +1,6 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import OutfitStatus from './components/OutfitStatus';
 
 function App() {
@@ -25,6 +25,11 @@ function App() {
     outfitData,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">

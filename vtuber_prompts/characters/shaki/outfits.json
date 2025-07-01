@@ -7,7 +7,6 @@
           "name": "black_bra",
           "enabled": true,
           "type": "underwear",
-          "layer_order": 0,
           "removable": {
             "access": "allowed_adult",
             "min_affinity": 3
@@ -17,7 +16,6 @@
           "name": "white_blouse",
           "enabled": true,
           "type": "outerwear",
-          "layer_order": 1,
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
@@ -27,7 +25,6 @@
           "name": "black_cardigan",
           "enabled": false,
           "type": "outerwear",
-          "layer_order": 2,
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
@@ -42,8 +39,7 @@
           "removable": {
             "access": "locked",
             "min_affinity": null
-          },
-          "layer_order": 0
+          }
         },
         "bottom": {
           "name": "black_skirt",
@@ -52,8 +48,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 1
+          }
         }
       },
       "feet": {
@@ -64,8 +59,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         }
       },
       "accessories": {
@@ -76,8 +70,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         },
         "necklace": {
           "name": "silver_choker",
@@ -86,8 +79,7 @@
           "removable": {
             "access": "allowed_adult",
             "min_affinity": 3
-          },
-          "layer_order": 0
+          }
         },
         "belt": {
           "name": "black_belt",
@@ -96,8 +88,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         }
       }
     }
@@ -110,7 +101,6 @@
           "name": "white_bra",
           "enabled": true,
           "type": "underwear",
-          "layer_order": 0,
           "removable": {
             "access": "allowed_adult",
             "min_affinity": 3
@@ -120,7 +110,6 @@
           "name": "white_shirt",
           "enabled": true,
           "type": "outerwear",
-          "layer_order": 1,
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
@@ -130,7 +119,6 @@
           "name": "navy_blazer",
           "enabled": true,
           "type": "outerwear",
-          "layer_order": 2,
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
@@ -145,8 +133,7 @@
           "removable": {
             "access": "locked",
             "min_affinity": null
-          },
-          "layer_order": 0
+          }
         },
         "bottom": {
           "name": "navy_skirt",
@@ -155,8 +142,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 1
+          }
         }
       },
       "feet": {
@@ -167,8 +153,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         }
       },
       "accessories": {
@@ -179,8 +164,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         },
         "necklace": {
           "name": "school_tie",
@@ -189,8 +173,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         },
         "belt": {
           "name": "none",
@@ -199,8 +182,7 @@
           "removable": {
             "access": "allowed_all",
             "min_affinity": 1
-          },
-          "layer_order": 0
+          }
         }
       }
     }

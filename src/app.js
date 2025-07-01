@@ -1,7 +1,11 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 import chatRouter from './routers/chat.router.js';
+
+// 환경 변수 로드
+dotenv.config();
 
 const app = express();
 const port = 3333;

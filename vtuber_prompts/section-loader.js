@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import nunjucks from 'nunjucks';
 
 class SectionLoader {
   constructor(character) {
@@ -9,79 +10,87 @@ class SectionLoader {
     const __dirname = path.dirname(__filename);
     this.sharedPath = path.join(__dirname, 'shared');
     this.characterPath = path.join(__dirname, `characters/${character}`);
+
+    // nunjucks 환경 설정 - 여러 경로 추가
+    this.env = nunjucks.configure(
+      [
+        this.characterPath, // 캐릭터 폴더
+        this.sharedPath, // 공통 폴더
+        __dirname, // 루트 폴더
+      ],
+      {
+        autoescape: false, // 마크다운 텍스트이므로 이스케이프 비활성화
+        trimBlocks: true,
+        lstripBlocks: true,
+      },
+    );
   }
 
-  // 공통 섹션들
-  loadConfiguration() {
-    return this.loadSharedFile('configuration.md');
+  // 줄바꿈 문자 정규화 함수
+  normalizeLineEndings(text) {
+    if (!text) return text;
+
+    // \r\n을 \n으로 변환
+    return text
+      .replace(/\r\n/g, '\n') // Windows CRLF를 LF로
+      .replace(/\r/g, '\n'); // Mac CR을 LF로
   }
 
-  loadSharedGuidelines(isNSFW = false) {
-    let guidelines = this.loadSharedFile('guidelines.md');
+  // 전체 프롬프트 조합 (nunjucks 템플릿 사용)
+  buildPrompt(context = {}) {
+    const { isNSFW = false, currentOutfit = null, affinityLevel = 1, user = 'user' } = context;
 
-    if (isNSFW) {
-      // mature content를 user-interaction 다음에 삽입
-      const matureContent = this.loadSharedFile('guidelines/mature-content.md');
-      guidelines = guidelines.replace(
-        '[Violent Content & Conversation Continuity]',
-        matureContent + '\n\n[Violent Content & Conversation Continuity]',
-      );
-    } else if (!isNSFW) {
-      // sfw content를 user-interaction 다음에 삽입
-      const sfwContent = this.loadSharedFile('guidelines/sfw-content.md');
-      guidelines = guidelines.replace(
-        '[Violent Content & Conversation Continuity]',
-        sfwContent + '\n\n[Violent Content & Conversation Continuity]',
-      );
+    // 템플릿 컨텍스트 구성
+    const templateContext = {
+      isNSFW,
+      currentOutfit,
+      affinityLevel,
+      user,
+      character: this.character,
+      outfitDescription: currentOutfit ? this.generateOutfitDescription(currentOutfit) : null,
+    };
+
+    // 메인 템플릿 로드 및 렌더링
+    const templatePath = path.join(this.characterPath, 'main_template.md');
+
+    if (fs.existsSync(templatePath)) {
+      try {
+        let renderedPrompt = this.env.render('main_template.md', templateContext);
+
+        // nunjucks가 자동으로 profile.md의 동적 섹션을 처리하므로 별도 교체 로직 불필요
+        console.log('Using nunjucks template rendering for dynamic content');
+
+        // 줄바꿈 문자 정규화
+        return this.normalizeLineEndings(renderedPrompt);
+      } catch (error) {
+        throw new Error(`Template rendering failed: ${error.message}`);
+      }
+    } else {
+      throw new Error(`Template file not found: ${templatePath}`);
     }
-
-    return guidelines;
-  }
-
-  loadAffinity() {
-    return this.loadSharedFile('affinity.md');
-  }
-
-  loadAdditionalInstructions() {
-    return this.loadSharedFile('additional-instructions.md');
-  }
-
-  // 캐릭터별 섹션들
-  loadCharacterProfile(isNSFW = false, currentOutfit = null) {
-    let profile = this.loadCharacterFile('profile.md');
-
-    if (isNSFW) {
-      // 포즈를 NSFW 버전으로 교체
-      const nsfwPoses = this.loadSharedFile('poses/poses-nsfw.md');
-      const sfwPoses = this.loadSharedFile('poses/poses-sfw.md');
-      profile = profile.replace(sfwPoses, nsfwPoses);
-    }
-
-    // 현재 복장 정보로 "Current Clothes" 섹션 교체
-    if (currentOutfit) {
-      const outfitDescription = this.generateOutfitDescription(currentOutfit);
-      profile = profile.replace(
-        /## Current Clothes[\s\S]*?(?=## |$)/,
-        `## Current Clothes\n\n${outfitDescription}`,
-      );
-    }
-
-    return profile;
   }
 
   // 복장 설명 생성 메서드
   generateOutfitDescription(outfitData) {
+    console.log('generateOutfitDescription input:', JSON.stringify(outfitData, null, 2));
+
+    if (!outfitData || !outfitData.parts) {
+      console.warn('Invalid outfit data structure:', outfitData);
+      return '**Current Outfit:** Default Style\n\n**Note:** Outfit information not available';
+    }
+
     const { current_outfit, parts } = outfitData;
 
-    let description = `**Current Outfit:** ${current_outfit.charAt(0).toUpperCase() + current_outfit.slice(1)} Style\n\n`;
+    let description = `**Current Outfit:** ${current_outfit ? current_outfit.charAt(0).toUpperCase() + current_outfit.slice(1) : 'Default'} Style\n\n`;
 
     // Upper Body
     if (parts.upper_body) {
       description += '**Upper Body:**\n';
       Object.entries(parts.upper_body).forEach(([part, details]) => {
-        if (details.enabled) {
+        if (details && details.enabled) {
           const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${details.name.replace(/_/g, ' ')} (${typeText}, 착용 중)\n`;
+          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
+          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }
       });
       description += '\n';
@@ -91,9 +100,10 @@ class SectionLoader {
     if (parts.lower_body) {
       description += '**Lower Body:**\n';
       Object.entries(parts.lower_body).forEach(([part, details]) => {
-        if (details.enabled) {
+        if (details && details.enabled) {
           const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${details.name.replace(/_/g, ' ')} (${typeText}, 착용 중)\n`;
+          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
+          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }
       });
       description += '\n';
@@ -103,8 +113,9 @@ class SectionLoader {
     if (parts.feet) {
       description += '**Feet:**\n';
       Object.entries(parts.feet).forEach(([part, details]) => {
-        if (details.enabled) {
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${details.name.replace(/_/g, ' ')} (액세서리, 착용 중)\n`;
+        if (details && details.enabled) {
+          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
+          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (액세서리, 착용 중)\n`;
         }
       });
       description += '\n';
@@ -114,8 +125,9 @@ class SectionLoader {
     if (parts.accessories) {
       description += '**Accessories:**\n';
       Object.entries(parts.accessories).forEach(([part, details]) => {
-        if (details.enabled) {
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${details.name.replace(/_/g, ' ')} (액세서리, 착용 중)\n`;
+        if (details && details.enabled) {
+          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
+          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (액세서리, 착용 중)\n`;
         }
       });
       description += '\n';
@@ -135,40 +147,14 @@ class SectionLoader {
       description += '- The swimsuit showcases her confident and alluring side\n';
       description += '- Perfect for beach or pool-related conversations\n';
       description += '- Emphasizes her comfort with showing skin\n';
+    } else {
+      description += '- The outfit is customized for the current situation\n';
+      description += '- Items can be adjusted based on user preferences\n';
+      description += '- Maintains character personality through clothing choices\n';
     }
 
+    console.log('Generated outfit description:', description);
     return description;
-  }
-
-  // 헬퍼 메서드들
-  loadSharedFile(relativePath) {
-    const filePath = path.join(this.sharedPath, relativePath);
-    return this.loadFile(filePath);
-  }
-
-  loadCharacterFile(relativePath) {
-    const filePath = path.join(this.characterPath, relativePath);
-    return this.loadFile(filePath);
-  }
-
-  loadFile(filePath) {
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath, 'utf8');
-    }
-    console.warn(`File not found: ${filePath}`);
-    return '';
-  }
-
-  // 전체 프롬프트 조합
-  buildPrompt(isNSFW = false, currentOutfit = null) {
-    const sections = [
-      this.loadConfiguration(),
-      this.loadCharacterProfile(isNSFW, currentOutfit), // references (포즈와 affinity 포함)
-      this.loadSharedGuidelines(isNSFW), // 가이드라인들 (mature content 포함)
-      this.loadAdditionalInstructions(),
-    ];
-
-    return sections.filter((section) => section.trim()).join('\n\n');
   }
 }
 
