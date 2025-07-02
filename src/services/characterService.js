@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js';
 import { CHARACTER_SETTINGS } from '../../vtuber_prompts/character_settings.js';
 import SectionLoader from '../../vtuber_prompts/section-loader.js';
+import affinityService from './affinityService.js';
 
 // 환경 변수 로드
 dotenv.config();
@@ -44,7 +45,9 @@ class CharacterService {
 
   get systemPrompt() {
     if (this._systemPrompt === null) {
-      this._systemPrompt = this.loadSystemPrompt();
+      // affinityService에서 현재 레벨을 가져와서 사용
+      const currentLevel = affinityService.level;
+      this._systemPrompt = this.loadSystemPrompt(currentLevel);
     }
     return this._systemPrompt;
   }
@@ -163,7 +166,9 @@ class CharacterService {
   }
 
   getSystemPrompt() {
-    return this.systemPrompt;
+    // 항상 현재 레벨로 시스템 프롬프트를 로드
+    const currentLevel = affinityService.level;
+    return this.loadSystemPrompt(currentLevel);
   }
 
   isJailbreakCharacter() {

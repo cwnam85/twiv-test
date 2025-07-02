@@ -106,13 +106,19 @@ const useChatting = () => {
 
       try {
         // 백엔드 API 호출
+        const chatPrompt = getChatPrompt(
+          currentCharacter,
+          level,
+          currentInput,
+          outfitData || undefined,
+        );
         const response: Response = await fetch('http://localhost:3333/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: getChatPrompt(currentCharacter, level, currentInput, outfitData || undefined),
+            message: chatPrompt,
             history: currentInput,
           }),
         });
@@ -212,18 +218,19 @@ const useChatting = () => {
         const randomThankYou =
           characterMessages.thankYou[Math.floor(Math.random() * characterMessages.thankYou.length)];
 
+        const thankYouPrompt = ThankYouPrompt(
+          currentCharacter,
+          level,
+          randomThankYou.message,
+          outfitData || undefined,
+        );
         const chatResponse = await fetch('http://localhost:3333/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: ThankYouPrompt(
-              currentCharacter,
-              level,
-              randomThankYou.message,
-              outfitData || undefined,
-            ),
+            message: thankYouPrompt,
             history: `시스템 : 사용자가 포인트를 결제하였습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요. 예시는 이렇습니다.\n예시 : ${randomThankYou.message}`,
           }),
         });
