@@ -4,12 +4,12 @@ export const POSE_UNLOCK_LEVELS = {
   1: ['stand', 'sit'],
   2: ['stand', 'sit'],
 
-  // 레벨 3: 더 많은 포즈
+  // 레벨 3 ,4: 더 많은 포즈
   3: ['stand', 'sit', 'spreadlegs'],
+  4: ['stand', 'sit', 'spreadlegs'],
 
-  // 레벨 4+: 모든 포즈
-  4: ['stand', 'sit', 'doggy', 'spreadlegs', 'standdoggy', 'missionary'],
-  5: ['stand', 'sit', 'doggy', 'spreadlegs', 'standdoggy', 'missionary'],
+  // 레벨 5 : 모든 포즈
+  5: ['stand', 'sit', 'doggy', 'spreadlegs', 'standdoggy', 'missionary', 'cowgirl'],
 };
 
 // 캐릭터별 포즈 제한 (선택사항)

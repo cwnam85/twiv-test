@@ -16,6 +16,80 @@ const webSocket = connectWebSocket();
 // 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
 conversationService.addSystemMessageIfNeeded();
 
+// 검열 에러 감지 함수
+function isInvalidResponse(response) {
+  if (!response || !response.dialogue) return true;
+
+  // dialogue가 문자열이 아니면 잘못된 응답
+  if (typeof response.dialogue !== 'string') return true;
+
+  // dialogue가 너무 짧거나 비어있으면 잘못된 응답
+  if (response.dialogue.trim().length < 5) return true;
+
+  // JSON 파싱 에러가 발생했거나 기본 에러 메시지인 경우
+  const dialogue = response.dialogue.toLowerCase();
+  const errorIndicators = [
+    'syntaxerror',
+    'unexpected token',
+    'invalid json',
+    'parse error',
+    'json parse',
+    'not valid json',
+  ];
+
+  return errorIndicators.some((indicator) => dialogue.includes(indicator));
+}
+
+// 재시도 로직 함수
+async function processLLMResponseWithRetry(
+  requestHistory,
+  realMessage,
+  currentModel,
+  systemPrompt,
+  maxRetries = 3,
+) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`LLM API 호출 시도 ${attempt}/${maxRetries}`);
+
+      const response = await responseService.processLLMResponse(
+        requestHistory,
+        realMessage,
+        currentModel,
+        systemPrompt,
+      );
+
+      // 검열된 응답인지 확인
+      if (isInvalidResponse(response)) {
+        console.log(`잘못된 응답 감지 (시도 ${attempt}/${maxRetries}), 재시도 중...`);
+        lastError = new Error('Invalid response detected');
+
+        if (attempt < maxRetries) {
+          // 잠시 대기 후 재시도
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+      }
+
+      // 정상적인 응답이면 반환
+      return response;
+    } catch (error) {
+      console.log(`LLM API 호출 실패 (시도 ${attempt}/${maxRetries}):`, error.message);
+      lastError = error;
+
+      if (attempt < maxRetries) {
+        // 잠시 대기 후 재시도
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
+  // 모든 시도 실패 시 마지막 에러 던지기
+  throw lastError;
+}
+
 // 현재 호감도와 레벨 가져오기
 router.get('/affinity', (req, res) => {
   const data = affinityService.getData();
@@ -49,10 +123,9 @@ router.post('/purchase', async (req, res) => {
     const currentModel = conversationService.getCurrentModel();
     const systemPrompt = characterService.getSystemPrompt();
 
-    const purchaseResponse = await responseService.processPurchaseCompletion(
+    const purchaseResponse = await processLLMResponseWithRetry(
       requestHistory,
       userMessage,
-      requestedContent,
       currentModel,
       systemPrompt,
     );
@@ -163,7 +236,7 @@ router.post('/chat', async (req, res) => {
     const systemPrompt = characterService.getSystemPrompt();
 
     // LLM 응답 처리
-    const response = await responseService.processLLMResponse(
+    const response = await processLLMResponseWithRetry(
       requestHistory,
       realMessage,
       currentModel,
@@ -178,10 +251,9 @@ router.post('/chat', async (req, res) => {
       console.log(`Purchase required for: ${response.requestedContent}`);
 
       try {
-        const purchaseResponse = await responseService.processPurchaseRequest(
+        const purchaseResponse = await processLLMResponseWithRetry(
           requestHistory,
           userMessage,
-          response.requestedContent,
           currentModel,
           systemPrompt,
         );
