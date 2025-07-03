@@ -154,6 +154,58 @@ class CharacterService {
     return currentOutfit;
   }
 
+  // 상점에서 복장 전체를 변경하는 메서드
+  changeToOutfit(outfitName) {
+    if (!this.activeCharacter) {
+      throw new Error('No active character');
+    }
+
+    const outfitPath = path.join(
+      __dirname,
+      `../../vtuber_prompts/characters/${this.activeCharacter}/outfits.json`,
+    );
+
+    if (!fs.existsSync(outfitPath)) {
+      throw new Error('Outfit file not found');
+    }
+
+    const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+
+    if (!allOutfits[outfitName]) {
+      throw new Error(`Outfit '${outfitName}' not found`);
+    }
+
+    // 현재 복장을 새로운 복장으로 변경
+    this._initialOutfit = outfitName;
+    this._initialOutfitData = allOutfits[outfitName];
+
+    console.log(`Outfit changed to: ${outfitName} for ${this.activeCharacter}`);
+
+    return this._initialOutfitData;
+  }
+
+  // 상점 복장 정보와 서버 복장을 동기화하는 메서드
+  syncWithShopOutfit() {
+    try {
+      const shopDataPath = path.join(process.cwd(), 'data', 'shop_data.json');
+
+      if (fs.existsSync(shopDataPath)) {
+        const shopData = JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
+        const currentShopOutfit = shopData.currentOutfit || 'default';
+
+        // 상점에서 착용 중인 복장이 있고, 기본 복장이 아닌 경우
+        if (currentShopOutfit !== 'default' && currentShopOutfit !== this.initialOutfit) {
+          console.log(`Syncing server outfit with shop outfit: ${currentShopOutfit}`);
+          this.changeToOutfit(currentShopOutfit);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing with shop outfit:', error);
+    }
+    return false;
+  }
+
   getActiveCharacter() {
     return this.activeCharacter;
   }

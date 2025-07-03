@@ -186,5 +186,99 @@
         }
       }
     }
+  },
+  "swimsuit": {
+    "current_outfit": "swimsuit",
+    "parts": {
+      "upper_body": {
+        "bra": {
+          "name": "bikini_top",
+          "enabled": true,
+          "type": "swimwear",
+          "removable": {
+            "access": "allowed_adult",
+            "min_affinity": 5
+          }
+        },
+        "top": {
+          "name": "none",
+          "enabled": false,
+          "type": "outerwear",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        },
+        "jacket": {
+          "name": "none",
+          "enabled": false,
+          "type": "outerwear",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        }
+      },
+      "lower_body": {
+        "panty": {
+          "name": "bikini_bottom",
+          "enabled": true,
+          "type": "swimwear",
+          "removable": {
+            "access": "locked",
+            "min_affinity": null
+          }
+        },
+        "bottom": {
+          "name": "none",
+          "enabled": false,
+          "type": "outerwear",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        }
+      },
+      "feet": {
+        "shoes": {
+          "name": "none",
+          "enabled": false,
+          "type": "accessory",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        }
+      },
+      "accessories": {
+        "hat": {
+          "name": "none",
+          "enabled": false,
+          "type": "accessory",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        },
+        "necklace": {
+          "name": "none",
+          "enabled": false,
+          "type": "accessory",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        },
+        "belt": {
+          "name": "none",
+          "enabled": false,
+          "type": "accessory",
+          "removable": {
+            "access": "allowed_all",
+            "min_affinity": 1
+          }
+        }
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@ import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
 import { useRef, useEffect } from 'react';
 import OutfitStatus from './components/OutfitStatus';
+import Shop from './components/Shop';
 
 function App() {
   const {
@@ -22,6 +23,15 @@ function App() {
     point,
     currentCharacter,
     outfitData,
+    // Shop 관련
+    shopData,
+    isShopOpen,
+    currentBackground,
+    currentOutfit,
+    purchaseItem,
+    equipItem,
+    openShop,
+    closeShop,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,17 +40,44 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const getBackgroundStyle = () => {
+    switch (currentBackground) {
+      case 'default':
+        return 'bg-white';
+      case 'school':
+        return 'bg-gradient-to-br from-blue-100 to-blue-200';
+      case 'beach':
+        return 'bg-gradient-to-br from-yellow-100 to-blue-100';
+      default:
+        return 'bg-white';
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <OutfitStatus outfitData={outfitData} />
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center p-4 ${getBackgroundStyle()}`}
+    >
+      <OutfitStatus
+        outfitData={outfitData}
+        currentOutfit={currentOutfit}
+        shopOutfits={shopData.outfits}
+      />
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}
         <div className="flex flex-col gap-2 mb-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Chat with {currentCharacter}</h1>
-            <div className="bg-blue-100 px-4 py-2 rounded-lg">
-              <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
-              <span className="text-blue-800 font-semibold ml-2">포인트: {point}</span>
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-100 px-4 py-2 rounded-lg">
+                <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
+                <span className="text-blue-800 font-semibold ml-2">포인트: {point}</span>
+              </div>
+              <button
+                onClick={openShop}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+              >
+                상점
+              </button>
             </div>
           </div>
           <div className="flex gap-2">
@@ -97,6 +134,17 @@ function App() {
         title="프리미엄 콘텐츠 구매"
         message={`${purchaseContent}를 구매하시겠습니까?`}
       />
+      {isShopOpen && (
+        <Shop
+          shopData={shopData}
+          point={point}
+          currentBackground={currentBackground}
+          currentOutfit={currentOutfit}
+          onPurchase={purchaseItem}
+          onEquip={equipItem}
+          onClose={closeShop}
+        />
+      )}
     </div>
   );
 }
