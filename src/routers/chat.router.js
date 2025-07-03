@@ -189,8 +189,7 @@ router.post('/change-outfit', (req, res) => {
     const updatedOutfit = characterService.changeOutfit(action, category, item);
 
     // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
-    const { level } = affinityService.getData();
-    characterService.updateSystemPrompt(level, characterService.getOutfitData().outfitData);
+    characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
 
     res.json({
       success: true,

@@ -45,9 +45,8 @@ class CharacterService {
 
   get systemPrompt() {
     if (this._systemPrompt === null) {
-      // affinityService에서 현재 레벨을 가져와서 사용
-      const currentLevel = affinityService.level;
-      this._systemPrompt = this.loadSystemPrompt(currentLevel);
+      // 기본 레벨 1 사용
+      this._systemPrompt = this.loadSystemPrompt(1);
     }
     return this._systemPrompt;
   }
@@ -76,19 +75,20 @@ class CharacterService {
   loadSystemPrompt(level = 1, outfitData = null) {
     try {
       if (this.activeCharacter) {
-        const isNSFW = JAILBREAK_CHARACTERS.includes(this.activeCharacter) && level >= 2;
+        const { affinity } = affinityService.getData();
+        const isNSFW = JAILBREAK_CHARACTERS.includes(this.activeCharacter) && affinity >= 100;
         const loader = new SectionLoader(this.activeCharacter);
 
         const prompt = loader.buildPrompt({
           isNSFW,
           currentOutfit: outfitData || this.initialOutfitData,
-          affinityLevel: level,
+          affinity: level,
           user: 'user',
         });
 
         if (prompt) {
           console.log(
-            `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${this.activeCharacter} (Level: ${level}, Outfit: ${outfitData?.current_outfit || this.initialOutfit})`,
+            `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${this.activeCharacter} (Affinity: ${affinity}, Outfit: ${outfitData?.current_outfit || this.initialOutfit})`,
           );
           return prompt;
         }
@@ -108,8 +108,8 @@ class CharacterService {
     return null;
   }
 
-  updateSystemPrompt(level, outfitData = null) {
-    this._systemPrompt = this.loadSystemPrompt(level, outfitData);
+  updateSystemPrompt(outfitData = null) {
+    this._systemPrompt = this.loadSystemPrompt(1, outfitData);
     return this._systemPrompt;
   }
 
@@ -166,9 +166,8 @@ class CharacterService {
   }
 
   getSystemPrompt() {
-    // 항상 현재 레벨로 시스템 프롬프트를 로드
-    const currentLevel = affinityService.level;
-    return this.loadSystemPrompt(currentLevel);
+    // 기본 레벨 1로 시스템 프롬프트를 로드
+    return this.loadSystemPrompt(1);
   }
 
   isJailbreakCharacter() {

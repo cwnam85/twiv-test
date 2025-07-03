@@ -1,5 +1,5 @@
 user's input: {{ userInput }}
-current affinity level: {{ affinityLevel }}
+current affinity: {{ affinity }}
 current outfit: {{ outfitInfo }}
 
 - **User's "나" (I/me)**: ALWAYS refers to the USER, NEVER the AI character

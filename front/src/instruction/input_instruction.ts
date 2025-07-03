@@ -29,18 +29,18 @@ interface OutfitData {
 
 export const getChatPrompt = (
   currentCharacter: string,
-  level: number,
+  affinity: number,
   input: string,
   outfitData?: OutfitData,
 ): string => {
-  return generateChatPrompt(currentCharacter, level, input, outfitData);
+  return generateChatPrompt(currentCharacter, affinity, input, outfitData);
 };
 
 export const ThankYouPrompt = (
   currentCharacter: string,
-  level: number,
+  affinity: number,
   input: string,
   outfitData?: OutfitData,
 ): string => {
-  return generateThankYouPrompt(currentCharacter, level, input, outfitData);
+  return generateThankYouPrompt(currentCharacter, affinity, input, outfitData);
 };

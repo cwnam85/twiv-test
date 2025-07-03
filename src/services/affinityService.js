@@ -11,7 +11,6 @@ const POINT_FILE_PATH = path.join(__dirname, '../data/point.json');
 class AffinityService {
   constructor() {
     this.affinity = 0;
-    this.level = 1;
     this.point = 100;
     this.loadData();
   }
@@ -27,7 +26,6 @@ class AffinityService {
         const data = fs.readFileSync(AFFINITY_FILE_PATH, 'utf8');
         const parsed = JSON.parse(data);
         this.affinity = parsed.affinity || 0;
-        this.level = parsed.level || 1;
       }
     } catch (error) {
       console.error('Error loading affinity data:', error);
@@ -57,7 +55,6 @@ class AffinityService {
         JSON.stringify(
           {
             affinity: this.affinity,
-            level: this.level,
           },
           null,
           2,
@@ -81,28 +78,10 @@ class AffinityService {
   }
 
   updateAffinity(change) {
-    const oldLevel = this.level;
     this.affinity += change;
-
-    // 레벨업 체크
-    if (this.affinity >= 100 && this.level < 5) {
-      this.level += 1;
-      this.affinity = 0;
-      console.log(`Level up! Current level: ${this.level}`);
-    }
-    // 레벨다운 체크
-    else if (this.affinity < 0 && this.level > 1) {
-      this.level -= 1;
-      this.affinity = 100 + this.affinity;
-      console.log(`Level down! Current level: ${this.level}`);
-    }
-    // 레벨 1에서는 affinity가 음수가 되지 않도록 처리
-    else if (this.level === 1) {
-      this.affinity = Math.max(0, this.affinity);
-    }
-
+    this.affinity = Math.max(0, this.affinity); // affinity가 음수가 되지 않도록 처리
     this.saveAffinity();
-    return { levelChanged: oldLevel !== this.level, newLevel: this.level };
+    return { affinityChanged: true, newAffinity: this.affinity };
   }
 
   updatePoint(change) {
@@ -118,7 +97,6 @@ class AffinityService {
   getData() {
     return {
       affinity: this.affinity,
-      level: this.level,
       point: this.point,
     };
   }

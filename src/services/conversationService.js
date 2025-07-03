@@ -86,9 +86,9 @@ class ConversationService {
   getRequestHistory() {
     let requestHistory = [...this.conversationHistory];
 
-    // 레벨 2 이상이고 jailbreak 캐릭터인 경우에만 임시로 추가
-    const { level } = affinityService.getData();
-    if (level >= 2 && characterService.isJailbreakCharacter()) {
+    // affinity가 100 이상이고 jailbreak 캐릭터인 경우에만 임시로 추가
+    const { affinity } = affinityService.getData();
+    if (affinity >= 100 && characterService.isJailbreakCharacter()) {
       const jailbreakHistory = this.getJailbreakHistory();
       requestHistory.push(...jailbreakHistory);
     }
@@ -97,13 +97,16 @@ class ConversationService {
   }
 
   getJailbreakHistory() {
-    const { level } = affinityService.getData();
     const activeCharacter = characterService.getActiveCharacter();
+    const { affinity } = affinityService.getData();
 
     let levelUpMessages;
     switch (activeCharacter) {
       case 'shaki':
-        levelUpMessages = characterService.renderJailbreakHistory(SHAKI_JAILBREAK_HISTORY, level);
+        levelUpMessages = characterService.renderJailbreakHistory(
+          SHAKI_JAILBREAK_HISTORY,
+          affinity,
+        );
         break;
       case 'miwoo':
         levelUpMessages = [...MIWOO_JAILBREAK_HISTORY];
@@ -115,7 +118,10 @@ class ConversationService {
         levelUpMessages = [...HARIO_JAILBREAK_HISTORY];
         break;
       default:
-        levelUpMessages = characterService.renderJailbreakHistory(SHAKI_JAILBREAK_HISTORY, level);
+        levelUpMessages = characterService.renderJailbreakHistory(
+          SHAKI_JAILBREAK_HISTORY,
+          affinity,
+        );
     }
     return levelUpMessages;
   }

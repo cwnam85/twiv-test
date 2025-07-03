@@ -113,11 +113,10 @@ class ResponseService {
     if (!isNaN(change)) {
       const result = affinityService.updateAffinity(change);
 
-      if (result.levelChanged) {
-        // 레벨 변경 시 시스템 프롬프트 업데이트
-        const { level } = affinityService.getData();
-        characterService.updateSystemPrompt(level);
-        console.log(`Level changed to ${result.newLevel}`);
+      if (result.affinityChanged) {
+        // affinity 변경 시 시스템 프롬프트 업데이트
+        characterService.updateSystemPrompt();
+        console.log(`Affinity changed to ${result.newAffinity}`);
       }
     }
   }
@@ -218,8 +217,7 @@ class ResponseService {
         );
 
         // 시스템 프롬프트 업데이트
-        const { level } = affinityService.getData();
-        characterService.updateSystemPrompt(level, characterService.getOutfitData().outfitData);
+        characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
       } catch (outfitError) {
         console.error('Error changing outfit:', outfitError);
       }

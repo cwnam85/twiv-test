@@ -38,13 +38,13 @@ class SectionLoader {
 
   // 전체 프롬프트 조합 (nunjucks 템플릿 사용)
   buildPrompt(context = {}) {
-    const { isNSFW = false, currentOutfit = null, affinityLevel = 1, user = 'user' } = context;
+    const { isNSFW = false, currentOutfit = null, affinity = 1, user = 'user' } = context;
 
     // 템플릿 컨텍스트 구성
     const templateContext = {
       isNSFW,
       currentOutfit,
-      affinityLevel,
+      affinity,
       user,
       character: this.character,
       outfitDescription: currentOutfit ? this.generateOutfitDescription(currentOutfit) : null,
@@ -72,7 +72,7 @@ class SectionLoader {
 
   // 복장 설명 생성 메서드
   generateOutfitDescription(outfitData) {
-    console.log('generateOutfitDescription input:', JSON.stringify(outfitData, null, 2));
+    // console.log('generateOutfitDescription input:', JSON.stringify(outfitData, null, 2));
 
     if (!outfitData || !outfitData.parts) {
       console.warn('Invalid outfit data structure:', outfitData);
@@ -153,7 +153,7 @@ class SectionLoader {
       description += '- Maintains character personality through clothing choices\n';
     }
 
-    console.log('Generated outfit description:', description);
+    // console.log('Generated outfit description:', description);
     return description;
   }
 }

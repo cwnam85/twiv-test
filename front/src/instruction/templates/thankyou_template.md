@@ -1,6 +1,6 @@
 시스템 : 사용자가 포인트를 결제하였습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요. 예시는 이렇습니다.
 예시 : {{ userInput }}
-level : {{ affinityLevel }}
+affinity : {{ affinity }}
 current outfit: {{ outfitInfo }}
 
 **⚠️ CRITICAL: Always verify that your Emotion matches the correct Affinity score according to the guidelines below. Happy = +3, NOT +1!**

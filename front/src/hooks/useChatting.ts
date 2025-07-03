@@ -35,7 +35,6 @@ const useChatting = () => {
   const [purchaseContent, setPurchaseContent] = useState('');
   const [originalUserInput, setOriginalUserInput] = useState('');
   const [affinity, setAffinity] = useState(0);
-  const [level, setLevel] = useState(1);
   const [point, setPoint] = useState(100);
   const [pose, setPose] = useState('stand');
   const [emotion, setEmotion] = useState('Neutral');
@@ -57,9 +56,6 @@ const useChatting = () => {
         const affinityData = await affinityResponse.json();
         if (affinityData.affinity !== undefined) {
           setAffinity(affinityData.affinity);
-        }
-        if (affinityData.level !== undefined) {
-          setLevel(affinityData.level);
         }
         if (affinityData.point !== undefined) {
           setPoint(affinityData.point);
@@ -108,7 +104,7 @@ const useChatting = () => {
         // 백엔드 API 호출
         const chatPrompt = getChatPrompt(
           currentCharacter,
-          level,
+          affinity,
           currentInput,
           outfitData || undefined,
         );
@@ -174,10 +170,6 @@ const useChatting = () => {
         if (data.affinity !== undefined) {
           setAffinity(data.affinity);
         }
-        // 레벨 업데이트
-        if (data.level !== undefined) {
-          setLevel(data.level);
-        }
         // 포인트 업데이트
         if (data.point !== undefined) {
           setPoint(data.point);
@@ -220,7 +212,7 @@ const useChatting = () => {
 
         const thankYouPrompt = ThankYouPrompt(
           currentCharacter,
-          level,
+          affinity,
           randomThankYou.message,
           outfitData || undefined,
         );
@@ -274,9 +266,6 @@ const useChatting = () => {
       if (data.affinity !== undefined) {
         setAffinity(data.affinity);
       }
-      if (data.level !== undefined) {
-        setLevel(data.level);
-      }
       if (data.point !== undefined) {
         setPoint(data.point);
       }
@@ -315,7 +304,6 @@ const useChatting = () => {
     handlePurchaseConfirm,
     handlePurchaseClose,
     affinity,
-    level,
     point,
     pose,
     emotion,

@@ -1,15 +1,9 @@
-// 호감도 레벨에 따른 포즈 해금 시스템
-export const POSE_UNLOCK_LEVELS = {
-  // 레벨 1, 2: 기본 포즈
-  1: ['stand', 'sit'],
-  2: ['stand', 'sit'],
-
-  // 레벨 3 ,4: 더 많은 포즈
-  3: ['stand', 'sit', 'spreadlegs'],
-  4: ['stand', 'sit', 'spreadlegs'],
-
-  // 레벨 5 : 모든 포즈
-  5: ['stand', 'sit', 'doggy', 'spreadlegs', 'standdoggy', 'missionary', 'cowgirl'],
+// 호감도 affinity에 따른 포즈 해금 시스템
+export const POSE_UNLOCK_AFFINITY = {
+  // affinity 0-99: 기본 포즈
+  0: ['stand', 'sit'],
+  // affinity 100+: 모든 포즈
+  100: ['stand', 'sit', 'doggy', 'spreadlegs', 'standdoggy', 'missionary', 'cowgirl'],
 };
 
 // 캐릭터별 포즈 제한 (선택사항)
