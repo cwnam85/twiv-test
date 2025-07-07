@@ -7,6 +7,9 @@ import {
 } from '../data/initialConversation.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
+import fs from 'fs';
+import path from 'path';
+import nunjucks from 'nunjucks';
 
 class ConversationService {
   constructor() {
@@ -17,19 +20,50 @@ class ConversationService {
   initializeHistory() {
     let initialHistory = SFW_INITIAL_CONVERSATION_HISTORY;
 
-    // 복장 정보 history에 추가
-    const outfitData = characterService.getOutfitData();
-    if (characterService.getActiveCharacter() && outfitData.outfitData) {
-      initialHistory.push({
-        role: 'assistant',
-        content: [
-          {
-            type: 'text',
-            text: `현재 ${characterService.getActiveCharacter()}는 "${outfitData.outfitName}" 복장을 입고 있습니다.`,
-          },
-        ],
-      });
-    }
+    // 템플릿 렌더링을 위한 nunjucks 환경 설정
+    const env = nunjucks.configure({
+      autoescape: false,
+      trimBlocks: true,
+      lstripBlocks: true,
+    });
+
+    // 현재 상점 데이터 가져오기
+    const shopData = this.getShopData();
+    const currentBackground =
+      shopData && shopData.currentBackground
+        ? this.getBackgroundName(shopData.currentBackground)
+        : 'Default Background';
+    const currentOutfit =
+      shopData && shopData.currentOutfit
+        ? this.getOutfitName(shopData.currentOutfit)
+        : 'Default Outfit';
+
+    // 현재 affinity 값 가져오기
+    const { affinity } = affinityService.getData();
+
+    // 템플릿 컨텍스트
+    const templateContext = {
+      currentBackground: currentBackground,
+      currentOutfit: currentOutfit,
+      affinity: affinity,
+    };
+
+    // 히스토리의 각 메시지를 렌더링
+    initialHistory = initialHistory.map((message) => {
+      if (message.content && Array.isArray(message.content)) {
+        const renderedContent = message.content.map((content) => {
+          if (content.type === 'text' && content.text) {
+            return {
+              ...content,
+              text: env.renderString(content.text, templateContext),
+            };
+          }
+          return content;
+        });
+        return { ...message, content: renderedContent };
+      }
+      return message;
+    });
 
     // 캐릭터의 첫 메시지 추가
     const firstMessage = characterService.getFirstMessage();
@@ -86,7 +120,7 @@ class ConversationService {
   getRequestHistory() {
     let requestHistory = [...this.conversationHistory];
 
-    // affinity가 100 이상이고 jailbreak 캐릭터인 경우에만 임시로 추가
+    // affinity가 100 이상이고 jailbreak 캐릭터인 경우에만 추가
     const { affinity } = affinityService.getData();
     if (affinity >= 100 && characterService.isJailbreakCharacter()) {
       const jailbreakHistory = this.getJailbreakHistory();
@@ -146,6 +180,40 @@ class ConversationService {
         this.conversationHistory.push(systemMessage);
       }
     }
+  }
+
+  // 상점 데이터 가져오기
+  getShopData() {
+    try {
+      const shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
+      if (fs.existsSync(shopDataPath)) {
+        return JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
+      }
+    } catch (error) {
+      console.error('Error reading shop data:', error);
+    }
+    return null;
+  }
+
+  // 배경 이름 가져오기
+  getBackgroundName(backgroundId) {
+    const backgroundNames = {
+      default: 'Default Background',
+      school: 'School',
+      beach: 'Beach',
+    };
+    return backgroundNames[backgroundId] || backgroundId;
+  }
+
+  // 복장 이름 가져오기
+  getOutfitName(outfitId) {
+    const outfitNames = {
+      default: 'Default Outfit',
+      casual: 'Casual',
+      school_uniform: 'School Uniform',
+      swimsuit: 'Swimsuit',
+    };
+    return outfitNames[outfitId] || outfitId;
   }
 }
 

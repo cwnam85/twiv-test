@@ -1,43 +1,29 @@
 {
   "ownedItems": [
+    "school",
     "school_uniform",
-    "beach",
-    "swimsuit",
-    "default",
-    "school"
+    "swimsuit"
   ],
-  "currentBackground": "default",
-  "currentOutfit": "casual",
+  "currentBackground": "school",
+  "currentOutfit": "school_uniform",
   "purchaseHistory": [
+    {
+      "itemId": "school",
+      "itemType": "background",
+      "price": 50,
+      "purchasedAt": "2025-07-03T08:09:13.386Z"
+    },
     {
       "itemId": "school_uniform",
       "itemType": "outfit",
       "price": 100,
-      "purchasedAt": "2025-07-03T06:23:34.228Z"
-    },
-    {
-      "itemId": "beach",
-      "itemType": "background",
-      "price": 80,
-      "purchasedAt": "2025-07-03T06:26:14.892Z"
+      "purchasedAt": "2025-07-03T08:09:19.840Z"
     },
     {
       "itemId": "swimsuit",
       "itemType": "outfit",
       "price": 150,
-      "purchasedAt": "2025-07-03T06:29:37.140Z"
-    },
-    {
-      "itemId": "default",
-      "itemType": "outfit",
-      "price": 0,
-      "purchasedAt": "2025-07-03T06:39:51.445Z"
-    },
-    {
-      "itemId": "school",
-      "itemType": "background",
-      "price": 50,
-      "purchasedAt": "2025-07-03T07:02:24.632Z"
+      "purchasedAt": "2025-07-03T08:17:25.295Z"
     }
   ]
 }

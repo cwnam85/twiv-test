@@ -7,6 +7,11 @@ import affinityService from '../services/affinityService.js';
 import characterService from '../services/characterService.js';
 import conversationService from '../services/conversationService.js';
 import responseService from '../services/responseService.js';
+import {
+  processAIResponse,
+  isValidResponse,
+  createResponseSummary,
+} from '../utils/responseProcessor.js';
 
 const router = express.Router();
 
@@ -16,37 +21,18 @@ const webSocket = connectWebSocket();
 // 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
 conversationService.addSystemMessageIfNeeded();
 
-// 검열 에러 감지 함수
+// 검열 에러 감지 함수 (새로운 유틸리티 함수 사용)
 function isInvalidResponse(response) {
-  if (!response || !response.dialogue) return true;
-
-  // dialogue가 문자열이 아니면 잘못된 응답
-  if (typeof response.dialogue !== 'string') return true;
-
-  // dialogue가 너무 짧거나 비어있으면 잘못된 응답
-  if (response.dialogue.trim().length < 5) return true;
-
-  // JSON 파싱 에러가 발생했거나 기본 에러 메시지인 경우
-  const dialogue = response.dialogue.toLowerCase();
-  const errorIndicators = [
-    'syntaxerror',
-    'unexpected token',
-    'invalid json',
-    'parse error',
-    'json parse',
-    'not valid json',
-  ];
-
-  return errorIndicators.some((indicator) => dialogue.includes(indicator));
+  return !isValidResponse(response);
 }
 
-// 재시도 로직 함수
+// 재시도 로직 함수 (새로운 응답 처리 함수 사용)
 async function processLLMResponseWithRetry(
   requestHistory,
   realMessage,
   currentModel,
   systemPrompt,
-  maxRetries = 3,
+  maxRetries = 10,
 ) {
   let lastError;
 
@@ -60,6 +46,10 @@ async function processLLMResponseWithRetry(
         currentModel,
         systemPrompt,
       );
+
+      // 응답 요약 로그
+      const summary = createResponseSummary(response);
+      console.log(`응답 처리 완료 (시도 ${attempt}):`, summary);
 
       // 검열된 응답인지 확인
       if (isInvalidResponse(response)) {
@@ -94,6 +84,12 @@ async function processLLMResponseWithRetry(
 router.get('/affinity', (req, res) => {
   const data = affinityService.getData();
   res.json(data);
+});
+
+// 타이머 상태 확인 API
+router.get('/timer-status', (req, res) => {
+  const timerStatus = affinityService.getTimerStatus();
+  res.json(timerStatus);
 });
 
 // 호감도와 포인트 업데이트

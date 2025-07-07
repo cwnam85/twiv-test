@@ -45,15 +45,28 @@ class CharacterService {
 
   get systemPrompt() {
     if (this._systemPrompt === null) {
-      // 기본 레벨 1 사용
-      this._systemPrompt = this.loadSystemPrompt(1);
+      // 실제 affinity 값 사용
+      this._systemPrompt = this.loadSystemPrompt();
     }
     return this._systemPrompt;
   }
 
   getInitialOutfit() {
-    const outfitEnvKey = `${this.activeCharacter?.toUpperCase()}_OUTFIT`;
-    return process.env[outfitEnvKey] || 'casual';
+    // 상점 데이터에서 복장 정보를 우선으로 가져오기
+    try {
+      const shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
+      if (fs.existsSync(shopDataPath)) {
+        const shopData = JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
+        if (shopData.currentOutfit) {
+          return shopData.currentOutfit;
+        }
+      }
+    } catch (error) {
+      console.error('Error reading shop data for initial outfit:', error);
+    }
+
+    // 상점 데이터가 없으면 기본값 사용
+    return 'casual';
   }
 
   loadOutfitData() {
@@ -72,7 +85,7 @@ class CharacterService {
     return null;
   }
 
-  loadSystemPrompt(level = 1, outfitData = null) {
+  loadSystemPrompt(outfitData = null) {
     try {
       if (this.activeCharacter) {
         const { affinity } = affinityService.getData();
@@ -82,7 +95,7 @@ class CharacterService {
         const prompt = loader.buildPrompt({
           isNSFW,
           currentOutfit: outfitData || this.initialOutfitData,
-          affinity: level,
+          affinity: affinity,
           user: 'user',
         });
 
@@ -109,7 +122,7 @@ class CharacterService {
   }
 
   updateSystemPrompt(outfitData = null) {
-    this._systemPrompt = this.loadSystemPrompt(1, outfitData);
+    this._systemPrompt = this.loadSystemPrompt(outfitData);
     return this._systemPrompt;
   }
 
@@ -187,14 +200,14 @@ class CharacterService {
   // 상점 복장 정보와 서버 복장을 동기화하는 메서드
   syncWithShopOutfit() {
     try {
-      const shopDataPath = path.join(process.cwd(), 'data', 'shop_data.json');
+      const shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
 
       if (fs.existsSync(shopDataPath)) {
         const shopData = JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
-        const currentShopOutfit = shopData.currentOutfit || 'default';
+        const currentShopOutfit = shopData.currentOutfit || 'casual';
 
-        // 상점에서 착용 중인 복장이 있고, 기본 복장이 아닌 경우
-        if (currentShopOutfit !== 'default' && currentShopOutfit !== this.initialOutfit) {
+        // 상점에서 착용 중인 복장이 있으면 항상 동기화
+        if (currentShopOutfit && currentShopOutfit !== this.initialOutfit) {
           console.log(`Syncing server outfit with shop outfit: ${currentShopOutfit}`);
           this.changeToOutfit(currentShopOutfit);
           return true;
@@ -218,8 +231,8 @@ class CharacterService {
   }
 
   getSystemPrompt() {
-    // 기본 레벨 1로 시스템 프롬프트를 로드
-    return this.loadSystemPrompt(1);
+    // 실제 affinity 값으로 시스템 프롬프트를 로드
+    return this.loadSystemPrompt();
   }
 
   isJailbreakCharacter() {
@@ -244,7 +257,7 @@ class CharacterService {
             if (content.type === 'text' && content.text) {
               return {
                 ...content,
-                text: env.renderString(content.text, { affinityLevel }),
+                text: env.renderString(content.text, { affinity: affinityLevel }),
               };
             }
             return content;

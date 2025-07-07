@@ -14,7 +14,15 @@ const useChatting = () => {
   // 각각의 작은 훅들을 사용
   const { currentCharacter, pose, emotion, updatePose, updateEmotion } = useCharacter();
 
-  const { affinity, point, updateAffinity, updatePoint, addPoints } = useAffinity();
+  const {
+    affinity,
+    point,
+    timerStatus,
+    showTimerExpiredAlert,
+    updateAffinity,
+    updatePoint,
+    addPoints,
+  } = useAffinity();
 
   const { outfitData, updateOutfitData, refreshOutfitData } = useOutfit();
 
@@ -52,6 +60,7 @@ const useChatting = () => {
     currentCharacter,
     affinity,
     outfitData,
+    currentBackground,
     onMessageAdd: addBotMessageFromMessage,
     onAffinityUpdate: updateAffinity,
     onPointUpdate: updatePoint,
@@ -69,6 +78,7 @@ const useChatting = () => {
     currentCharacter,
     affinity,
     outfitData,
+    currentBackground,
     onMessageAdd: addBotMessageFromMessage,
     onAffinityUpdate: updateAffinity,
     onPointUpdate: updatePoint,
@@ -118,6 +128,8 @@ const useChatting = () => {
     handlePurchaseClose,
     affinity,
     point,
+    timerStatus,
+    showTimerExpiredAlert,
     pose,
     emotion,
     currentCharacter,

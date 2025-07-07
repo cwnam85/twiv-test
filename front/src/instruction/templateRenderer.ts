@@ -30,6 +30,7 @@ interface OutfitData {
 interface TemplateContext {
   userInput: string;
   affinity: number;
+  backgroundInfo: string;
   outfitInfo: string;
   character: string;
   poseList: string;
@@ -52,6 +53,21 @@ function renderTemplate(template: string, context: TemplateContext): string {
   });
 
   return result;
+}
+
+// 배경 정보를 문자열로 변환하는 함수
+function generateBackgroundInfo(backgroundId?: string): string {
+  if (!backgroundId) {
+    return 'Default Background';
+  }
+
+  const backgroundNames: { [key: string]: string } = {
+    default: 'Default Background',
+    school: 'School',
+    beach: 'Beach',
+  };
+
+  return backgroundNames[backgroundId] || backgroundId;
 }
 
 // 복장 정보를 문자열로 변환하는 함수
@@ -93,15 +109,18 @@ export function generateChatPrompt(
   affinity: number,
   input: string,
   outfitData?: OutfitData,
+  backgroundId?: string,
 ): string {
   try {
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
+    const backgroundInfo = generateBackgroundInfo(backgroundId);
 
     const context: TemplateContext = {
       userInput: input,
       affinity: affinity,
+      backgroundInfo: backgroundInfo,
       outfitInfo: outfitInfo,
       character: currentCharacter,
       poseList: poseList,
@@ -122,15 +141,18 @@ export function generateThankYouPrompt(
   affinity: number,
   input: string,
   outfitData?: OutfitData,
+  backgroundId?: string,
 ): string {
   try {
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
+    const backgroundInfo = generateBackgroundInfo(backgroundId);
 
     const context: TemplateContext = {
       userInput: input,
       affinity: affinity,
+      backgroundInfo: backgroundInfo,
       outfitInfo: outfitInfo,
       character: currentCharacter,
       poseList: poseList,

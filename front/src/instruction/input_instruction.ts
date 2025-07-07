@@ -32,8 +32,9 @@ export const getChatPrompt = (
   affinity: number,
   input: string,
   outfitData?: OutfitData,
+  backgroundId?: string,
 ): string => {
-  return generateChatPrompt(currentCharacter, affinity, input, outfitData);
+  return generateChatPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
 };
 
 export const ThankYouPrompt = (
@@ -41,6 +42,7 @@ export const ThankYouPrompt = (
   affinity: number,
   input: string,
   outfitData?: OutfitData,
+  backgroundId?: string,
 ): string => {
-  return generateThankYouPrompt(currentCharacter, affinity, input, outfitData);
+  return generateThankYouPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
 };

@@ -27,9 +27,6 @@ const OutfitStatus: React.FC<OutfitStatusProps> = ({
           <div style={{ fontWeight: 500, color: '#059669', fontSize: '1.1em' }}>
             🛍️ 상점 복장: {equippedShopOutfit.name}
           </div>
-          <div style={{ fontSize: '0.9em', color: '#059669', marginTop: 2 }}>
-            (상점에서 구매한 복장이 착용 중입니다)
-          </div>
         </div>
       )}
 

@@ -3,6 +3,8 @@ import useChatting from './hooks/useChatting';
 import { useRef, useEffect } from 'react';
 import OutfitStatus from './components/OutfitStatus';
 import Shop from './components/Shop';
+import TimerDisplay from './components/TimerDisplay';
+import TimerExpiredAlert from './components/TimerExpiredAlert';
 
 function App() {
   const {
@@ -21,6 +23,8 @@ function App() {
     pose,
     emotion,
     point,
+    timerStatus,
+    showTimerExpiredAlert,
     currentCharacter,
     outfitData,
     // Shop 관련
@@ -57,6 +61,16 @@ function App() {
     <div
       className={`min-h-screen flex flex-col items-center justify-center p-4 ${getBackgroundStyle()}`}
     >
+      {/* 타이머 표시 */}
+      <TimerDisplay
+        hasTimer={timerStatus.hasTimer}
+        remainingTime={timerStatus.remainingTime}
+        affinity={affinity}
+      />
+
+      {/* 타이머 만료 알림 */}
+      <TimerExpiredAlert show={showTimerExpiredAlert} />
+
       <OutfitStatus
         outfitData={outfitData}
         currentOutfit={currentOutfit}

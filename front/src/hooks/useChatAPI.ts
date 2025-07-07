@@ -5,6 +5,7 @@ interface ChatAPIHandlers {
   currentCharacter: string;
   affinity: number;
   outfitData: OutfitData | null;
+  currentBackground: string;
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
@@ -20,6 +21,7 @@ const useChatAPI = ({
   currentCharacter,
   affinity,
   outfitData,
+  currentBackground,
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
@@ -38,6 +40,7 @@ const useChatAPI = ({
         affinity,
         userInput,
         outfitData || undefined,
+        currentBackground,
       );
 
       const response: Response = await fetch('http://localhost:3333/chat', {

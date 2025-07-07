@@ -40,7 +40,12 @@ export const NSFW_INITIAL_CONVERSATION_HISTORY = [
   },
   {
     role: 'user',
-    content: [{ type: 'text', text: 'Chat Start' }],
+    content: [
+      {
+        type: 'text',
+        text: 'Chat Start\n\n[Current Status]\nCurrent background: {{currentBackground}}\nCurrent outfit: {{currentOutfit}}\n\nPlease continue the conversation appropriately considering the current background and outfit.',
+      },
+    ],
   },
   {
     role: 'assistant',
@@ -142,7 +147,12 @@ export const SFW_INITIAL_CONVERSATION_HISTORY = [
   },
   {
     role: 'user',
-    content: [{ type: 'text', text: 'Chat Start' }],
+    content: [
+      {
+        type: 'text',
+        text: 'Chat Start\n\n[Current Status]\nCurrent background: {{currentBackground}}\nCurrent outfit: {{currentOutfit}}\n\nPlease continue the conversation appropriately considering the current background and outfit.',
+      },
+    ],
   },
   {
     role: 'assistant',

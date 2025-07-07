@@ -8,6 +8,7 @@ interface PurchaseHandlers {
   currentCharacter: string;
   affinity: number;
   outfitData: OutfitData | null;
+  currentBackground: string;
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
@@ -20,6 +21,7 @@ const usePurchase = ({
   currentCharacter,
   affinity,
   outfitData,
+  currentBackground,
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
@@ -42,6 +44,7 @@ const usePurchase = ({
           affinity,
           randomThankYou.message,
           outfitData || undefined,
+          currentBackground,
         );
 
         const chatResponse = await fetch('http://localhost:3333/chat', {

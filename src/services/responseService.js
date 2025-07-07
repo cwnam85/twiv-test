@@ -22,14 +22,14 @@ class ResponseService {
       // 포인트 차감
       affinityService.deductPoint(1);
 
-      return this.parseResponse(responseLLM);
+      return await this.parseResponse(responseLLM);
     } catch (error) {
       console.error(`Error calling ${currentModel} API:`, error);
       throw error;
     }
   }
 
-  parseResponse(responseLLM) {
+  async parseResponse(responseLLM) {
     let dialogue = null;
     let emotion = null;
     let pose = null;
@@ -39,40 +39,19 @@ class ResponseService {
     let outfitChange = null;
 
     try {
-      if (typeof responseLLM.dialogue === 'object') {
-        const parsed = responseLLM.dialogue;
-        dialogue = parsed.dialogue;
-        emotion = parsed.emotion;
-        pose = parsed.pose;
-        purchaseRequired = parsed.purchaseRequired === 'true' || parsed.purchaseRequired === true;
-        requestedContent = parsed.requestedContent;
-        outfitChange = parsed.outfitChange;
+      // 새로운 응답 처리 함수 사용
+      const { processAIResponse } = await import('../utils/responseProcessor.js');
+      const processedResponse = processAIResponse(responseLLM);
 
-        // affinity 처리
-        if (parsed.affinity) {
-          this.processAffinityChange(parsed.affinity);
-        }
-      } else {
-        // 문자열로 된 JSON을 파싱
-        try {
-          const parsedDialogue = JSON.parse(responseLLM.dialogue);
-          dialogue = parsedDialogue.dialogue;
-          emotion = parsedDialogue.emotion;
-          pose = parsedDialogue.pose;
-          purchaseRequired =
-            parsedDialogue.purchaseRequired === 'true' || parsedDialogue.purchaseRequired === true;
-          requestedContent = parsedDialogue.requestedContent;
-          outfitChange = parsedDialogue.outfitChange;
+      dialogue = processedResponse.dialogue;
+      emotion = processedResponse.emotion;
+      pose = processedResponse.pose;
+      purchaseRequired = processedResponse.purchaseRequired;
+      requestedContent = processedResponse.requestedContent;
 
-          // affinity 처리
-          if (parsedDialogue.affinity) {
-            this.processAffinityChange(parsedDialogue.affinity);
-          }
-        } catch (parseError) {
-          console.error('JSON 파싱 중 오류 발생:', parseError);
-          // 기존 정규식 방식으로 폴백
-          return this.parseWithRegex(responseLLM.dialogue);
-        }
+      // affinity 처리
+      if (processedResponse.affinity) {
+        this.processAffinityChange(processedResponse.affinity);
       }
 
       usage = responseLLM.usage;
@@ -88,6 +67,7 @@ class ResponseService {
       };
     } catch (error) {
       console.error('Response parsing error:', error);
+      // 폴백: 기존 정규식 방식 사용
       return this.parseWithRegex(responseLLM.dialogue);
     }
   }
