@@ -89,7 +89,7 @@ class CharacterService {
     try {
       if (this.activeCharacter) {
         const { affinity } = affinityService.getData();
-        const isNSFW = JAILBREAK_CHARACTERS.includes(this.activeCharacter) && affinity >= 100;
+        const isNSFW = JAILBREAK_CHARACTERS.includes(this.activeCharacter) && affinity >= 80;
         const loader = new SectionLoader(this.activeCharacter);
 
         const prompt = loader.buildPrompt({

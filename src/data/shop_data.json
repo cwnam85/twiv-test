@@ -1,29 +1,14 @@
 {
-  "ownedItems": [
-    "school",
-    "school_uniform",
-    "swimsuit"
-  ],
-  "currentBackground": "school",
-  "currentOutfit": "school_uniform",
+  "ownedBackgrounds": [],
+  "ownedOutfits": [],
+  "currentBackground": "default",
+  "currentOutfit": "default",
   "purchaseHistory": [
     {
       "itemId": "school",
       "itemType": "background",
       "price": 50,
-      "purchasedAt": "2025-07-03T08:09:13.386Z"
-    },
-    {
-      "itemId": "school_uniform",
-      "itemType": "outfit",
-      "price": 100,
-      "purchasedAt": "2025-07-03T08:09:19.840Z"
-    },
-    {
-      "itemId": "swimsuit",
-      "itemType": "outfit",
-      "price": 150,
-      "purchasedAt": "2025-07-03T08:17:25.295Z"
+      "purchasedAt": "2025-07-09T01:58:06.472Z"
     }
   ]
 }

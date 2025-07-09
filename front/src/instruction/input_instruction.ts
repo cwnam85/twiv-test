@@ -27,22 +27,22 @@ interface OutfitData {
   };
 }
 
-export const getChatPrompt = (
+export const getChatPrompt = async (
   currentCharacter: string,
   affinity: number,
   input: string,
   outfitData?: OutfitData,
   backgroundId?: string,
-): string => {
-  return generateChatPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
+): Promise<string> => {
+  return await generateChatPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
 };
 
-export const ThankYouPrompt = (
+export const ThankYouPrompt = async (
   currentCharacter: string,
   affinity: number,
   input: string,
   outfitData?: OutfitData,
   backgroundId?: string,
-): string => {
-  return generateThankYouPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
+): Promise<string> => {
+  return await generateThankYouPrompt(currentCharacter, affinity, input, outfitData, backgroundId);
 };

@@ -12,7 +12,8 @@ class ShopService {
     try {
       if (!fs.existsSync(this.shopDataPath)) {
         const defaultShopData = {
-          ownedItems: [],
+          ownedBackgrounds: [],
+          ownedOutfits: [],
           currentBackground: 'default',
           currentOutfit: 'default',
           purchaseHistory: [],
@@ -40,7 +41,8 @@ class ShopService {
     } catch (error) {
       console.error('Error reading shop data:', error);
       return {
-        ownedItems: [],
+        ownedBackgrounds: [],
+        ownedOutfits: [],
         currentBackground: 'default',
         currentOutfit: 'default',
         purchaseHistory: [],
@@ -63,7 +65,8 @@ class ShopService {
   getOwnedItems() {
     const shopData = this.getShopData();
     return {
-      ownedItems: shopData.ownedItems || [],
+      ownedBackgrounds: shopData.ownedBackgrounds || [],
+      ownedOutfits: shopData.ownedOutfits || [],
       currentBackground: shopData.currentBackground || 'default',
       currentOutfit: shopData.currentOutfit || 'default',
     };
@@ -74,7 +77,12 @@ class ShopService {
     const shopData = this.getShopData();
 
     // 이미 구매한 아이템인지 확인
-    if (shopData.ownedItems.includes(itemId)) {
+    const isAlreadyOwned =
+      itemType === 'background'
+        ? shopData.ownedBackgrounds.includes(itemId)
+        : shopData.ownedOutfits.includes(itemId);
+
+    if (isAlreadyOwned) {
       throw new Error('이미 구매한 상품입니다.');
     }
 
@@ -83,8 +91,13 @@ class ShopService {
       throw new Error('포인트가 부족합니다.');
     }
 
-    // 구매 처리
-    shopData.ownedItems.push(itemId);
+    // 구매 처리 - 아이템 타입에 따라 적절한 배열에 추가
+    if (itemType === 'background') {
+      shopData.ownedBackgrounds.push(itemId);
+    } else if (itemType === 'outfit') {
+      shopData.ownedOutfits.push(itemId);
+    }
+
     shopData.purchaseHistory.push({
       itemId,
       itemType,
@@ -100,7 +113,8 @@ class ShopService {
     return {
       success: true,
       newPoint: currentPoints - price,
-      ownedItems: shopData.ownedItems,
+      ownedBackgrounds: shopData.ownedBackgrounds,
+      ownedOutfits: shopData.ownedOutfits,
     };
   }
 
@@ -109,7 +123,13 @@ class ShopService {
     const shopData = this.getShopData();
 
     // 기본 의상이나 기본 배경이 아닌 경우에만 구매 여부 확인
-    if (itemId !== 'default' && !shopData.ownedItems.includes(itemId)) {
+    const isOwned =
+      itemId === 'default' ||
+      (itemType === 'background'
+        ? shopData.ownedBackgrounds.includes(itemId)
+        : shopData.ownedOutfits.includes(itemId));
+
+    if (!isOwned) {
       throw new Error('구매하지 않은 상품입니다.');
     }
 

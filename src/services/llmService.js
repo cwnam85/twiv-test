@@ -51,7 +51,7 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
           content: msg.content[0].text,
         })),
         system: systemPrompt,
-        max_tokens: 400,
+        max_tokens: 800,
         stream: false,
       };
       console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));

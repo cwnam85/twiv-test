@@ -26,11 +26,11 @@ router.get('/items', (req, res) => {
     const itemsWithOwnedStatus = {
       backgrounds: shopItems.backgrounds.map((item) => ({
         ...item,
-        isOwned: item.id === 'default' ? true : ownedData.ownedItems.includes(item.id),
+        isOwned: item.id === 'default' ? true : ownedData.ownedBackgrounds.includes(item.id),
       })),
       outfits: shopItems.outfits.map((item) => ({
         ...item,
-        isOwned: item.id === 'default' ? true : ownedData.ownedItems.includes(item.id),
+        isOwned: item.id === 'default' ? true : ownedData.ownedOutfits.includes(item.id),
       })),
     };
 

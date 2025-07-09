@@ -38,6 +38,16 @@ class ConversationService {
         ? this.getOutfitName(shopData.currentOutfit)
         : 'Default Outfit';
 
+    // 보유한 아이템들 정보 가져오기
+    const ownedBackgrounds =
+      shopData && shopData.ownedBackgrounds
+        ? shopData.ownedBackgrounds.map((item) => this.getBackgroundName(item))
+        : ['Default Background'];
+    const ownedOutfits =
+      shopData && shopData.ownedOutfits
+        ? shopData.ownedOutfits.map((item) => this.getOutfitName(item))
+        : ['Default Outfit'];
+
     // 현재 affinity 값 가져오기
     const { affinity } = affinityService.getData();
 
@@ -46,6 +56,8 @@ class ConversationService {
       currentBackground: currentBackground,
       currentOutfit: currentOutfit,
       affinity: affinity,
+      ownedBackgrounds: ownedBackgrounds.join(', '),
+      ownedOutfits: ownedOutfits.join(', '),
     };
 
     // 히스토리의 각 메시지를 렌더링

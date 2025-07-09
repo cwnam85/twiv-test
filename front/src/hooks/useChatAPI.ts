@@ -1,4 +1,4 @@
-import { getChatPrompt } from '../instruction/input_instruction';
+import { generateChatPrompt } from '../instruction/templateRenderer';
 import { OutfitData, Message } from '../types';
 
 interface ChatAPIHandlers {
@@ -35,7 +35,7 @@ const useChatAPI = ({
   const sendMessage = async (userInput: string) => {
     try {
       // 백엔드 API 호출
-      const chatPrompt = getChatPrompt(
+      const chatPrompt = await generateChatPrompt(
         currentCharacter,
         affinity,
         userInput,

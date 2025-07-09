@@ -34,6 +34,10 @@ interface TemplateContext {
   outfitInfo: string;
   character: string;
   poseList: string;
+  currentBackground: string;
+  currentOutfit: string;
+  ownedBackgrounds: string;
+  ownedOutfits: string;
 }
 
 // 간단한 템플릿 렌더링 함수 (Jinja 문법 지원)
@@ -103,19 +107,71 @@ function getTemplate(templateName: string): string {
   }
 }
 
+// 상점 데이터 가져오기 함수
+async function getShopData() {
+  try {
+    const response = await fetch('http://localhost:3333/shop/owned');
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error('Error fetching shop data:', error);
+  }
+  return {
+    ownedBackgrounds: [],
+    ownedOutfits: [],
+    currentBackground: 'default',
+    currentOutfit: 'default',
+  };
+}
+
+// 배경 이름 변환 함수
+function getBackgroundName(backgroundId: string): string {
+  const backgroundNames: { [key: string]: string } = {
+    default: 'Default Background',
+    school: 'School',
+    beach: 'Beach',
+  };
+  return backgroundNames[backgroundId] || backgroundId;
+}
+
+// 복장 이름 변환 함수
+function getOutfitName(outfitId: string): string {
+  const outfitNames: { [key: string]: string } = {
+    default: 'Default Outfit',
+    casual: 'Casual',
+    school_uniform: 'School Uniform',
+    swimsuit: 'Swimsuit',
+  };
+  return outfitNames[outfitId] || outfitId;
+}
+
 // 채팅 프롬프트 생성 함수
-export function generateChatPrompt(
+export async function generateChatPrompt(
   currentCharacter: string,
   affinity: number,
   input: string,
   outfitData?: OutfitData,
   backgroundId?: string,
-): string {
+): Promise<string> {
   try {
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
     const backgroundInfo = generateBackgroundInfo(backgroundId);
+
+    // 상점 데이터 가져오기
+    const shopData = await getShopData();
+
+    // 보유한 아이템들 정보 가져오기
+    const ownedBackgrounds =
+      shopData.ownedBackgrounds && shopData.ownedBackgrounds.length > 0
+        ? shopData.ownedBackgrounds.map((item: string) => getBackgroundName(item)).join(', ')
+        : 'none';
+    const ownedOutfits =
+      shopData.ownedOutfits && shopData.ownedOutfits.length > 0
+        ? shopData.ownedOutfits.map((item: string) => getOutfitName(item)).join(', ')
+        : 'none';
 
     const context: TemplateContext = {
       userInput: input,
@@ -124,6 +180,10 @@ export function generateChatPrompt(
       outfitInfo: outfitInfo,
       character: currentCharacter,
       poseList: poseList,
+      currentBackground: getBackgroundName(shopData.currentBackground || 'default'),
+      currentOutfit: getOutfitName(shopData.currentOutfit || 'default'),
+      ownedBackgrounds: ownedBackgrounds,
+      ownedOutfits: ownedOutfits,
     };
 
     const template = getTemplate('chat_template');
@@ -136,18 +196,31 @@ export function generateChatPrompt(
 }
 
 // 감사 인사 프롬프트 생성 함수
-export function generateThankYouPrompt(
+export async function generateThankYouPrompt(
   currentCharacter: string,
   affinity: number,
   input: string,
   outfitData?: OutfitData,
   backgroundId?: string,
-): string {
+): Promise<string> {
   try {
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
     const backgroundInfo = generateBackgroundInfo(backgroundId);
+
+    // 상점 데이터 가져오기
+    const shopData = await getShopData();
+
+    // 보유한 아이템들 정보 가져오기
+    const ownedBackgrounds =
+      shopData.ownedBackgrounds && shopData.ownedBackgrounds.length > 0
+        ? shopData.ownedBackgrounds.map((item: string) => getBackgroundName(item)).join(', ')
+        : 'none';
+    const ownedOutfits =
+      shopData.ownedOutfits && shopData.ownedOutfits.length > 0
+        ? shopData.ownedOutfits.map((item: string) => getOutfitName(item)).join(', ')
+        : 'none';
 
     const context: TemplateContext = {
       userInput: input,
@@ -156,6 +229,10 @@ export function generateThankYouPrompt(
       outfitInfo: outfitInfo,
       character: currentCharacter,
       poseList: poseList,
+      currentBackground: getBackgroundName(shopData.currentBackground || 'default'),
+      currentOutfit: getOutfitName(shopData.currentOutfit || 'default'),
+      ownedBackgrounds: ownedBackgrounds,
+      ownedOutfits: ownedOutfits,
     };
 
     const template = getTemplate('thankyou_template');

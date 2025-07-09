@@ -33,8 +33,6 @@ export function processAIResponse(rawResponse) {
         emotion: 'neutral',
         pose: 'stand',
         affinity: '0',
-        purchaseRequired: false,
-        requestedContent: null,
       };
     }
 
@@ -94,8 +92,6 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
-      purchaseRequired: false,
-      requestedContent: null,
     };
   }
 }
@@ -141,7 +137,5 @@ export function createResponseSummary(response) {
     emotion: response.emotion,
     pose: response.pose,
     affinity: response.affinity,
-    purchaseRequired: response.purchaseRequired,
-    hasRequestedContent: !!response.requestedContent,
   };
 }

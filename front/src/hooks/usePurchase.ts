@@ -39,7 +39,7 @@ const usePurchase = ({
         const randomThankYou =
           characterMessages.thankYou[Math.floor(Math.random() * characterMessages.thankYou.length)];
 
-        const thankYouPrompt = ThankYouPrompt(
+        const thankYouPrompt = await ThankYouPrompt(
           currentCharacter,
           affinity,
           randomThankYou.message,
