@@ -1,14 +1,22 @@
 {
   "ownedBackgrounds": [],
-  "ownedOutfits": [],
+  "ownedOutfits": [
+    "school_uniform"
+  ],
   "currentBackground": "default",
-  "currentOutfit": "default",
+  "currentOutfit": "casual",
   "purchaseHistory": [
     {
       "itemId": "school",
       "itemType": "background",
       "price": 50,
       "purchasedAt": "2025-07-09T01:58:06.472Z"
+    },
+    {
+      "itemId": "school_uniform",
+      "itemType": "outfit",
+      "price": 100,
+      "purchasedAt": "2025-07-09T03:27:39.672Z"
     }
   ]
 }
