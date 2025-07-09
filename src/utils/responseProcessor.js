@@ -36,44 +36,41 @@ export function processAIResponse(rawResponse) {
       };
     }
 
-    // 1. Pre-analysis 섹션 제거
-    let cleaned = responseText.replace(
+    // 1. <Thought></Thought> 태그로 감싸진 Pre-analysis 섹션 제거
+    let cleaned = responseText.replace(/<Thought>[\s\S]*?<\/Thought>/g, '');
+
+    // 2. 기존 방식도 호환성을 위해 유지 (점진적 마이그레이션)
+    cleaned = cleaned.replace(
       /### Pre-analysis[\s\S]*?Now I will craft the response based on the \*\*system_rule\*\* and \*\*guidelines\*\*:\s*\n/,
       '',
     );
 
-    // 2. JSON 추출 (여러 패턴 시도)
-    const jsonPatterns = [
-      /\{[\s\S]*\}/, // 일반적인 JSON 패턴
-      /"dialogue":\s*"[^"]*"[^}]*\}/, // dialogue가 포함된 JSON
-      /dialogue:\s*"[^"]*"[^}]*\}/, // dialogue: 형식
-    ];
+    // 3. JSON 추출 (단순화된 패턴) - <Thought> 태그가 포함된 경우도 처리
+    let jsonMatch = cleaned.match(/\{[\s\S]*\}/);
 
-    let jsonData = null;
-    for (const pattern of jsonPatterns) {
-      const match = cleaned.match(pattern);
-      if (match) {
-        try {
-          // JSON 문자열을 객체로 파싱
-          jsonData = JSON.parse(match[0]);
-          break;
-        } catch (e) {
-          // 이 패턴 실패, 다음 패턴 시도
-          continue;
-        }
+    // JSON 안에 <Thought> 태그가 포함된 경우 제거
+    if (jsonMatch && jsonMatch[0].includes('<Thought>')) {
+      const cleanedJson = jsonMatch[0].replace(/<Thought>[\s\S]*?<\/Thought>/g, '');
+      // JSON 구조 복원
+      const jsonStart = cleanedJson.indexOf('{');
+      const jsonEnd = cleanedJson.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        jsonMatch = [cleanedJson.substring(jsonStart, jsonEnd + 1)];
       }
     }
 
-    // 3. JSON 데이터가 있으면 처리
-    if (jsonData) {
-      return {
-        dialogue: jsonData.dialogue || '',
-        emotion: jsonData.emotion || 'neutral',
-        pose: jsonData.pose || 'stand',
-        affinity: jsonData.affinity || '0',
-        purchaseRequired: jsonData.purchaseRequired || false,
-        requestedContent: jsonData.requestedContent || null,
-      };
+    if (jsonMatch) {
+      try {
+        const jsonData = JSON.parse(jsonMatch[0]);
+        return {
+          dialogue: jsonData.dialogue || '',
+          emotion: jsonData.emotion || 'neutral',
+          pose: jsonData.pose || 'stand',
+          affinity: jsonData.affinity || '0',
+        };
+      } catch (e) {
+        console.warn('JSON 파싱 실패, 전체 텍스트 사용:', e.message);
+      }
     }
 
     // 4. JSON이 없는 경우 전체 텍스트를 dialogue로 사용
@@ -82,8 +79,6 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
-      purchaseRequired: false,
-      requestedContent: null,
     };
   } catch (error) {
     console.error('AI 응답 처리 중 오류:', error);

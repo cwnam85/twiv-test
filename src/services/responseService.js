@@ -34,9 +34,6 @@ class ResponseService {
     let emotion = null;
     let pose = null;
     let usage = null;
-    let purchaseRequired = false;
-    let requestedContent = null;
-    let outfitChange = null;
 
     try {
       // 새로운 응답 처리 함수 사용
@@ -46,12 +43,11 @@ class ResponseService {
       dialogue = processedResponse.dialogue;
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
-      purchaseRequired = processedResponse.purchaseRequired;
-      requestedContent = processedResponse.requestedContent;
+      const affinity = processedResponse.affinity;
 
       // affinity 처리
-      if (processedResponse.affinity) {
-        this.processAffinityChange(processedResponse.affinity);
+      if (affinity) {
+        this.processAffinityChange(affinity);
       }
 
       usage = responseLLM.usage;
@@ -61,9 +57,7 @@ class ResponseService {
         emotion,
         pose,
         usage,
-        purchaseRequired,
-        requestedContent,
-        outfitChange,
+        affinity,
       };
     } catch (error) {
       console.error('Response parsing error:', error);
@@ -76,15 +70,14 @@ class ResponseService {
     const matchEmotion = dialogueText.match(/emotion:\s*["']?([^"',}]+)["']?/i);
     const matchDialogue = dialogueText.match(/dialogue:\s*["']([^"']+)["']/i);
     const matchPose = dialogueText.match(/pose:\s*["']?([^"',}]+)["']?/i);
+    const matchAffinity = dialogueText.match(/affinity:\s*["']?([^"',}]+)["']?/i);
 
     return {
       dialogue: matchDialogue ? matchDialogue[1].trim() : null,
       emotion: matchEmotion ? matchEmotion[1].trim() : null,
       pose: matchPose ? matchPose[1].trim() : null,
       usage: null,
-      purchaseRequired: false,
-      requestedContent: null,
-      outfitChange: null,
+      affinity: matchAffinity ? matchAffinity[1].trim() : null,
     };
   }
 
@@ -128,10 +121,7 @@ class ResponseService {
 
       // 구매 확인 메시지로 대체
       if (parsed.dialogue) {
-        return {
-          ...parsed,
-          purchaseRequired: false, // 구매 확인 메시지이므로 false로 설정
-        };
+        return parsed;
       }
     } catch (purchaseError) {
       console.error('구매 확인 메시지 생성 오류:', purchaseError);
