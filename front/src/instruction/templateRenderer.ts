@@ -1,6 +1,8 @@
 import { getCharacterPoses, formatPoseList } from './allowed_poses/character_poses';
+import { characterForAdult } from './allowed_poses/pose_unlock_levels';
 import chatTemplate from './templates/chat_template.md?raw';
 import thankYouTemplate from './templates/thankyou_template.md?raw';
+import nunjucks from 'nunjucks';
 
 interface OutfitItem {
   name: string;
@@ -38,25 +40,35 @@ interface TemplateContext {
   currentOutfit: string;
   ownedBackgrounds: string;
   ownedOutfits: string;
+  isAdultCharacter: boolean;
 }
 
-// 간단한 템플릿 렌더링 함수 (Jinja 문법 지원)
+// nunjucks를 사용한 템플릿 렌더링 함수
 function renderTemplate(template: string, context: TemplateContext): string {
-  let result = template;
-
-  // 줄바꿈 정규화 (Windows CRLF를 LF로 변환)
-  result = result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-  // Jinja 변수 치환
-  Object.entries(context).forEach(([key, value]) => {
-    const placeholder = `{{ ${key} }}`;
-    result = result.replace(
-      new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-      String(value),
-    );
+  // nunjucks 환경 설정
+  const env = nunjucks.configure({
+    autoescape: false,
+    trimBlocks: true,
+    lstripBlocks: true,
   });
 
-  return result;
+  try {
+    // nunjucks로 템플릿 렌더링
+    return env.renderString(template, context);
+  } catch (error) {
+    console.error('Error rendering template with nunjucks:', error);
+
+    // 폴백: 기존 단순 치환 방식
+    let result = template;
+    Object.entries(context).forEach(([key, value]) => {
+      const placeholder = `{{ ${key} }}`;
+      result = result.replace(
+        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+        String(value),
+      );
+    });
+    return result;
+  }
 }
 
 // 배경 정보를 문자열로 변환하는 함수
@@ -184,6 +196,7 @@ export async function generateChatPrompt(
       currentOutfit: getOutfitName(shopData.currentOutfit || 'default'),
       ownedBackgrounds: ownedBackgrounds,
       ownedOutfits: ownedOutfits,
+      isAdultCharacter: characterForAdult[currentCharacter] || false,
     };
 
     const template = getTemplate('chat_template');
@@ -233,6 +246,7 @@ export async function generateThankYouPrompt(
       currentOutfit: getOutfitName(shopData.currentOutfit || 'default'),
       ownedBackgrounds: ownedBackgrounds,
       ownedOutfits: ownedOutfits,
+      isAdultCharacter: characterForAdult[currentCharacter] || false,
     };
 
     const template = getTemplate('thankyou_template');

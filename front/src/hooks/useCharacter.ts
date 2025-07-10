@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { characterForAdult } from '../instruction/allowed_poses/pose_unlock_levels';
 
 const useCharacter = () => {
   const [currentCharacter, setCurrentCharacter] = useState('Default Character');
@@ -37,11 +38,15 @@ const useCharacter = () => {
     setEmotion(newEmotion);
   };
 
+  // 성인용 캐릭터 여부를 계산하는 함수
+  const isAdultCharacter = characterForAdult[currentCharacter] || false;
+
   return {
     currentCharacter,
     setCurrentCharacter,
     pose,
     emotion,
+    isAdultCharacter,
     updatePose,
     updateEmotion,
   };

@@ -3,11 +3,9 @@
   "ownedOutfits": [
     "school_uniform"
   ],
-  "ownedBoosters": [
-    "affinity_booster"
-  ],
+  "ownedBoosters": [],
   "currentBackground": "default",
-  "currentOutfit": "casual",
+  "currentOutfit": "school_uniform",
   "activeBooster": null,
   "purchaseHistory": [
     {

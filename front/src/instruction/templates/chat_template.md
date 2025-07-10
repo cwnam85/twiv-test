@@ -51,7 +51,29 @@ The following is the complete list of allowed emotions. Only these emotions can 
 
 The following is the complete list of allowed poses. Only these poses can be used:
 
-{{ poseList }}
+{% if affinity < 80 %}
+
+- stand
+- sit
+  {% endif %}
+
+{% if affinity >= 80 and affinity < 100 and isAdultCharacter %}
+
+- stand
+- sit
+- doggy
+- spreadlegs
+  {% endif %}
+
+{% if affinity >= 100 and isAdultCharacter %}
+
+- stand
+- sit
+- doggy
+- spreadlegs
+- standingdoggy
+- missionary
+  {% endif %}
 
 > **WARNING**: Only the poses listed above are allowed. Any other poses must not be used as they will cause errors in the system.
 

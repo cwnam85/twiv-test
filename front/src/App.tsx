@@ -38,22 +38,41 @@ function App() {
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // 부스터 상태가 변경될 때 시작 시간 설정
+  useEffect(() => {
+    if (
+      boosterStatus?.affinityBoosterStatus.boosterActive &&
+      boosterStatus.affinityBoosterStatus.boosterRemainingTime
+    ) {
+      // 서버에서 받은 남은 시간을 기준으로 시작 시간 계산
+      const remainingTime = boosterStatus.affinityBoosterStatus.boosterRemainingTime;
+      const startTime = Date.now() - (600000 - remainingTime); // 10분(600000ms)에서 남은 시간을 빼서 시작 시간 계산
+      setBoosterStartTime(startTime);
+    } else if (!boosterStatus?.affinityBoosterStatus.boosterActive) {
+      setBoosterStartTime(null);
+    }
+  }, [
+    boosterStatus?.affinityBoosterStatus.boosterActive,
+    boosterStatus?.affinityBoosterStatus.boosterRemainingTime,
+  ]);
+
   // 실시간 타이머 업데이트
   useEffect(() => {
-    if (boosterStatus?.affinityBoosterStatus.boosterActive) {
+    if (boosterStatus?.affinityBoosterStatus.boosterActive && boosterStartTime) {
       const interval = setInterval(() => {
         setCurrentTime(Date.now());
       }, 1000); // 1초마다 업데이트
 
       return () => clearInterval(interval);
     }
-  }, [boosterStatus?.affinityBoosterStatus.boosterActive]);
+  }, [boosterStatus?.affinityBoosterStatus.boosterActive, boosterStartTime]);
 
   const getBackgroundStyle = () => {
     switch (currentBackground) {
@@ -70,24 +89,23 @@ function App() {
 
   // 부스터 상태 표시
   const renderBoosterStatus = () => {
-    if (!boosterStatus?.affinityBoosterStatus.boosterActive) {
+    if (!boosterStatus?.affinityBoosterStatus.boosterActive || !boosterStartTime) {
       return null;
     }
 
-    const remainingTime = boosterStatus.affinityBoosterStatus.boosterRemainingTime;
-    if (remainingTime === null) {
-      return null;
-    }
+    // 부스터 지속 시간 (10분 = 600초 = 600000ms)
+    const BOOSTER_DURATION = 600000; // 10분
 
-    // 현재 시간을 기준으로 남은 시간 계산
-    const adjustedRemainingTime = remainingTime - (currentTime - Date.now());
+    // 현재 시간과 시작 시간의 차이를 계산
+    const elapsedTime = currentTime - boosterStartTime;
+    const remainingTime = BOOSTER_DURATION - elapsedTime;
 
-    if (adjustedRemainingTime <= 0) {
+    if (remainingTime <= 0) {
       return null; // 만료된 경우 표시하지 않음
     }
 
-    const minutes = Math.floor(adjustedRemainingTime / 60000);
-    const seconds = Math.floor((adjustedRemainingTime % 60000) / 1000);
+    const minutes = Math.floor(remainingTime / 60000);
+    const seconds = Math.floor((remainingTime % 60000) / 1000);
 
     return (
       <div className="bg-orange-100 px-4 py-2 rounded-lg mb-2">
