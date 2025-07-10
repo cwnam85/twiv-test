@@ -31,7 +31,7 @@ export interface Message {
 export interface ShopItem {
   id: string;
   name: string;
-  type: 'background' | 'outfit';
+  type: 'background' | 'outfit' | 'booster';
   price: number;
   description: string;
   image?: string;
@@ -41,4 +41,17 @@ export interface ShopItem {
 export interface ShopData {
   backgrounds: ShopItem[];
   outfits: ShopItem[];
+  boosters: ShopItem[];
+}
+
+export interface BoosterStatus {
+  shopBoosterStatus: {
+    active?: boolean;
+    expired?: boolean;
+    remainingTime?: number;
+  } | null;
+  affinityBoosterStatus: {
+    boosterActive: boolean;
+    boosterRemainingTime: number | null;
+  };
 }

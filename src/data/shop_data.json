@@ -3,8 +3,12 @@
   "ownedOutfits": [
     "school_uniform"
   ],
+  "ownedBoosters": [
+    "affinity_booster"
+  ],
   "currentBackground": "default",
   "currentOutfit": "casual",
+  "activeBooster": null,
   "purchaseHistory": [
     {
       "itemId": "school",
@@ -17,6 +21,18 @@
       "itemType": "outfit",
       "price": 100,
       "purchasedAt": "2025-07-09T03:27:39.672Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-07-09T07:42:28.805Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-07-09T07:46:02.708Z"
     }
   ]
 }

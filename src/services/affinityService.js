@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import shopService from './shopService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,13 +13,48 @@ class AffinityService {
   constructor() {
     this.affinity = 0;
     this.point = 100;
-    this.timerId = null; // 타이머 ID 저장
+    this.maxAffinity = 200; // 호감도 최대치
+    this.boosterActive = false;
+    this.boosterExpiresAt = null;
     this.loadData();
+    this.initializeBoosterStatus(); // 서버 시작 시 부스터 상태 초기화
   }
 
   loadData() {
     this.loadAffinity();
     this.loadPoint();
+  }
+
+  // 서버 시작 시 부스터 상태 초기화
+  initializeBoosterStatus() {
+    try {
+      const shopData = shopService.getOwnedItems();
+
+      if (shopData.activeBooster) {
+        const now = new Date();
+        const expiresAt = new Date(shopData.activeBooster.expiresAt);
+
+        if (now >= expiresAt) {
+          // 만료된 부스터는 비활성화
+          this.boosterActive = false;
+          this.boosterExpiresAt = null;
+          console.log('Booster expired on server start');
+        } else {
+          // 아직 유효한 부스터는 활성화
+          this.boosterActive = true;
+          this.boosterExpiresAt = expiresAt;
+          console.log('Booster still active on server start');
+        }
+      } else {
+        // 활성화된 부스터가 없으면 비활성화 상태
+        this.boosterActive = false;
+        this.boosterExpiresAt = null;
+      }
+    } catch (error) {
+      console.error('Error initializing booster status:', error);
+      this.boosterActive = false;
+      this.boosterExpiresAt = null;
+    }
   }
 
   loadAffinity() {
@@ -78,88 +114,59 @@ class AffinityService {
     }
   }
 
-  // 타이머 만료 알림 전송
-  async sendTimerExpiredNotification() {
-    try {
-      const { sendMessageToWarudo } = await import('../services/warudoService.js');
-      const notificationMessage = JSON.stringify({
-        action: 'TimerExpired',
-        data: {
-          message: '호감도 타이머가 만료되었습니다!',
-          affinity: this.affinity,
-        },
-      });
-      await sendMessageToWarudo(notificationMessage);
-    } catch (error) {
-      console.error('Error sending timer expired notification:', error);
-    }
-  }
+  // 부스터 활성화
+  activateBooster() {
+    const shopData = shopService.getOwnedItems();
 
-  // 타이머 시작 메서드
-  startTimer() {
-    // 기존 타이머가 있으면 취소
-    if (this.timerId) {
-      clearTimeout(this.timerId);
+    if (!shopData.activeBooster) {
+      throw new Error('활성화된 부스터가 없습니다.');
     }
 
-    // 5분 후에 호감도를 50으로 설정
-    this.timerId = setTimeout(
-      async () => {
-        console.log('Timer expired: Affinity reset to 50');
-        this.affinity = 50;
-        this.saveAffinity();
-        this.timerId = null;
+    this.boosterActive = true;
+    this.boosterExpiresAt = new Date(shopData.activeBooster.expiresAt);
 
-        // 타이머 만료 알림 전송
-        await this.sendTimerExpiredNotification();
+    // 호감도를 100으로 설정
+    this.affinity = 100;
+    this.saveAffinity();
 
-        // 시스템 프롬프트 업데이트를 위해 characterService 호출
-        const characterService = await import('./characterService.js');
-        characterService.default.updateSystemPrompt();
-      },
-      5 * 60 * 1000,
-    ); // 5분
-
-    console.log('Timer started: Affinity will reset to 50 in 5 minutes');
+    console.log('Booster activated: Affinity set to 100');
+    return { success: true, affinity: this.affinity };
   }
 
-  // 타이머 취소 메서드
-  cancelTimer() {
-    if (this.timerId) {
-      clearTimeout(this.timerId);
-      this.timerId = null;
-      console.log('Timer cancelled');
+  // 부스터 만료 확인 및 처리
+  checkBoosterStatus() {
+    if (!this.boosterActive || !this.boosterExpiresAt) {
+      return { active: false };
     }
-  }
 
-  // 타이머 상태 확인 메서드
-  getTimerStatus() {
+    const now = new Date();
+    if (now >= this.boosterExpiresAt) {
+      // 부스터 만료
+      this.boosterActive = false;
+      this.boosterExpiresAt = null;
+      console.log('Booster expired: Affinity can now change normally');
+      return { expired: true };
+    }
+
     return {
-      hasTimer: this.timerId !== null,
-      remainingTime: this.timerId ? this.getRemainingTime() : null,
+      active: true,
+      remainingTime: this.boosterExpiresAt.getTime() - now.getTime(),
     };
   }
 
-  // 남은 시간 계산 (대략적)
-  getRemainingTime() {
-    // 타이머가 시작된 시간을 저장하지 않으므로 정확한 시간은 계산할 수 없음
-    // 필요하다면 타이머 시작 시간을 저장하는 로직을 추가할 수 있음
-    return '약 5분';
-  }
-
   updateAffinity(change) {
+    // 부스터가 활성화되어 있으면 호감도 변경을 무시
+    const boosterStatus = this.checkBoosterStatus();
+    if (boosterStatus.active) {
+      console.log('Booster active: Affinity change ignored');
+      return { affinityChanged: false, newAffinity: this.affinity, boosterActive: true };
+    }
+
     const oldAffinity = this.affinity;
     this.affinity += change;
-    this.affinity = Math.max(0, this.affinity); // affinity가 음수가 되지 않도록 처리
 
-    // 호감도가 100 이상이 되면 타이머 시작
-    if (this.affinity >= 100 && oldAffinity < 100) {
-      this.startTimer();
-    }
-    // 호감도가 100 미만으로 떨어지면 타이머 취소
-    else if (this.affinity < 100 && oldAffinity >= 100) {
-      this.cancelTimer();
-    }
+    // 호감도 범위 제한 (0 ~ maxAffinity)
+    this.affinity = Math.max(0, Math.min(this.maxAffinity, this.affinity));
 
     this.saveAffinity();
     return { affinityChanged: true, newAffinity: this.affinity };
@@ -176,10 +183,13 @@ class AffinityService {
   }
 
   getData() {
+    const boosterStatus = this.checkBoosterStatus();
     return {
       affinity: this.affinity,
       point: this.point,
-      timerStatus: this.getTimerStatus(),
+      maxAffinity: this.maxAffinity,
+      boosterActive: boosterStatus.active,
+      boosterRemainingTime: boosterStatus.active ? boosterStatus.remainingTime : null,
     };
   }
 

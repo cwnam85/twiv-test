@@ -5,6 +5,7 @@ class ShopService {
   constructor() {
     this.shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
     this.ensureShopDataFile();
+    this.cleanupExpiredBoosters(); // 서버 시작 시 만료된 부스터 정리
   }
 
   // 상점 데이터 파일이 없으면 생성
@@ -14,8 +15,10 @@ class ShopService {
         const defaultShopData = {
           ownedBackgrounds: [],
           ownedOutfits: [],
+          ownedBoosters: [],
           currentBackground: 'default',
           currentOutfit: 'default',
+          activeBooster: null,
           purchaseHistory: [],
         };
 
@@ -33,6 +36,26 @@ class ShopService {
     }
   }
 
+  // 만료된 부스터 정리
+  cleanupExpiredBoosters() {
+    try {
+      const shopData = this.getShopData();
+
+      if (shopData.activeBooster) {
+        const now = new Date();
+        const expiresAt = new Date(shopData.activeBooster.expiresAt);
+
+        if (now >= expiresAt) {
+          console.log('Cleaning up expired booster on server start');
+          shopData.activeBooster = null;
+          this.saveShopData(shopData);
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up expired boosters:', error);
+    }
+  }
+
   // 상점 데이터 읽기
   getShopData() {
     try {
@@ -43,8 +66,10 @@ class ShopService {
       return {
         ownedBackgrounds: [],
         ownedOutfits: [],
+        ownedBoosters: [],
         currentBackground: 'default',
         currentOutfit: 'default',
+        activeBooster: null,
         purchaseHistory: [],
       };
     }
@@ -67,8 +92,10 @@ class ShopService {
     return {
       ownedBackgrounds: shopData.ownedBackgrounds || [],
       ownedOutfits: shopData.ownedOutfits || [],
+      ownedBoosters: shopData.ownedBoosters || [],
       currentBackground: shopData.currentBackground || 'default',
       currentOutfit: shopData.currentOutfit || 'default',
+      activeBooster: shopData.activeBooster || null,
     };
   }
 
@@ -77,10 +104,14 @@ class ShopService {
     const shopData = this.getShopData();
 
     // 이미 구매한 아이템인지 확인
-    const isAlreadyOwned =
-      itemType === 'background'
-        ? shopData.ownedBackgrounds.includes(itemId)
-        : shopData.ownedOutfits.includes(itemId);
+    let isAlreadyOwned = false;
+    if (itemType === 'background') {
+      isAlreadyOwned = (shopData.ownedBackgrounds || []).includes(itemId);
+    } else if (itemType === 'outfit') {
+      isAlreadyOwned = (shopData.ownedOutfits || []).includes(itemId);
+    } else if (itemType === 'booster') {
+      isAlreadyOwned = (shopData.ownedBoosters || []).includes(itemId);
+    }
 
     if (isAlreadyOwned) {
       throw new Error('이미 구매한 상품입니다.');
@@ -93,11 +124,17 @@ class ShopService {
 
     // 구매 처리 - 아이템 타입에 따라 적절한 배열에 추가
     if (itemType === 'background') {
+      if (!shopData.ownedBackgrounds) shopData.ownedBackgrounds = [];
       shopData.ownedBackgrounds.push(itemId);
     } else if (itemType === 'outfit') {
+      if (!shopData.ownedOutfits) shopData.ownedOutfits = [];
       shopData.ownedOutfits.push(itemId);
+    } else if (itemType === 'booster') {
+      if (!shopData.ownedBoosters) shopData.ownedBoosters = [];
+      shopData.ownedBoosters.push(itemId);
     }
 
+    if (!shopData.purchaseHistory) shopData.purchaseHistory = [];
     shopData.purchaseHistory.push({
       itemId,
       itemType,
@@ -113,8 +150,73 @@ class ShopService {
     return {
       success: true,
       newPoint: currentPoints - price,
-      ownedBackgrounds: shopData.ownedBackgrounds,
-      ownedOutfits: shopData.ownedOutfits,
+      ownedBackgrounds: shopData.ownedBackgrounds || [],
+      ownedOutfits: shopData.ownedOutfits || [],
+      ownedBoosters: shopData.ownedBoosters || [],
+    };
+  }
+
+  // 부스터 사용
+  useBooster(boosterId) {
+    const shopData = this.getShopData();
+
+    // 부스터를 소유하고 있는지 확인
+    if (!(shopData.ownedBoosters || []).includes(boosterId)) {
+      throw new Error('구매하지 않은 부스터입니다.');
+    }
+
+    // 이미 활성화된 부스터가 있는지 확인
+    if (shopData.activeBooster) {
+      throw new Error('이미 활성화된 부스터가 있습니다.');
+    }
+
+    // 부스터 활성화
+    shopData.activeBooster = {
+      id: boosterId,
+      activatedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10분 후 만료
+    };
+
+    // 사용된 부스터를 소유 목록에서 제거
+    if (!shopData.ownedBoosters) shopData.ownedBoosters = [];
+    const boosterIndex = shopData.ownedBoosters.indexOf(boosterId);
+    if (boosterIndex > -1) {
+      shopData.ownedBoosters.splice(boosterIndex, 1);
+    }
+
+    // 데이터 저장
+    if (!this.saveShopData(shopData)) {
+      throw new Error('부스터 사용 중 오류가 발생했습니다.');
+    }
+
+    return {
+      success: true,
+      activeBooster: shopData.activeBooster,
+      ownedBoosters: shopData.ownedBoosters || [],
+    };
+  }
+
+  // 부스터 만료 확인
+  checkBoosterExpiration() {
+    const shopData = this.getShopData();
+
+    if (!shopData.activeBooster) {
+      return null;
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(shopData.activeBooster.expiresAt);
+
+    if (now >= expiresAt) {
+      // 부스터 만료
+      shopData.activeBooster = null;
+      this.saveShopData(shopData);
+      return { expired: true };
+    }
+
+    return {
+      active: true,
+      remainingTime: expiresAt.getTime() - now.getTime(),
     };
   }
 
@@ -199,6 +301,15 @@ class ShopService {
           type: 'outfit',
           price: 150,
           description: '활기찬 수영복으로 즐거운 시간을 보내세요.',
+        },
+      ],
+      boosters: [
+        {
+          id: 'affinity_booster',
+          name: '호감도 부스터',
+          type: 'booster',
+          price: 200,
+          description: '호감도를 100으로 설정하고 10분간 유지합니다.',
         },
       ],
     };

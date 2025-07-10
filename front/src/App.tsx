@@ -1,10 +1,8 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import OutfitStatus from './components/OutfitStatus';
 import Shop from './components/Shop';
-import TimerDisplay from './components/TimerDisplay';
-import TimerExpiredAlert from './components/TimerExpiredAlert';
 
 function App() {
   const {
@@ -23,8 +21,7 @@ function App() {
     pose,
     emotion,
     point,
-    timerStatus,
-    showTimerExpiredAlert,
+
     currentCharacter,
     outfitData,
     // Shop 관련
@@ -32,17 +29,31 @@ function App() {
     isShopOpen,
     currentBackground,
     currentOutfit,
+    boosterStatus,
     purchaseItem,
+    useBooster,
     equipItem,
     openShop,
     closeShop,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // 실시간 타이머 업데이트
+  useEffect(() => {
+    if (boosterStatus?.affinityBoosterStatus.boosterActive) {
+      const interval = setInterval(() => {
+        setCurrentTime(Date.now());
+      }, 1000); // 1초마다 업데이트
+
+      return () => clearInterval(interval);
+    }
+  }, [boosterStatus?.affinityBoosterStatus.boosterActive]);
 
   const getBackgroundStyle = () => {
     switch (currentBackground) {
@@ -57,20 +68,40 @@ function App() {
     }
   };
 
+  // 부스터 상태 표시
+  const renderBoosterStatus = () => {
+    if (!boosterStatus?.affinityBoosterStatus.boosterActive) {
+      return null;
+    }
+
+    const remainingTime = boosterStatus.affinityBoosterStatus.boosterRemainingTime;
+    if (remainingTime === null) {
+      return null;
+    }
+
+    // 현재 시간을 기준으로 남은 시간 계산
+    const adjustedRemainingTime = remainingTime - (currentTime - Date.now());
+
+    if (adjustedRemainingTime <= 0) {
+      return null; // 만료된 경우 표시하지 않음
+    }
+
+    const minutes = Math.floor(adjustedRemainingTime / 60000);
+    const seconds = Math.floor((adjustedRemainingTime % 60000) / 1000);
+
+    return (
+      <div className="bg-orange-100 px-4 py-2 rounded-lg mb-2">
+        <span className="text-orange-800 font-semibold">
+          ⚡ 호감도 부스터 활성화 중: {minutes}:{seconds.toString().padStart(2, '0')}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div
       className={`min-h-screen flex flex-col items-center justify-center p-4 ${getBackgroundStyle()}`}
     >
-      {/* 타이머 표시 */}
-      <TimerDisplay
-        hasTimer={timerStatus.hasTimer}
-        remainingTime={timerStatus.remainingTime}
-        affinity={affinity}
-      />
-
-      {/* 타이머 만료 알림 */}
-      <TimerExpiredAlert show={showTimerExpiredAlert} />
-
       <OutfitStatus
         outfitData={outfitData}
         currentOutfit={currentOutfit}
@@ -94,6 +125,7 @@ function App() {
               </button>
             </div>
           </div>
+          {renderBoosterStatus()}
           <div className="flex gap-2">
             <div className="bg-green-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-green-800 font-semibold">감정: {emotion}</span>
@@ -156,6 +188,7 @@ function App() {
           currentOutfit={currentOutfit}
           onPurchase={purchaseItem}
           onEquip={equipItem}
+          onUseBooster={useBooster}
           onClose={closeShop}
         />
       )}

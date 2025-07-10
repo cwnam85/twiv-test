@@ -86,10 +86,13 @@ router.get('/affinity', (req, res) => {
   res.json(data);
 });
 
-// 타이머 상태 확인 API
-router.get('/timer-status', (req, res) => {
-  const timerStatus = affinityService.getTimerStatus();
-  res.json(timerStatus);
+// 호감도 정보 API
+router.get('/affinity-info', (req, res) => {
+  const data = affinityService.getData();
+  res.json({
+    ...data,
+    affinityLevel: affinityService.getAffinityLevel(),
+  });
 });
 
 // 호감도와 포인트 업데이트

@@ -32,6 +32,10 @@ router.get('/items', (req, res) => {
         ...item,
         isOwned: item.id === 'default' ? true : ownedData.ownedOutfits.includes(item.id),
       })),
+      boosters: shopItems.boosters.map((item) => ({
+        ...item,
+        isOwned: ownedData.ownedBoosters.includes(item.id),
+      })),
     };
 
     res.json(itemsWithOwnedStatus);
@@ -68,6 +72,53 @@ router.post('/purchase', (req, res) => {
   } catch (error) {
     console.error('Error purchasing item:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// 부스터 사용
+router.post('/use-booster', (req, res) => {
+  try {
+    const { boosterId } = req.body;
+
+    if (!boosterId) {
+      return res.status(400).json({ error: '부스터 ID가 누락되었습니다.' });
+    }
+
+    // 부스터 사용 처리
+    const useResult = shopService.useBooster(boosterId);
+
+    // 호감도 서비스에서 부스터 활성화
+    const affinityResult = affinityService.activateBooster();
+
+    res.json({
+      success: true,
+      message: '부스터가 활성화되었습니다. 호감도가 100으로 설정되고 10분간 유지됩니다.',
+      activeBooster: useResult.activeBooster,
+      affinity: affinityResult.affinity,
+      ownedBoosters: useResult.ownedBoosters,
+    });
+  } catch (error) {
+    console.error('Error using booster:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 부스터 상태 확인
+router.get('/booster-status', (req, res) => {
+  try {
+    const boosterStatus = shopService.checkBoosterExpiration();
+    const affinityData = affinityService.getData();
+
+    res.json({
+      shopBoosterStatus: boosterStatus,
+      affinityBoosterStatus: {
+        boosterActive: affinityData.boosterActive,
+        boosterRemainingTime: affinityData.boosterRemainingTime,
+      },
+    });
+  } catch (error) {
+    console.error('Error checking booster status:', error);
+    res.status(500).json({ error: 'Failed to check booster status' });
   }
 });
 

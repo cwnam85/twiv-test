@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShopData, ShopItem, OutfitData } from '../types';
+import { ShopData, ShopItem, OutfitData, BoosterStatus } from '../types';
 import { SHOP_DATA } from '../data/shopData';
 
 interface UseShopProps {
@@ -14,6 +14,7 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [currentBackground, setCurrentBackground] = useState('default');
   const [currentOutfit, setCurrentOutfit] = useState('default');
+  const [boosterStatus, setBoosterStatus] = useState<BoosterStatus | null>(null);
 
   // 기본 의상과 기본 배경이 항상 소유 상태인지 확인하는 함수
   const ensureDefaultItemsOwned = (data: ShopData) => ({
@@ -56,6 +57,13 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
           // 서버 응답이 없으면 로컬스토리지에서 불러오기 (fallback)
           loadFromLocalStorage();
         }
+
+        // 부스터 상태 확인
+        const boosterResponse = await fetch('http://localhost:3333/shop/booster-status');
+        if (boosterResponse.ok) {
+          const boosterData = await boosterResponse.json();
+          setBoosterStatus(boosterData);
+        }
       } catch (error) {
         console.error('Error loading shop data from server:', error);
         // 서버 통신 실패시 로컬스토리지에서 불러오기
@@ -81,6 +89,10 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
             outfits: prev.outfits.map((item) => ({
               ...item,
               isOwned: item.id === 'default' ? true : owned.includes(item.id),
+            })),
+            boosters: prev.boosters.map((item) => ({
+              ...item,
+              isOwned: owned.includes(item.id),
             })),
           }));
         } else {
@@ -145,6 +157,9 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
           outfits: prev.outfits.map((outfit) =>
             outfit.id === item.id ? { ...outfit, isOwned: true } : outfit,
           ),
+          boosters: prev.boosters.map((booster) =>
+            booster.id === item.id ? { ...booster, isOwned: true } : booster,
+          ),
         }));
 
         // 복장을 구매한 경우 서버의 복장 데이터도 업데이트
@@ -170,6 +185,61 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
       console.error('Error purchasing item:', error);
       onMessageAdd({
         text: '서버 통신 오류로 구매에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        isUser: false,
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const useBooster = async (boosterId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:3333/shop/use-booster', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ boosterId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // 부스터 사용 후 상점 데이터 업데이트
+        setShopData((prev) => ({
+          ...prev,
+          boosters: prev.boosters.map((booster) =>
+            booster.id === boosterId ? { ...booster, isOwned: false } : booster,
+          ),
+        }));
+
+        // 부스터 상태 업데이트
+        const boosterStatusResponse = await fetch('http://localhost:3333/shop/booster-status');
+        if (boosterStatusResponse.ok) {
+          const boosterData = await boosterStatusResponse.json();
+          setBoosterStatus(boosterData);
+        }
+
+        onMessageAdd({
+          text: data.message,
+          isUser: false,
+        });
+
+        return true;
+      } else {
+        const errorData = await response.json();
+        onMessageAdd({
+          text: errorData.error || '부스터 사용 중 오류가 발생했습니다.',
+          isUser: false,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Error using booster:', error);
+      onMessageAdd({
+        text: '서버 통신 오류로 부스터 사용에 실패했습니다. 잠시 후 다시 시도해주세요.',
         isUser: false,
       });
       return false;
@@ -257,7 +327,9 @@ const useShop = ({ point, onPointUpdate, onMessageAdd, refreshOutfitData }: UseS
     isShopOpen,
     currentBackground,
     currentOutfit,
+    boosterStatus,
     purchaseItem,
+    useBooster,
     equipItem,
     openShop,
     closeShop,

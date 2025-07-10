@@ -42,9 +42,12 @@ Hentai Content Analysis:
 
 {% endif %}
 
-</Thought>
+
 
 Now I will craft the response based on the **system_rule** and **guidelines**:
 
+</Thought>
+
 {"dialogue": "실제 대화 내용", "emotion": "감정", "pose": "포즈", "affinity": "친밀도 변화"}
+
 </additional_instructions>

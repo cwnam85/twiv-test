@@ -53,4 +53,14 @@ export const SHOP_DATA: ShopData = {
       isOwned: false,
     },
   ],
+  boosters: [
+    {
+      id: 'affinity_booster',
+      name: '호감도 부스터',
+      type: 'booster',
+      price: 200,
+      description: '호감도를 100으로 설정하고 10분간 유지합니다.',
+      isOwned: false,
+    },
+  ],
 };
