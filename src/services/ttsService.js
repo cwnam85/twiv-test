@@ -28,7 +28,10 @@ export async function playTTSSupertone(response, emotion) {
     'Content-Type': 'application/json',
   };
 
-  const mp3FilePath = './tts_sync.mp3';
+  // 고유한 파일명 생성 (타임스탬프 + 랜덤)
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  const mp3FilePath = `./tts_${timestamp}_${random}.mp3`;
 
   try {
     // API 호출하여 바이너리 오디오 스트림 받기
@@ -37,11 +40,8 @@ export async function playTTSSupertone(response, emotion) {
       responseType: 'arraybuffer', // 바이너리 데이터로 받기
     });
 
-    // 오디오 길이 확인 (디버깅용)
+    // 오디오 길이 확인
     const audioLength = apiResponse.headers['x-audio-length'];
-    if (audioLength) {
-      console.log(`Audio length: ${audioLength} seconds`);
-    }
 
     // 오디오 데이터를 파일로 저장
     fs.writeFileSync(mp3FilePath, apiResponse.data);
@@ -54,19 +54,55 @@ export async function playTTSSupertone(response, emotion) {
     });
 
     return new Promise((resolve, reject) => {
-      ffmpeg(mp3FilePath)
+      let playbackStarted = false;
+      let playbackEnded = false;
+      const startTime = Date.now();
+
+      const ffmpegProcess = ffmpeg(mp3FilePath)
         .inputFormat('mp3')
         .audioChannels(2)
         .audioFrequency(44100)
         .toFormat('s16le')
+        .on('start', () => {
+          playbackStarted = true;
+        })
         .on('error', (err) => {
           console.error('Error during playback:', err.message);
+          // 에러 발생 시 임시 파일 삭제
+          try {
+            fs.unlinkSync(mp3FilePath);
+          } catch (unlinkError) {
+            console.error('Error deleting temp file:', unlinkError);
+          }
           reject(err);
         })
         .on('end', () => {
-          resolve();
+          playbackEnded = true;
+
+          // 재생 완료 후 임시 파일 삭제
+          try {
+            fs.unlinkSync(mp3FilePath);
+          } catch (unlinkError) {
+            console.error('Error deleting temp file:', unlinkError);
+          }
+
+          // 실제 오디오 길이만큼 대기 (오디오 길이가 없으면 기본값 사용)
+          const duration = audioLength ? parseFloat(audioLength) * 1000 : 3000; // 기본 3초
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, duration - elapsed);
+
+          setTimeout(() => {
+            resolve();
+          }, remaining);
         })
         .pipe(speaker);
+
+      // 스피커 종료 이벤트도 감지
+      speaker.on('close', () => {
+        if (playbackEnded) {
+          // 스피커 종료 확인 (디버깅용으로 남겨둠)
+        }
+      });
     });
   } catch (error) {
     console.error('Error calling Supertone API:', error.message);

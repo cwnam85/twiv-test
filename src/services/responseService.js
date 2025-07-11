@@ -3,6 +3,7 @@ import { playTTSSupertone } from './ttsService.js';
 import { sendMessageToWarudo } from './warudoService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
+import { playMatureTTS } from './audioService.js';
 
 class ResponseService {
   constructor() {
@@ -34,6 +35,8 @@ class ResponseService {
     let emotion = null;
     let pose = null;
     let usage = null;
+    let matureTags = [];
+    let segments = [];
 
     try {
       // 새로운 응답 처리 함수 사용
@@ -44,6 +47,8 @@ class ResponseService {
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
       const affinity = processedResponse.affinity;
+      matureTags = processedResponse.matureTags || [];
+      segments = processedResponse.segments || [];
 
       // affinity 처리
       if (affinity) {
@@ -58,6 +63,8 @@ class ResponseService {
         pose,
         usage,
         affinity,
+        matureTags,
+        segments,
       };
     } catch (error) {
       console.error('Response parsing error:', error);
@@ -78,6 +85,8 @@ class ResponseService {
       pose: matchPose ? matchPose[1].trim() : null,
       usage: null,
       affinity: matchAffinity ? matchAffinity[1].trim() : null,
+      matureTags: [],
+      segments: [],
     };
   }
 
@@ -155,9 +164,32 @@ class ResponseService {
     }
   }
 
-  async playResponse(dialogue, emotion) {
+  async playResponse(dialogue, emotion, matureTags = [], segments = []) {
     try {
-      await playTTSSupertone(dialogue, emotion);
+      if (segments && segments.length > 0) {
+        // segments가 있으면 순차적으로 재생
+        for (let i = 0; i < segments.length; i++) {
+          const segment = segments[i];
+
+          if (segment.type === 'text' && segment.content.trim()) {
+            // 텍스트 세그먼트는 TTS로 재생
+            await playTTSSupertone(segment.content, emotion);
+          } else if (segment.type === 'tag') {
+            // 태그 세그먼트는 mature 오디오로 재생
+            const type = segment.content.replace(/_/g, ''); // _moan_ -> moan
+            await playMatureTTS(type);
+          }
+        }
+      } else {
+        // segments가 없으면 기존 방식 사용 (호환성)
+        await playTTSSupertone(dialogue, emotion);
+
+        // mature 태그들 순차적으로 재생
+        for (const tag of matureTags) {
+          const type = tag.replace(/_/g, ''); // _kiss_ -> kiss
+          await playMatureTTS(type);
+        }
+      }
     } catch (error) {
       console.error('Error during TTS playback:', error);
     }

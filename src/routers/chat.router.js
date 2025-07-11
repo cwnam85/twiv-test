@@ -148,7 +148,12 @@ router.post('/purchase', async (req, res) => {
     });
 
     // TTS 호출
-    await responseService.playResponse(purchaseResponse.dialogue, purchaseResponse.emotion);
+    await responseService.playResponse(
+      purchaseResponse.dialogue,
+      purchaseResponse.emotion,
+      purchaseResponse.matureTags,
+      purchaseResponse.segments,
+    );
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(purchaseResponse.pose);
@@ -216,7 +221,7 @@ router.post('/chat', async (req, res) => {
       characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
 
     // 포인트가 0일 때 TTS로 메시지 재생
-    await responseService.playResponse(randomMessage.message, randomMessage.emotion);
+    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], []);
 
     return res.json({
       message: randomMessage.message,
@@ -293,7 +298,12 @@ router.post('/chat', async (req, res) => {
     });
 
     // TTS 호출
-    await responseService.playResponse(response.dialogue, response.emotion);
+    await responseService.playResponse(
+      response.dialogue,
+      response.emotion,
+      response.matureTags,
+      response.segments,
+    );
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);

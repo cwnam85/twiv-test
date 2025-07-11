@@ -4,6 +4,52 @@
  */
 
 /**
+ * mature 태그를 추출하고 분할된 텍스트 반환
+ * @param {string} text - 원본 텍스트
+ * @returns {object} 분할된 텍스트 배열과 태그 정보
+ */
+function extractMatureTags(text) {
+  const segments = [];
+  const tags = [];
+  let currentText = '';
+
+  // 정규식으로 태그를 찾되, 위치 정보도 함께 저장
+  const tagRegex = /(_kiss_|_moan_|_breath_|_suck_)/g;
+  let match;
+  let lastIndex = 0;
+
+  while ((match = tagRegex.exec(text)) !== null) {
+    // 태그 이전 텍스트 추가
+    const beforeTag = text.substring(lastIndex, match.index);
+    if (beforeTag.trim()) {
+      segments.push({ type: 'text', content: beforeTag.trim() });
+    }
+
+    // 태그 추가
+    segments.push({ type: 'tag', content: match[0] });
+    tags.push(match[0]);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // 마지막 태그 이후 텍스트 추가
+  const afterLastTag = text.substring(lastIndex);
+  if (afterLastTag.trim()) {
+    segments.push({ type: 'text', content: afterLastTag.trim() });
+  }
+
+  // 태그가 없는 경우 전체 텍스트를 하나의 세그먼트로
+  if (segments.length === 0) {
+    segments.push({ type: 'text', content: text.trim() });
+  }
+
+  return {
+    segments: segments,
+    tags: tags,
+  };
+}
+
+/**
  * AI 응답에서 Pre-analysis를 제거하고 JSON만 추출
  * @param {string|object} rawResponse - AI의 원본 응답
  * @returns {object} 처리된 응답 객체
@@ -33,6 +79,8 @@ export function processAIResponse(rawResponse) {
         emotion: 'neutral',
         pose: 'stand',
         affinity: '0',
+        matureTags: [],
+        segments: [],
       };
     }
 
@@ -62,11 +110,21 @@ export function processAIResponse(rawResponse) {
     if (jsonMatch) {
       try {
         const jsonData = JSON.parse(jsonMatch[0]);
+        const dialogue = jsonData.dialogue || '';
+
+        // mature 태그 처리
+        const { segments, tags } = extractMatureTags(dialogue);
+
         return {
-          dialogue: jsonData.dialogue || '',
+          dialogue: segments
+            .filter((seg) => seg.type === 'text')
+            .map((seg) => seg.content)
+            .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
           affinity: jsonData.affinity || '0',
+          matureTags: tags,
+          segments: segments, // 세그먼트 정보 추가
         };
       } catch (e) {
         console.warn('JSON 파싱 실패, 전체 텍스트 사용:', e.message);
@@ -74,11 +132,17 @@ export function processAIResponse(rawResponse) {
     }
 
     // 4. JSON이 없는 경우 전체 텍스트를 dialogue로 사용
+    const { segments, tags } = extractMatureTags(cleaned.trim());
     return {
-      dialogue: cleaned.trim(),
+      dialogue: segments
+        .filter((seg) => seg.type === 'text')
+        .map((seg) => seg.content)
+        .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
+      matureTags: tags,
+      segments: segments, // 세그먼트 정보 추가
     };
   } catch (error) {
     console.error('AI 응답 처리 중 오류:', error);
@@ -87,6 +151,8 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
+      matureTags: [],
+      segments: [],
     };
   }
 }
