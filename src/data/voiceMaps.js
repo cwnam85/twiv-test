@@ -77,4 +77,16 @@ export const characterVoiceMaps = {
     annoyed: 'wK9jwRnqyeVL1izKJ5LE5Q',
     angry: 'byga593Do9KBvuPMmAcXNu',
   },
+  blacknila: {
+    happy: '2tFEepiFc2JNG6WgbprZpv',
+    dominating: 'bU6gwUfTFJuUBACCDRMYMX',
+    embarrassed: 'wTrpECwTvRp1mewq9Zsegw',
+    sad: '9Pc4LCtAwXPMDGtn1yoAXR',
+    affectionate: 'rXgq9uCFQNFmxcYr5QJ3cy',
+    funny: '3aTeXmJ2x8vZm3rpo4YDkU',
+    neutral: 'cx1wbSrhNDvrcdvEBqoFmP',
+    annoyed: '4VHGwaaowqHXbCx7ztSaHW',
+    aroused: 'xdXsR8rEjVMQc4vqnAj6Cd',
+    angry: 'bU6gwUfTFJuUBACCDRMYMX',
+  },
 };

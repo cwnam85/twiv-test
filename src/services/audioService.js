@@ -36,7 +36,23 @@ export function playMP3(filename) {
 
 export function playMatureTTS(type) {
   return new Promise((resolve, reject) => {
-    const matureTTSDir = path.join(__dirname, '../../mature_tts', type);
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+    // 캐릭터별 mature_tts 폴더 경로 결정
+    let matureTTSDir;
+
+    // 캐릭터별 폴더가 존재하는지 확인
+    const characterSpecificDir = path.join(__dirname, '../../mature_tts', activeCharacter, type);
+    const defaultDir = path.join(__dirname, '../../mature_tts', type);
+
+    // 캐릭터별 폴더가 존재하면 사용, 없으면 기본 폴더 사용
+    if (fs.existsSync(characterSpecificDir)) {
+      matureTTSDir = characterSpecificDir;
+    } else {
+      matureTTSDir = defaultDir;
+    }
+
+    console.log(`Using mature TTS directory for ${activeCharacter}: ${matureTTSDir}`);
 
     // 해당 폴더의 모든 mp3 파일 읽기
     fs.readdir(matureTTSDir, (err, files) => {
@@ -87,6 +103,7 @@ export function playMatureTTS(type) {
           .inputFormat('mp3')
           .audioChannels(2)
           .audioFrequency(44100)
+          .audioFilters('volume=4.0') // mature_tts 음량 증폭 (2배)
           .toFormat('s16le')
           .on('start', () => {
             playbackStarted = true;
