@@ -47,6 +47,7 @@ class ResponseService {
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
       const affinity = processedResponse.affinity;
+      const outfitChange = processedResponse.outfitChange;
       matureTags = processedResponse.matureTags || [];
       segments = processedResponse.segments || [];
 
@@ -63,6 +64,7 @@ class ResponseService {
         pose,
         usage,
         affinity,
+        outfitChange,
         matureTags,
         segments,
       };
@@ -78,6 +80,18 @@ class ResponseService {
     const matchDialogue = dialogueText.match(/dialogue:\s*["']([^"']+)["']/i);
     const matchPose = dialogueText.match(/pose:\s*["']?([^"',}]+)["']?/i);
     const matchAffinity = dialogueText.match(/affinity:\s*["']?([^"',}]+)["']?/i);
+    const matchOutfitChange = dialogueText.match(/outfitChange:\s*\{[\s\S]*?\}/i);
+
+    let outfitChange = null;
+    if (matchOutfitChange) {
+      try {
+        // outfitChange JSON 객체 추출
+        const outfitChangeText = matchOutfitChange[0].replace(/outfitChange:\s*/, '');
+        outfitChange = JSON.parse(outfitChangeText);
+      } catch (e) {
+        console.warn('Failed to parse outfitChange from regex:', e);
+      }
+    }
 
     return {
       dialogue: matchDialogue ? matchDialogue[1].trim() : null,
@@ -85,6 +99,7 @@ class ResponseService {
       pose: matchPose ? matchPose[1].trim() : null,
       usage: null,
       affinity: matchAffinity ? matchAffinity[1].trim() : null,
+      outfitChange,
       matureTags: [],
       segments: [],
     };
@@ -206,17 +221,11 @@ class ResponseService {
   }
 
   processOutfitChange(outfitChange) {
-    if (outfitChange && outfitChange.action && outfitChange.category && outfitChange.item) {
-      console.log(
-        `Processing outfit change: ${outfitChange.action} ${outfitChange.category}.${outfitChange.item}`,
-      );
+    if (outfitChange && outfitChange.action && outfitChange.category) {
+      console.log(`Processing outfit change: ${outfitChange.action} ${outfitChange.category}`);
 
       try {
-        characterService.changeOutfit(
-          outfitChange.action,
-          outfitChange.category,
-          outfitChange.item,
-        );
+        characterService.changeOutfit(outfitChange.action, outfitChange.category);
 
         // 시스템 프롬프트 업데이트
         characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);

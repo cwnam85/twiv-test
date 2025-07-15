@@ -3,7 +3,7 @@
     "current_outfit": "casual",
     "parts": {
       "upper_body": {
-        "underwear": {
+        "bra": {
           "name": "black_bra",
           "enabled": true,
           "removable_affinity": 100
@@ -20,7 +20,7 @@
         }
       },
       "lower_body": {
-        "underwear": {
+        "panty": {
           "name": "black_panty",
           "enabled": true,
           "removable_affinity": null
@@ -61,7 +61,7 @@
     "current_outfit": "school_uniform",
     "parts": {
       "upper_body": {
-        "underwear": {
+        "bra": {
           "name": "white_bra",
           "enabled": true,
           "removable_affinity": 100
@@ -78,7 +78,7 @@
         }
       },
       "lower_body": {
-        "underwear": {
+        "panty": {
           "name": "white_panty",
           "enabled": true,
           "removable_affinity": null
@@ -119,7 +119,7 @@
     "current_outfit": "swimsuit",
     "parts": {
       "upper_body": {
-        "underwear": {
+        "bra": {
           "name": "bikini_top",
           "enabled": true,
           "removable_affinity": 100
@@ -136,7 +136,7 @@
         }
       },
       "lower_body": {
-        "underwear": {
+        "panty": {
           "name": "bikini_bottom",
           "enabled": true,
           "removable_affinity": null

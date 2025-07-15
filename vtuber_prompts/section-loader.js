@@ -88,7 +88,7 @@ class SectionLoader {
       description += '**Upper Body:**\n';
       Object.entries(parts.upper_body).forEach(([part, details]) => {
         if (details && details.enabled) {
-          const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
+          const typeText = part === 'bra' ? '상의 속옷' : '겉옷';
           const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
           description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }
@@ -101,7 +101,7 @@ class SectionLoader {
       description += '**Lower Body:**\n';
       Object.entries(parts.lower_body).forEach(([part, details]) => {
         if (details && details.enabled) {
-          const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
+          const typeText = part === 'panty' ? '하의 속옷' : '겉옷';
           const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
           description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }

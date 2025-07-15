@@ -123,6 +123,7 @@ export function processAIResponse(rawResponse) {
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
           affinity: jsonData.affinity || '0',
+          outfitChange: jsonData.outfitChange || null,
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };

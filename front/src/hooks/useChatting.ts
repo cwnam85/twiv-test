@@ -16,7 +16,7 @@ const useChatting = () => {
 
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
 
-  const { outfitData, updateOutfitData, refreshOutfitData } = useOutfit();
+  const { outfitData, refreshOutfitData } = useOutfit();
 
   const { messages, addUserMessage, addBotMessageFromMessage } = useMessages(currentCharacter);
 
@@ -60,7 +60,6 @@ const useChatting = () => {
     onPointUpdate: updatePoint,
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
-    onOutfitUpdate: updateOutfitData,
     onOutfitRefresh: refreshOutfitData,
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,

@@ -188,16 +188,16 @@ router.get('/current-outfit', (req, res) => {
 // 복장 변경 API
 router.post('/change-outfit', (req, res) => {
   try {
-    const { action, category, item } = req.body;
+    const { action, category } = req.body;
 
-    const updatedOutfit = characterService.changeOutfit(action, category, item);
+    const updatedOutfit = characterService.changeOutfit(action, category);
 
     // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
     characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
 
     res.json({
       success: true,
-      message: `Successfully ${action}ed ${item}`,
+      message: `Successfully ${action}ed ${category}`,
       updatedOutfit: updatedOutfit,
     });
   } catch (error) {
