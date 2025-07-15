@@ -3,92 +3,56 @@
     "current_outfit": "casual",
     "parts": {
       "upper_body": {
-        "bra": {
+        "underwear": {
           "name": "black_bra",
           "enabled": true,
-          "type": "underwear",
-          "removable": {
-            "access": "allowed_adult",
-            "min_affinity": 3
-          }
+          "removable_affinity": 100
         },
         "top": {
           "name": "white_blouse",
           "enabled": true,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
-        "jacket": {
+        "outerwear": {
           "name": "black_cardigan",
-          "enabled": false,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "enabled": true,
+          "removable_affinity": 80
         }
       },
       "lower_body": {
-        "panty": {
+        "underwear": {
           "name": "black_panty",
           "enabled": true,
-          "type": "underwear",
-          "removable": {
-            "access": "locked",
-            "min_affinity": null
-          }
+          "removable_affinity": null
         },
         "bottom": {
           "name": "black_skirt",
           "enabled": true,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "feet": {
         "shoes": {
           "name": "black_loafers",
           "enabled": true,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "accessories": {
         "hat": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
         "necklace": {
           "name": "silver_choker",
           "enabled": true,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_adult",
-            "min_affinity": 3
-          }
+          "removable_affinity": 100
         },
         "belt": {
           "name": "black_belt",
           "enabled": true,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       }
     }
@@ -97,92 +61,56 @@
     "current_outfit": "school_uniform",
     "parts": {
       "upper_body": {
-        "bra": {
+        "underwear": {
           "name": "white_bra",
           "enabled": true,
-          "type": "underwear",
-          "removable": {
-            "access": "allowed_adult",
-            "min_affinity": 3
-          }
+          "removable_affinity": 100
         },
         "top": {
           "name": "white_shirt",
           "enabled": true,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
-        "jacket": {
+        "outerwear": {
           "name": "navy_blazer",
           "enabled": true,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "lower_body": {
-        "panty": {
+        "underwear": {
           "name": "white_panty",
           "enabled": true,
-          "type": "underwear",
-          "removable": {
-            "access": "locked",
-            "min_affinity": null
-          }
+          "removable_affinity": null
         },
         "bottom": {
           "name": "navy_skirt",
           "enabled": true,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "feet": {
         "shoes": {
           "name": "black_school_shoes",
           "enabled": true,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "accessories": {
         "hat": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
         "necklace": {
           "name": "school_tie",
           "enabled": true,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
         "belt": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       }
     }
@@ -191,92 +119,56 @@
     "current_outfit": "swimsuit",
     "parts": {
       "upper_body": {
-        "bra": {
+        "underwear": {
           "name": "bikini_top",
           "enabled": true,
-          "type": "swimwear",
-          "removable": {
-            "access": "allowed_adult",
-            "min_affinity": 5
-          }
+          "removable_affinity": 100
         },
         "top": {
           "name": "none",
           "enabled": false,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
-        "jacket": {
+        "outerwear": {
           "name": "none",
           "enabled": false,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "lower_body": {
-        "panty": {
+        "underwear": {
           "name": "bikini_bottom",
           "enabled": true,
-          "type": "swimwear",
-          "removable": {
-            "access": "locked",
-            "min_affinity": null
-          }
+          "removable_affinity": null
         },
         "bottom": {
           "name": "none",
           "enabled": false,
-          "type": "outerwear",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "feet": {
         "shoes": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       },
       "accessories": {
         "hat": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
         "necklace": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         },
         "belt": {
           "name": "none",
           "enabled": false,
-          "type": "accessory",
-          "removable": {
-            "access": "allowed_all",
-            "min_affinity": 1
-          }
+          "removable_affinity": 80
         }
       }
     }

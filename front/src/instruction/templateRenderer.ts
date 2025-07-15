@@ -7,12 +7,7 @@ import nunjucks from 'nunjucks';
 interface OutfitItem {
   name: string;
   enabled: boolean;
-  type: string;
-  layer_order: number;
-  removable: {
-    access: string;
-    min_affinity: number | null;
-  };
+  removable_affinity: number | null;
 }
 
 interface OutfitParts {
@@ -41,6 +36,8 @@ interface TemplateContext {
   ownedBackgrounds: string;
   ownedOutfits: string;
   isAdultCharacter: boolean;
+  outfitDetail: string;
+  removableOutfits: string;
 }
 
 // nunjucks를 사용한 템플릿 렌더링 함수
@@ -107,6 +104,51 @@ function generateOutfitInfo(outfitData?: OutfitData): string {
   return `${outfitName} (${enabledItems.join(', ')})`;
 }
 
+// 복장 상세 정보를 JSON 형식으로 생성하는 함수
+function generateOutfitDetail(outfitData?: OutfitData): string {
+  if (!outfitData || !outfitData.outfitData) {
+    return 'none';
+  }
+
+  const { outfitData: data } = outfitData;
+  const enabledItems: string[] = [];
+
+  // enabled된 아이템들만 수집 (JSON 형식)
+  Object.entries(data.parts).forEach(([category, items]) => {
+    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
+      if (itemData.enabled && itemData.name !== 'none') {
+        enabledItems.push(`${category}.${itemName}: ${itemData.name}`);
+      }
+    });
+  });
+
+  return enabledItems.length > 0 ? enabledItems.join(', ') : 'none';
+}
+
+// 현재 호감도에서 제거 가능한 복장 아이템들을 배열로 생성하는 함수
+function generateRemovableOutfits(outfitData?: OutfitData, affinity: number = 0): string {
+  if (!outfitData || !outfitData.outfitData) {
+    return '[]';
+  }
+
+  const { outfitData: data } = outfitData;
+  const removableItems: string[] = [];
+
+  // 현재 호감도에서 제거 가능한 아이템들 수집
+  Object.entries(data.parts).forEach(([category, items]) => {
+    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
+      if (itemData.enabled && itemData.name !== 'none') {
+        // removable_affinity가 null이 아니고, 현재 호감도가 충분한 경우
+        if (itemData.removable_affinity !== null && affinity >= itemData.removable_affinity) {
+          removableItems.push(`${category}.${itemName}`);
+        }
+      }
+    });
+  });
+
+  return `[${removableItems.join(', ')}]`;
+}
+
 // 템플릿 파일을 가져오는 함수
 function getTemplate(templateName: string): string {
   switch (templateName) {
@@ -170,6 +212,7 @@ export async function generateChatPrompt(
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
+    const outfitDetail = generateOutfitDetail(outfitData);
     const backgroundInfo = generateBackgroundInfo(backgroundId);
 
     // 상점 데이터 가져오기
@@ -197,6 +240,8 @@ export async function generateChatPrompt(
       ownedBackgrounds: ownedBackgrounds,
       ownedOutfits: ownedOutfits,
       isAdultCharacter: characterForAdult[currentCharacter] || false,
+      outfitDetail: outfitDetail,
+      removableOutfits: generateRemovableOutfits(outfitData, affinity),
     };
 
     const template = getTemplate('chat_template');
@@ -220,6 +265,7 @@ export async function generateThankYouPrompt(
     const allowedPoses = getCharacterPoses(currentCharacter, affinity);
     const poseList = formatPoseList(allowedPoses);
     const outfitInfo = generateOutfitInfo(outfitData);
+    const outfitDetail = generateOutfitDetail(outfitData);
     const backgroundInfo = generateBackgroundInfo(backgroundId);
 
     // 상점 데이터 가져오기
@@ -247,6 +293,8 @@ export async function generateThankYouPrompt(
       ownedBackgrounds: ownedBackgrounds,
       ownedOutfits: ownedOutfits,
       isAdultCharacter: characterForAdult[currentCharacter] || false,
+      outfitDetail: outfitDetail,
+      removableOutfits: generateRemovableOutfits(outfitData, affinity),
     };
 
     const template = getTemplate('thankyou_template');

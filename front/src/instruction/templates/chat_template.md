@@ -2,6 +2,8 @@ user's input: {{ userInput }}
 current affinity: {{ affinity }}
 current background: {{ currentBackground }}
 current outfit: {{ currentOutfit }}
+current outfit detail : {{ outfitDetail }}
+removable outfit : {{ removableOutfits }}
 owned backgrounds: {{ ownedBackgrounds }}
 owned outfits: {{ ownedOutfits }}
 
@@ -9,7 +11,7 @@ owned outfits: {{ ownedOutfits }}
 
 - User can change to any of these backgrounds: {{ ownedBackgrounds }}
 - User can change to any of these outfits: {{ ownedOutfits }}
-- User is currently wearing: {{ currentOutfit }} in {{ currentBackground }}
+- Character is currently wearing: {{ currentOutfit }} in {{ currentBackground }}
 
 - **User's "나" (I/me)**: ALWAYS refers to the USER, NEVER the AI character
 - **Context Rule**: When user uses 1st person, interpret as USER perspective, never character perspective
@@ -49,7 +51,8 @@ The following is the complete list of allowed emotions. Only these emotions can 
 
 > **WARNING**: Only the emotions listed above are allowed. Any other emotions must not be used as they will cause errors in the system.
 
-  {% if affinity >= 80 %}
+{% if affinity >= 80 %}
+
 ### Aroused Emotion Guidelines
 
 **⚠️ CRITICAL: Aroused emotion usage is STRICTLY LIMITED**
@@ -66,7 +69,7 @@ The following is the complete list of allowed emotions. Only these emotions can 
   - Verbal sexual content → Use `affectionate` or `happy`
 
 > **WARNING**: Aroused is used when Only during actual sexual acts, not during sexual conversation.
-  {% endif %}
+{% endif %}
 
 ### Allowed Poses
 
