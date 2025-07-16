@@ -54,17 +54,17 @@ const useChatAPI = ({
 
       const data = await response.json();
 
-      // outfitChange 처리
-      if (data.outfitChange && data.outfitChange.action && data.outfitChange.category) {
-        console.log('Processing outfit change:', data.outfitChange);
-
+      // outfitOn/outfitOff 처리 (배열 형태 지원)
+      if (
+        (Array.isArray(data.outfitOn) && data.outfitOn.length > 0) ||
+        (Array.isArray(data.outfitOff) && data.outfitOff.length > 0)
+      ) {
         // 복장 변경이 발생했으면 최신 복장 데이터를 다시 받아오기
         const newOutfitData = await onOutfitRefresh();
         if (newOutfitData) {
           console.log('Updated outfit data from API:', newOutfitData);
 
           // 복장 변경 알림 메시지 추가 (선택사항)
-          const actionText = data.outfitChange.action === 'remove' ? '벗었어요' : '입었어요';
           const categoryMap: { [key: string]: string } = {
             bra: '브라',
             panty: '팬티',
@@ -76,10 +76,19 @@ const useChatAPI = ({
             necklace: '목걸이',
             belt: '벨트',
           };
-          const categoryText =
-            categoryMap[data.outfitChange.category] || data.outfitChange.category;
 
-          console.log(`복장 변경: ${categoryText}를 ${actionText}`);
+          if (Array.isArray(data.outfitOff)) {
+            for (const category of data.outfitOff) {
+              const categoryText = categoryMap[category] || category;
+              console.log(`복장 변경: ${categoryText}를 벗었어요`);
+            }
+          }
+          if (Array.isArray(data.outfitOn)) {
+            for (const category of data.outfitOn) {
+              const categoryText = categoryMap[category] || category;
+              console.log(`복장 변경: ${categoryText}를 입었어요`);
+            }
+          }
         }
       }
 

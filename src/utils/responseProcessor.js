@@ -79,6 +79,8 @@ export function processAIResponse(rawResponse) {
         emotion: 'neutral',
         pose: 'stand',
         affinity: '0',
+        outfitOn: [],
+        outfitOff: [],
         matureTags: [],
         segments: [],
       };
@@ -123,7 +125,8 @@ export function processAIResponse(rawResponse) {
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
           affinity: jsonData.affinity || '0',
-          outfitChange: jsonData.outfitChange || null,
+          outfitOn: jsonData.outfitOn || [], // 새로운 형식
+          outfitOff: jsonData.outfitOff || [], // 새로운 형식
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };
@@ -142,6 +145,8 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
+      outfitOn: [],
+      outfitOff: [],
       matureTags: tags,
       segments: segments, // 세그먼트 정보 추가
     };
@@ -152,6 +157,8 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
+      outfitOn: [],
+      outfitOff: [],
       matureTags: [],
       segments: [],
     };

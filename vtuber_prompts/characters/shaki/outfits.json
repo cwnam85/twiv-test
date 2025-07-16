@@ -5,7 +5,7 @@
       "upper_body": {
         "bra": {
           "name": "black_bra",
-          "enabled": true,
+          "enabled": false,
           "removable_affinity": 100
         },
         "top": {
@@ -15,7 +15,7 @@
         },
         "outerwear": {
           "name": "black_cardigan",
-          "enabled": true,
+          "enabled": false,
           "removable_affinity": 80
         }
       },
@@ -27,7 +27,7 @@
         },
         "bottom": {
           "name": "black_skirt",
-          "enabled": true,
+          "enabled": false,
           "removable_affinity": 80
         }
       },

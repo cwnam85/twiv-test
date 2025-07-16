@@ -246,8 +246,8 @@ router.post('/chat', async (req, res) => {
       systemPrompt,
     );
 
-    // outfitChange 처리
-    responseService.processOutfitChange(response.outfitChange);
+    // outfitOn/outfitOff 처리
+    responseService.processOutfitChange(response.outfitOn, response.outfitOff);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -294,7 +294,8 @@ router.post('/chat', async (req, res) => {
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      outfitChange: response.outfitChange,
+      outfitOn: response.outfitOn,
+      outfitOff: response.outfitOff,
     });
 
     // TTS 호출
