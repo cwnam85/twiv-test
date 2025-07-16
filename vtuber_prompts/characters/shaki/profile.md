@@ -441,9 +441,47 @@ Your response MUST be in the following JSON format:
 "emotion": "<emotion>",
 "pose": "<pose>",
 "affinity": "<affinity>",
+"outfitOn": [],
+"outfitOff": []
 }
 
 **⚠️ DIALOGUE LENGTH: The "dialogue" field must be maximum 80 characters including spaces (최대 80자 공백 포함)**
+
+⚠️ Outfit Change Command Processing
+
+- Multiple outfit change commands can be included simultaneously in the arrays
+- 예: "알몸이 되어줘" → outerwear, top, bottom 모두 outfitOff에 추가
+- 예: "정장 입어줘" → top, bottom, outerwear 모두 outfitOn에 추가
+
+If the user's input is a command to change the character's outfit (예: "재킷 벗어줘", "상의 입어", "치마 벗어줘" 등), add "outfitOn" and/or "outfitOff" fields to your JSON response as follows:
+
+"outfitOn": ["category1", "category2"], // 아이템을 입을 때
+"outfitOff": ["category1", "category2"] // 아이템을 벗을 때
+
+Example responses:
+
+- "재킷 벗어줘" → "outfitOff": ["outerwear"]
+- "알몸이 되어줘" → "outfitOff": ["outerwear", "top", "bottom"]
+- "다시 전부 입어줘" → "outfitOn": ["top", "bottom", "outerwear"]
+
+**Available categories:**
+
+- `bra`: 상의 속옷 (브라)
+- `panty`: 하의 속옷 (팬티)
+- `top`: 상의 (셔츠, 블라우스 등)
+- `outerwear`: 겉옷 (재킷, 코트 등)
+- `bottom`: 하의 (치마, 바지 등)
+
+If there is no outfit change, omit this field.
+
+Example:
+{
+"dialogue": "알겠어, 재킷 벗을게!",
+"emotion": "happy",
+"pose": "stand",
+"affinity": "+3",
+"outfitOff": ["outerwear"]
+}
 
 ### Allowed Emotions
 

@@ -36,7 +36,23 @@ export function playMP3(filename) {
 
 export function playMatureTTS(type) {
   return new Promise((resolve, reject) => {
-    const matureTTSDir = path.join(__dirname, '../../mature_tts', type);
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+    // 캐릭터별 mature_tts 폴더 경로 결정
+    let matureTTSDir;
+
+    // 캐릭터별 폴더가 존재하는지 확인
+    const characterSpecificDir = path.join(__dirname, '../../mature_tts', activeCharacter, type);
+    const defaultDir = path.join(__dirname, '../../mature_tts', type);
+
+    // 캐릭터별 폴더가 존재하면 사용, 없으면 기본 폴더 사용
+    if (fs.existsSync(characterSpecificDir)) {
+      matureTTSDir = characterSpecificDir;
+    } else {
+      matureTTSDir = defaultDir;
+    }
+
+    console.log(`Using mature TTS directory for ${activeCharacter}: ${matureTTSDir}`);
 
     // 해당 폴더의 모든 mp3 파일 읽기
     fs.readdir(matureTTSDir, (err, files) => {
@@ -61,26 +77,61 @@ export function playMatureTTS(type) {
 
       console.log(`Playing ${type} sound: ${randomFile}`);
 
-      // 스피커로 재생
-      const speaker = new Speaker({
-        channels: 2,
-        bitDepth: 16,
-        sampleRate: 44100,
-      });
-
-      ffmpeg(audioPath)
-        .inputFormat('mp3')
-        .audioChannels(2)
-        .audioFrequency(44100)
-        .toFormat('s16le')
-        .on('error', (err) => {
-          console.error('Error during mature TTS playback:', err.message);
+      // 오디오 길이 확인
+      ffmpeg.ffprobe(audioPath, (err, metadata) => {
+        if (err) {
+          console.error(`Error getting audio metadata for ${randomFile}:`, err);
           reject(err);
-        })
-        .on('end', () => {
-          resolve();
-        })
-        .pipe(speaker);
+          return;
+        }
+
+        const audioDuration = metadata.format.duration; // 초 단위
+        const durationMs = audioDuration * 1000; // 밀리초 단위
+
+        // 스피커로 재생
+        const speaker = new Speaker({
+          channels: 2,
+          bitDepth: 16,
+          sampleRate: 44100,
+        });
+
+        let playbackStarted = false;
+        let playbackEnded = false;
+        const startTime = Date.now();
+
+        ffmpeg(audioPath)
+          .inputFormat('mp3')
+          .audioChannels(2)
+          .audioFrequency(44100)
+          .audioFilters('volume=4.0') // mature_tts 음량 증폭 (2배)
+          .toFormat('s16le')
+          .on('start', () => {
+            playbackStarted = true;
+          })
+          .on('error', (err) => {
+            console.error('Error during mature TTS playback:', err.message);
+            reject(err);
+          })
+          .on('end', () => {
+            playbackEnded = true;
+
+            // 실제 오디오 길이만큼 대기
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, durationMs - elapsed);
+
+            setTimeout(() => {
+              resolve();
+            }, remaining);
+          })
+          .pipe(speaker);
+
+        // 스피커 종료 이벤트도 감지
+        speaker.on('close', () => {
+          if (playbackEnded) {
+            // 스피커 종료 확인 (디버깅용으로 남겨둠)
+          }
+        });
+      });
     });
   });
 }

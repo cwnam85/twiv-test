@@ -5,12 +5,7 @@ import { generateChatPrompt, generateThankYouPrompt } from './templateRenderer';
 interface OutfitItem {
   name: string;
   enabled: boolean;
-  type: string;
-  layer_order: number;
-  removable: {
-    access: string;
-    min_affinity: number | null;
-  };
+  removable_affinity: number | null;
 }
 
 interface OutfitParts {

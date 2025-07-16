@@ -53,11 +53,11 @@ async function testNunjucksTemplate() {
       parts: {
         upper_body: {
           top: { enabled: true, name: 'school_blazer', type: 'outer' },
-          underwear: { enabled: true, name: 'white_bra', type: 'underwear' },
+          bra: { enabled: true, name: 'white_bra', type: 'underwear' },
         },
         lower_body: {
           bottom: { enabled: true, name: 'school_skirt', type: 'outer' },
-          underwear: { enabled: true, name: 'white_panties', type: 'underwear' },
+          panty: { enabled: true, name: 'white_panties', type: 'underwear' },
         },
       },
     },

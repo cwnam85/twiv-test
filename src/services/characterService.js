@@ -126,7 +126,7 @@ class CharacterService {
     return this._systemPrompt;
   }
 
-  changeOutfit(action, category, item) {
+  changeOutfit(action, category) {
     if (!this.activeCharacter || !this.initialOutfitData) {
       throw new Error('No active character or outfit data');
     }
@@ -143,17 +143,41 @@ class CharacterService {
     const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
     const currentOutfit = allOutfits[this.initialOutfit];
 
-    if (!currentOutfit || !currentOutfit.parts[category] || !currentOutfit.parts[category][item]) {
-      throw new Error('Item not found');
+    if (!currentOutfit) {
+      throw new Error('Current outfit not found');
     }
 
-    // 복장 상태 변경
-    if (action === 'remove') {
-      currentOutfit.parts[category][item].enabled = false;
-    } else if (action === 'wear') {
-      currentOutfit.parts[category][item].enabled = true;
-    } else {
-      throw new Error('Invalid action. Use "remove" or "wear"');
+    // 카테고리 매핑: 최상위 카테고리와 하위 카테고리 매핑
+    const categoryMapping = {
+      bra: 'upper_body',
+      panty: 'lower_body',
+      top: 'upper_body',
+      outerwear: 'upper_body',
+      bottom: 'lower_body',
+      shoes: 'feet',
+      hat: 'accessories',
+      necklace: 'accessories',
+      belt: 'accessories',
+    };
+
+    const parentCategory = categoryMapping[category];
+    if (!parentCategory) {
+      throw new Error(`Unknown category: ${category}`);
+    }
+
+    if (!currentOutfit.parts[parentCategory] || !currentOutfit.parts[parentCategory][category]) {
+      throw new Error(`Category '${category}' not found in ${parentCategory}`);
+    }
+
+    // 해당 카테고리의 아이템에 대해 복장 상태 변경
+    const item = currentOutfit.parts[parentCategory][category];
+    if (item.name !== 'none') {
+      // 'none'이 아닌 실제 아이템만 처리
+      if (action === 'remove') {
+        item.enabled = false;
+      } else if (action === 'wear') {
+        item.enabled = true;
+      }
     }
 
     // outfits.json 파일 업데이트
@@ -162,7 +186,7 @@ class CharacterService {
     // 메모리상의 initialOutfitData도 업데이트
     this._initialOutfitData = currentOutfit;
 
-    console.log(`Outfit changed: ${action} ${category}.${item} for ${this.activeCharacter}`);
+    console.log(`Outfit changed: ${action} ${category} for ${this.activeCharacter}`);
 
     return currentOutfit;
   }

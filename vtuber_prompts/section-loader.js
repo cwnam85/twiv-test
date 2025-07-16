@@ -50,15 +50,15 @@ class SectionLoader {
       outfitDescription: currentOutfit ? this.generateOutfitDescription(currentOutfit) : null,
     };
 
-    // 메인 템플릿 로드 및 렌더링
-    const templatePath = path.join(this.characterPath, 'main_template.md');
+    // 공통 메인 템플릿 로드 및 렌더링
+    const sharedTemplatePath = path.join(this.sharedPath, 'main_template.md');
 
-    if (fs.existsSync(templatePath)) {
+    if (fs.existsSync(sharedTemplatePath)) {
       try {
         let renderedPrompt = this.env.render('main_template.md', templateContext);
 
         // nunjucks가 자동으로 profile.md의 동적 섹션을 처리하므로 별도 교체 로직 불필요
-        console.log('Using nunjucks template rendering for dynamic content');
+        console.log('Using shared nunjucks template rendering for dynamic content');
 
         // 줄바꿈 문자 정규화
         return this.normalizeLineEndings(renderedPrompt);
@@ -66,7 +66,7 @@ class SectionLoader {
         throw new Error(`Template rendering failed: ${error.message}`);
       }
     } else {
-      throw new Error(`Template file not found: ${templatePath}`);
+      throw new Error(`Shared template file not found: ${sharedTemplatePath}`);
     }
   }
 
@@ -88,7 +88,7 @@ class SectionLoader {
       description += '**Upper Body:**\n';
       Object.entries(parts.upper_body).forEach(([part, details]) => {
         if (details && details.enabled) {
-          const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
+          const typeText = part === 'bra' ? '상의 속옷' : '겉옷';
           const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
           description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }
@@ -101,7 +101,7 @@ class SectionLoader {
       description += '**Lower Body:**\n';
       Object.entries(parts.lower_body).forEach(([part, details]) => {
         if (details && details.enabled) {
-          const typeText = details.type === 'underwear' ? '속옷' : '겉옷';
+          const typeText = part === 'panty' ? '하의 속옷' : '겉옷';
           const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
           description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
         }

@@ -47,6 +47,8 @@ class ResponseService {
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
       const affinity = processedResponse.affinity;
+      const outfitOn = processedResponse.outfitOn || [];
+      const outfitOff = processedResponse.outfitOff || [];
       matureTags = processedResponse.matureTags || [];
       segments = processedResponse.segments || [];
 
@@ -63,6 +65,8 @@ class ResponseService {
         pose,
         usage,
         affinity,
+        outfitOn,
+        outfitOff,
         matureTags,
         segments,
       };
@@ -78,6 +82,29 @@ class ResponseService {
     const matchDialogue = dialogueText.match(/dialogue:\s*["']([^"']+)["']/i);
     const matchPose = dialogueText.match(/pose:\s*["']?([^"',}]+)["']?/i);
     const matchAffinity = dialogueText.match(/affinity:\s*["']?([^"',}]+)["']?/i);
+    const matchOutfitOn = dialogueText.match(/outfitOn:\s*(\[[\s\S]*?\])/i);
+    const matchOutfitOff = dialogueText.match(/outfitOff:\s*(\[[\s\S]*?\])/i);
+
+    let outfitOn = [];
+    let outfitOff = [];
+
+    if (matchOutfitOn) {
+      try {
+        const outfitOnText = matchOutfitOn[0].replace(/outfitOn:\s*/, '');
+        outfitOn = JSON.parse(outfitOnText);
+      } catch (e) {
+        console.warn('Failed to parse outfitOn from regex:', e);
+      }
+    }
+
+    if (matchOutfitOff) {
+      try {
+        const outfitOffText = matchOutfitOff[0].replace(/outfitOff:\s*/, '');
+        outfitOff = JSON.parse(outfitOffText);
+      } catch (e) {
+        console.warn('Failed to parse outfitOff from regex:', e);
+      }
+    }
 
     return {
       dialogue: matchDialogue ? matchDialogue[1].trim() : null,
@@ -85,6 +112,8 @@ class ResponseService {
       pose: matchPose ? matchPose[1].trim() : null,
       usage: null,
       affinity: matchAffinity ? matchAffinity[1].trim() : null,
+      outfitOn,
+      outfitOff,
       matureTags: [],
       segments: [],
     };
@@ -205,23 +234,41 @@ class ResponseService {
     }
   }
 
-  processOutfitChange(outfitChange) {
-    if (outfitChange && outfitChange.action && outfitChange.category && outfitChange.item) {
-      console.log(
-        `Processing outfit change: ${outfitChange.action} ${outfitChange.category}.${outfitChange.item}`,
-      );
+  processOutfitChange(outfitOn, outfitOff) {
+    // outfitOff 처리 (벗기기)
+    if (Array.isArray(outfitOff) && outfitOff.length > 0) {
+      for (const category of outfitOff) {
+        if (category) {
+          console.log(`Processing outfit removal: ${category}`);
+          try {
+            characterService.changeOutfit('remove', category);
+          } catch (outfitError) {
+            console.error(`Error removing outfit ${category}:`, outfitError);
+          }
+        }
+      }
+    }
 
+    // outfitOn 처리 (입기)
+    if (Array.isArray(outfitOn) && outfitOn.length > 0) {
+      for (const category of outfitOn) {
+        if (category) {
+          console.log(`Processing outfit wearing: ${category}`);
+          try {
+            characterService.changeOutfit('wear', category);
+          } catch (outfitError) {
+            console.error(`Error wearing outfit ${category}:`, outfitError);
+          }
+        }
+      }
+    }
+
+    // 모든 변경 완료 후 시스템 프롬프트 업데이트
+    if ((outfitOn && outfitOn.length > 0) || (outfitOff && outfitOff.length > 0)) {
       try {
-        characterService.changeOutfit(
-          outfitChange.action,
-          outfitChange.category,
-          outfitChange.item,
-        );
-
-        // 시스템 프롬프트 업데이트
         characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
-      } catch (outfitError) {
-        console.error('Error changing outfit:', outfitError);
+      } catch (error) {
+        console.error('Error updating system prompt after outfit changes:', error);
       }
     }
   }

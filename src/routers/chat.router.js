@@ -188,16 +188,16 @@ router.get('/current-outfit', (req, res) => {
 // 복장 변경 API
 router.post('/change-outfit', (req, res) => {
   try {
-    const { action, category, item } = req.body;
+    const { action, category } = req.body;
 
-    const updatedOutfit = characterService.changeOutfit(action, category, item);
+    const updatedOutfit = characterService.changeOutfit(action, category);
 
     // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
     characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
 
     res.json({
       success: true,
-      message: `Successfully ${action}ed ${item}`,
+      message: `Successfully ${action}ed ${category}`,
       updatedOutfit: updatedOutfit,
     });
   } catch (error) {
@@ -246,8 +246,8 @@ router.post('/chat', async (req, res) => {
       systemPrompt,
     );
 
-    // outfitChange 처리
-    responseService.processOutfitChange(response.outfitChange);
+    // outfitOn/outfitOff 처리
+    responseService.processOutfitChange(response.outfitOn, response.outfitOff);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -294,7 +294,8 @@ router.post('/chat', async (req, res) => {
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      outfitChange: response.outfitChange,
+      outfitOn: response.outfitOn,
+      outfitOff: response.outfitOff,
     });
 
     // TTS 호출
