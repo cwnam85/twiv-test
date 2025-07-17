@@ -8,6 +8,9 @@ import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import Speaker from 'speaker';
 
+// AudioProcessor 클래스 import
+// import { AudioProcessor } from './audioService.js';
+
 class ResponseService {
   constructor() {
     this.purchaseCost = 100;
@@ -200,16 +203,12 @@ class ResponseService {
     try {
       if (segments && segments.length > 0) {
         console.log(`[AUDIO] Starting playback with ${segments.length} segments`);
-
         // 1단계: TTS 파일들을 한꺼번에 미리 생성 (순서대로)
         const ttsFiles = [];
         let ttsIndex = 0;
-
         console.log(`[TTS] Pre-generating all TTS files in order...`);
-
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
-
           if (segment.type === 'text' && segment.content.trim()) {
             console.log(
               `[TTS] Generating TTS ${ttsIndex + 1}/${segments.filter((s) => s.type === 'text').length}: "${segment.content}"`,
@@ -230,20 +229,16 @@ class ResponseService {
             ttsIndex++;
           }
         }
-
         console.log(
           `[TTS] ✓ All ${ttsFiles.filter((f) => f).length}/${ttsFiles.length} TTS files generated successfully`,
         );
-
         // 2단계: output에 명시된 순서대로 효과음과 TTS를 순차적으로 재생
         console.log(`[PLAYBACK] Starting sequential playback in output order...`);
         ttsIndex = 0;
-
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
           const isFirst = i === 0; // 첫 번째 세그먼트
           const isLast = i === segments.length - 1; // 마지막 세그먼트
-
           if (segment.type === 'text' && segment.content.trim()) {
             // TTS 세그먼트: 미리 생성된 파일 재생
             const ttsFile = ttsFiles[ttsIndex];
@@ -275,9 +270,7 @@ class ResponseService {
             }
           }
         }
-
         console.log(`[PLAYBACK] ✓ All segments completed`);
-
         // 3단계: 모든 재생 완료 후 TTS 파일들 정리
         console.log(`[CLEANUP] Cleaning up ${ttsFiles.length} TTS files...`);
         for (let i = 0; i < ttsFiles.length; i++) {
@@ -296,7 +289,6 @@ class ResponseService {
         // segments가 없으면 기존 방식 사용 (호환성)
         console.log(`[AUDIO] Using legacy playback mode (no segments)`);
         await playTTSSupertone(dialogue, emotion);
-
         // mature 태그들 순차적으로 재생
         for (const tag of matureTags) {
           const type = tag.replace(/_/g, ''); // _kiss_ -> kiss
@@ -309,147 +301,24 @@ class ResponseService {
     }
   }
 
-  // TTS 파일 재생 메서드 (JavaScript 레벨 페이드 효과)
+  // TTS 파일 재생 메서드 (AudioProcessor 사용)
   async playTTSFile(filePath, isFirst = false, isLast = false) {
-    return new Promise(async (resolve, reject) => {
-      const speaker = new Speaker({
-        channels: 2,
-        bitDepth: 16,
-        sampleRate: 44100,
-      });
-
-      const audioChunks = [];
-      const { PassThrough } = await import('stream');
-      const passThrough = new PassThrough();
-
-      // PassThrough 스트림에서 데이터 수집
-      passThrough.on('data', (chunk) => {
-        audioChunks.push(chunk);
-      });
-
-      passThrough.on('end', () => {
-        try {
-          // 모든 데이터를 하나로 합치기
-          const fullAudio = Buffer.concat(audioChunks);
-          console.log(`[TTS] Audio data size: ${fullAudio.length} bytes`);
-
-          // JavaScript로 페이드 효과 적용
-          let processedAudio = fullAudio;
-
-          if (!isFirst) {
-            console.log(`[TTS] Applying fade-in effect`);
-            processedAudio = this.applyFadeIn(processedAudio, 0.5); // 0.5초 페이드 인
-          }
-
-          if (!isLast) {
-            console.log(`[TTS] Applying fade-out effect`);
-            processedAudio = this.applyFadeOut(processedAudio, 0.5); // 0.5초 페이드 아웃
-          }
-
-          // 처리된 오디오를 Speaker로 재생
-          console.log(`[TTS] Writing ${processedAudio.length} bytes to speaker`);
-          speaker.write(processedAudio);
-          speaker.end();
-
-          speaker.on('close', () => {
-            const fadeInfo = [];
-            if (!isFirst) fadeInfo.push('fade-in');
-            if (!isLast) fadeInfo.push('fade-out');
-            console.log(
-              `[TTS] ✓ Playback completed ${fadeInfo.length > 0 ? `(${fadeInfo.join(', ')})` : '(no fade)'}.`,
-            );
-            resolve();
-          });
-        } catch (error) {
-          console.error('[TTS] Error during audio processing:', error);
-          reject(error);
-        }
-      });
-
-      // ffmpeg로 raw PCM 데이터 추출 (필터 없이)
-      ffmpeg(filePath)
-        .inputFormat('mp3')
-        .audioChannels(2)
-        .audioFrequency(44100)
-        .toFormat('s16le')
-        .on('error', (err) => {
-          console.error(`[TTS] Error during PCM extraction:`, err);
-          reject(err);
-        })
-        .pipe(passThrough);
-    });
-  }
-
-  // 페이드인 효과 적용
-  applyFadeIn(pcmData, durationSeconds, sampleRate = 44100) {
-    const fadeSamples = Math.floor(durationSeconds * sampleRate);
-    const result = Buffer.from(pcmData);
-
-    for (let i = 0; i < fadeSamples; i++) {
-      const fadeMultiplier = i / fadeSamples; // 0 ~ 1.0
-
-      // 스테레오이므로 4바이트씩 처리
-      const sampleIndex = i * 4;
-
-      // 왼쪽 채널
-      const leftSample = result.readInt16LE(sampleIndex);
-      const fadedLeft = Math.round(leftSample * fadeMultiplier);
-      result.writeInt16LE(fadedLeft, sampleIndex);
-
-      // 오른쪽 채널
-      const rightSample = result.readInt16LE(sampleIndex + 2);
-      const fadedRight = Math.round(rightSample * fadeMultiplier);
-      result.writeInt16LE(fadedRight, sampleIndex + 2);
-    }
-
-    return result;
-  }
-
-  // 페이드아웃 효과 적용
-  applyFadeOut(pcmData, durationSeconds, sampleRate = 44100) {
-    const fadeSamples = Math.floor(durationSeconds * sampleRate);
-    const totalSamples = Math.floor(pcmData.length / 4);
-    const result = Buffer.from(pcmData);
-
-    for (let i = 0; i < fadeSamples; i++) {
-      // 지수 감소 방식으로 더 자연스러운 페이드아웃
-      const fadeMultiplier = Math.pow(1.0 - i / fadeSamples, 2);
-      const sampleIndex = (totalSamples - fadeSamples + i) * 4;
-
-      // 왼쪽 채널
-      const leftSample = result.readInt16LE(sampleIndex);
-      const fadedLeft = Math.round(leftSample * fadeMultiplier);
-      result.writeInt16LE(fadedLeft, sampleIndex);
-
-      // 오른쪽 채널
-      const rightSample = result.readInt16LE(sampleIndex + 2);
-      const fadedRight = Math.round(rightSample * fadeMultiplier);
-      result.writeInt16LE(fadedRight, sampleIndex + 2);
-    }
-
-    return result;
-  }
-
-  // 페이드 없이 재생하는 백업 메서드 (기존 방식 유지)
-  async playTTSFileWithoutFade(filePath) {
     return new Promise((resolve, reject) => {
       const speaker = new Speaker({
         channels: 2,
         bitDepth: 16,
         sampleRate: 44100,
       });
-
       ffmpeg(filePath)
         .inputFormat('mp3')
         .audioChannels(2)
         .audioFrequency(44100)
         .toFormat('s16le')
         .on('error', (err) => {
-          console.error(`[TTS] Error during playback without fade:`, err);
+          console.error('Error during playback:', err.message);
           reject(err);
         })
         .on('end', () => {
-          console.log(`[TTS] ✓ Playback completed (no fade - fallback)`);
           resolve();
         })
         .pipe(speaker);

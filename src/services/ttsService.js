@@ -3,6 +3,8 @@ import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import Speaker from 'speaker';
 import { characterVoiceMaps } from '../data/voiceMaps.js';
+import { applyFadeIn, applyFadeOut, applyVolumeBoost } from './audioService.js';
+import { AUDIO_FADE_CONFIG } from '../config/audioConfig.js';
 
 export async function playTTSSupertone(response, emotion, returnFilePath = false) {
   // 현재 활성화된 캐릭터의 voice map 가져오기
@@ -52,69 +54,69 @@ export async function playTTSSupertone(response, emotion, returnFilePath = false
       return Promise.resolve(mp3FilePath);
     }
 
-    // 스피커로 재생
+    // 스피커로 재생 (PCM 버퍼 가공: 페이드 아웃 config 적용)
     const speaker = new Speaker({
       channels: 2,
       bitDepth: 16,
       sampleRate: 44100,
     });
 
-    return new Promise((resolve, reject) => {
-      let playbackStarted = false;
-      let playbackEnded = false;
-      const startTime = Date.now();
+    return new Promise(async (resolve, reject) => {
+      const audioChunks = [];
+      const { PassThrough } = await import('stream');
+      const passThrough = new PassThrough();
 
-      const ffmpegProcess = ffmpeg(mp3FilePath)
+      passThrough.on('data', (chunk) => {
+        audioChunks.push(chunk);
+      });
+
+      passThrough.on('end', () => {
+        try {
+          const fullAudio = Buffer.concat(audioChunks);
+          let processedAudio = fullAudio;
+
+          // 페이드 효과 적용 (TTS는 항상 처음/마지막 적용)
+          processedAudio = applyFadeIn(processedAudio, AUDIO_FADE_CONFIG.fadeInDuration, 44100);
+          processedAudio = applyFadeOut(
+            processedAudio,
+            AUDIO_FADE_CONFIG.fadeOutDuration,
+            44100,
+            AUDIO_FADE_CONFIG.minFadeVolume,
+          );
+
+          // 필요시 음량 증폭 (TTS는 config)
+          processedAudio = applyVolumeBoost(processedAudio, AUDIO_FADE_CONFIG.ttsVolumeBoost);
+
+          speaker.write(processedAudio);
+          speaker.end();
+
+          speaker.on('close', () => {
+            // 파일 삭제
+            try {
+              fs.unlinkSync(mp3FilePath);
+            } catch (e) {}
+            resolve();
+          });
+        } catch (error) {
+          try {
+            fs.unlinkSync(mp3FilePath);
+          } catch (e) {}
+          reject(error);
+        }
+      });
+
+      ffmpeg(mp3FilePath)
         .inputFormat('mp3')
         .audioChannels(2)
         .audioFrequency(44100)
         .toFormat('s16le')
-        .on('start', () => {
-          playbackStarted = true;
-        })
         .on('error', (err) => {
-          console.error('Error during playback:', err.message);
-          // 에러 발생 시 임시 파일 삭제
           try {
             fs.unlinkSync(mp3FilePath);
-          } catch (unlinkError) {
-            console.error('Error deleting temp file:', unlinkError);
-          }
+          } catch (e) {}
           reject(err);
         })
-        .on('end', () => {
-          playbackEnded = true;
-
-          // returnFilePath가 true가 아닐 때만 파일 삭제
-          if (!returnFilePath) {
-            try {
-              fs.unlinkSync(mp3FilePath);
-            } catch (unlinkError) {
-              console.error('Error deleting temp file:', unlinkError);
-            }
-          }
-
-          // 실제 오디오 길이만큼 대기 (오디오 길이가 없으면 기본값 사용)
-          const duration = audioLength ? parseFloat(audioLength) * 1000 : 3000; // 기본 3초
-          const elapsed = Date.now() - startTime;
-          const remaining = Math.max(0, duration - elapsed);
-
-          setTimeout(() => {
-            if (returnFilePath) {
-              resolve(mp3FilePath); // 파일 경로 반환
-            } else {
-              resolve();
-            }
-          }, remaining);
-        })
-        .pipe(speaker);
-
-      // 스피커 종료 이벤트도 감지
-      speaker.on('close', () => {
-        if (playbackEnded) {
-          // 스피커 종료 확인 (디버깅용으로 남겨둠)
-        }
-      });
+        .pipe(passThrough);
     });
   } catch (error) {
     console.error('Error calling Supertone API:', error.message);
