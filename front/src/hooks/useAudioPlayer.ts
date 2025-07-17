@@ -23,6 +23,40 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
   const isPlayingRef = useRef(false);
   const infiniteIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // TTS 파일명 추출 함수
+  const extractFileName = useCallback((audioUrl: string): string | null => {
+    try {
+      const url = new URL(audioUrl, window.location.origin);
+      const pathParts = url.pathname.split('/');
+      const fileName = pathParts[pathParts.length - 1];
+      return fileName || null;
+    } catch (error) {
+      console.error('[CLIENT] Error extracting filename from URL:', error);
+      return null;
+    }
+  }, []);
+
+  // TTS 파일 재생 완료 시 서버에 삭제 요청
+  const notifyTTSSFilePlayed = useCallback(async (fileName: string) => {
+    try {
+      const response = await fetch('/delete-tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileName }),
+      });
+
+      if (response.ok) {
+        console.log(`[CLIENT] Notified server to delete TTS file: ${fileName}`);
+      } else {
+        console.warn(`[CLIENT] Failed to notify server about TTS file deletion: ${fileName}`);
+      }
+    } catch (error) {
+      console.error(`[CLIENT] Error notifying server about TTS file deletion:`, error);
+    }
+  }, []);
+
   // AudioContext 초기화
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -54,6 +88,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       isFirst: boolean,
       isLast: boolean,
       isEffect: boolean = false,
+      audioUrl?: string, // TTS 파일 URL 추가
     ): Promise<void> => {
       if (!audioContextRef.current || !gainNodeRef.current) {
         initAudioContext();
@@ -102,10 +137,19 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       source.start();
 
       return new Promise((resolve) => {
-        source.onended = () => resolve();
+        source.onended = () => {
+          // TTS 파일인 경우 재생 완료 후 서버에 삭제 요청
+          if (!isEffect && audioUrl) {
+            const fileName = extractFileName(audioUrl);
+            if (fileName) {
+              notifyTTSSFilePlayed(fileName);
+            }
+          }
+          resolve();
+        };
       });
     },
-    [initAudioContext],
+    [initAudioContext, extractFileName, notifyTTSSFilePlayed],
   );
 
   // 효과음 재생
@@ -137,6 +181,24 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
     [loadAudioBuffer, playWithFade],
   );
 
+  // 무한재생 중지
+  const stopInfinitePlayback = useCallback(() => {
+    if (infiniteIntervalRef.current) {
+      clearInterval(infiniteIntervalRef.current);
+      infiniteIntervalRef.current = null;
+    }
+    // isPlayingRef.current = false로 설정하여 재귀 호출을 중단
+    console.log(`[CLIENT] Stopped infinite playback`);
+  }, []);
+
+  // 전체 재생 중지
+  const stopPlayback = useCallback(() => {
+    console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
+    isPlayingRef.current = false;
+    stopInfinitePlayback();
+    console.log(`[CLIENT] Stopped all playback`);
+  }, [stopInfinitePlayback]);
+
   // 세그먼트 순차 재생
   const playSegments = useCallback(
     async (segments: AudioSegment[]): Promise<void> => {
@@ -156,7 +218,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
         const audioBuffers = await Promise.all(
           ttsSegments.map(async (segment) => {
             const audioBuffer = await loadAudioBuffer(segment.audioUrl!);
-            return { index: segment.index, audioBuffer };
+            return { index: segment.index, audioBuffer, audioUrl: segment.audioUrl };
           }),
         );
 
@@ -175,7 +237,13 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
           if (segment.type === 'text') {
             const audioElement = audioBuffers.find((ae) => ae.index === segment.index);
             if (audioElement) {
-              await playWithFade(audioElement.audioBuffer, isFirst, isLast);
+              await playWithFade(
+                audioElement.audioBuffer,
+                isFirst,
+                isLast,
+                false,
+                audioElement.audioUrl,
+              );
               console.log(`[CLIENT] ✓ TTS segment ${i + 1} completed`);
             }
           } else {
@@ -190,7 +258,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       }
       // 무한재생이 시작될 예정이므로 여기서 isPlayingRef를 false로 설정하지 않음
     },
-    [loadAudioBuffer, playWithFade, playEffect],
+    [loadAudioBuffer, playWithFade, playEffect, stopPlayback],
   );
 
   // 무한재생 시작
@@ -236,26 +304,8 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       // 첫 번째 효과음 재생 시작
       playNextEffect();
     },
-    [loadAudioBuffer, playWithFade],
+    [loadAudioBuffer, playWithFade, currentCharacter],
   );
-
-  // 무한재생 중지
-  const stopInfinitePlayback = useCallback(() => {
-    if (infiniteIntervalRef.current) {
-      clearInterval(infiniteIntervalRef.current);
-      infiniteIntervalRef.current = null;
-    }
-    // isPlayingRef.current = false로 설정하여 재귀 호출을 중단
-    console.log(`[CLIENT] Stopped infinite playback`);
-  }, []);
-
-  // 전체 재생 중지
-  const stopPlayback = useCallback(() => {
-    console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
-    isPlayingRef.current = false;
-    stopInfinitePlayback();
-    console.log(`[CLIENT] Stopped all playback`);
-  }, [stopInfinitePlayback]);
 
   // 메인 재생 함수
   const playAudioData = useCallback(

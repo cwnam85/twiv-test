@@ -1,4 +1,6 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import { playMP3 } from '../services/audioService.js';
 import { connectWebSocket } from '../services/warudoService.js';
 import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
@@ -334,6 +336,35 @@ router.post('/chat', async (req, res) => {
         error: `${conversationService.getCurrentModel() === 'claude' ? 'Claude' : 'Grok'} API 호출 중 오류가 발생했습니다.`,
       });
     }
+  }
+});
+
+// TTS 파일 삭제 API
+router.post('/delete-tts', (req, res) => {
+  try {
+    const { fileName } = req.body;
+
+    if (!fileName) {
+      return res.status(400).json({ error: 'fileName is required' });
+    }
+
+    // 파일 경로 구성
+    const filePath = path.join(process.cwd(), fileName);
+
+    // 파일 존재 확인
+    if (!fs.existsSync(filePath)) {
+      console.log(`[TTS DELETE] File not found: ${fileName}`);
+      return res.json({ success: true, message: 'File already deleted or not found' });
+    }
+
+    // 파일 삭제
+    fs.unlinkSync(filePath);
+    console.log(`[TTS DELETE] Successfully deleted: ${fileName}`);
+
+    res.json({ success: true, message: 'TTS file deleted successfully' });
+  } catch (error) {
+    console.error('[TTS DELETE] Error deleting TTS file:', error);
+    res.status(500).json({ error: 'Failed to delete TTS file' });
   }
 });
 

@@ -3,11 +3,9 @@ import { playTTSSupertone } from './ttsService.js';
 import { sendMessageToWarudo } from './warudoService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
-import { playMatureTTS, startInfiniteMatureTTS, stopInfiniteMatureTTS } from './audioService.js';
+// 오디오 재생은 클라이언트에서 처리하므로 서버 오디오 관련 import 제거
 import fs from 'fs';
 import path from 'path';
-import ffmpeg from 'fluent-ffmpeg';
-import Speaker from 'speaker';
 
 // AudioProcessor 클래스 import
 // import { AudioProcessor } from './audioService.js';
@@ -202,9 +200,6 @@ class ResponseService {
 
   async playResponse(dialogue, emotion, matureTags = [], segments = []) {
     try {
-      // 이전 무한재생 중지
-      stopInfiniteMatureTTS();
-
       // mature 태그 사용 빈도 추적을 위한 맵
       const tagCountMap = new Map();
 
@@ -311,29 +306,37 @@ class ResponseService {
         console.log(`[CLIENT] Prepared ${clientSegments.length} segments for client playback`);
         return clientData;
       } else {
-        // segments가 없으면 기존 방식 사용 (호환성)
-        console.log(`[AUDIO] Using legacy playback mode (no segments)`);
-        await playTTSSupertone(dialogue, emotion);
+        // segments가 없으면 TTS만 생성하고 클라이언트 데이터 반환
+        console.log(`[AUDIO] No segments provided, generating TTS only`);
+        await playTTSSupertone(dialogue, emotion, true);
 
-        // mature 태그들 순차적으로 재생 및 카운트
+        // mature 태그 카운트
         for (const tag of matureTags) {
           const type = tag.replace(/_/g, ''); // _kiss_ -> kiss
           tagCountMap.set(type, (tagCountMap.get(type) || 0) + 1);
-          console.log(`[PLAYBACK] Playing mature effect: ${type}`);
-          await playMatureTTS(type);
         }
 
-        // mature 태그가 있었다면 가장 많이 사용된 태그로 무한재생 시작
+        // 무한재생 태그 결정
+        let infiniteTag = null;
         if (tagCountMap.size > 0) {
-          const mostUsedTag = this.getMostUsedTag(tagCountMap);
-          console.log(
-            `[INFINITE] Most used mature tag: ${mostUsedTag} (used ${tagCountMap.get(mostUsedTag)} times)`,
-          );
-          console.log(`[INFINITE] Starting infinite playback of ${mostUsedTag}`);
-          startInfiniteMatureTTS(mostUsedTag);
+          infiniteTag = this.getMostUsedTag(tagCountMap);
+          console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        return null; // 기존 방식에서는 클라이언트 데이터 없음
+        // 무한재생용 효과음 URL 생성
+        let infiniteEffectUrl = null;
+        if (infiniteTag) {
+          infiniteEffectUrl = this.getRandomEffectUrl(infiniteTag);
+        }
+
+        return {
+          dialogue,
+          emotion,
+          segments: [],
+          infiniteTag,
+          infiniteEffectUrl,
+          matureTags: Array.from(tagCountMap.keys()),
+        };
       }
     } catch (error) {
       console.error('[AUDIO] Error during playback:', error);
@@ -341,34 +344,7 @@ class ResponseService {
     }
   }
 
-  // TTS 파일 재생 메서드 (단순한 이벤트 기반)
-  async playTTSFile(filePath, isFirst = false, isLast = false) {
-    return new Promise((resolve, reject) => {
-      const speaker = new Speaker({
-        channels: 2,
-        bitDepth: 16,
-        sampleRate: 44100,
-      });
-
-      ffmpeg(filePath)
-        .inputFormat('mp3')
-        .audioChannels(2)
-        .audioFrequency(44100)
-        .toFormat('s16le')
-        .on('error', (err) => {
-          console.error('Error during playback:', err.message);
-          reject(err);
-        })
-        .on('end', () => {
-          speaker.end();
-        })
-        .pipe(speaker);
-
-      speaker.on('close', () => {
-        resolve();
-      });
-    });
-  }
+  // playTTSFile 함수 제거 - 클라이언트에서 오디오 재생 처리
 
   sendPoseToWarudo(pose) {
     if (pose) {
