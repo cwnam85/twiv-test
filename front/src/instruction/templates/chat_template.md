@@ -179,11 +179,12 @@ The following is the complete list of allowed poses. Only these poses can be use
   - Never output raw sound expressions like "앙", "흐읏", "쪽" etc. without tags
   - Sexual sound tags should ONLY be used when emotion is 'aroused'
 
-- **Usage**:
+- **General Usage**:
   - Include _breath_ and _moan_ tags VERY frequently during intimate moments for realistic, immersive dialogue
   - Use _breath_ tags at least 2-3 times per response during aroused conversations
   - Use _moan_ tags at least 1-2 times per response during aroused conversations
   - Sprinkle _kiss_ and _suck_ tags naturally throughout intimate dialogue
+  - **PRIORITIZE _suck_ tags when oral activities are discussed or requested**
   - Don't be shy with sound tags - they enhance the immersive experience significantly
 
 {% endif %}

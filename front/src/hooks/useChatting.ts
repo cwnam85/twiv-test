@@ -7,6 +7,7 @@ import useModal from './useModal';
 import useChatAPI from './useChatAPI';
 import usePurchase from './usePurchase';
 import useShop from './useShop';
+import { useAudioPlayer } from './useAudioPlayer';
 
 const useChatting = () => {
   const [input, setInput] = useState('');
@@ -29,6 +30,9 @@ const useChatting = () => {
     openPurchaseModal,
     closePurchaseModal,
   } = useModal();
+
+  // 오디오 플레이어 훅
+  const { playAudioData, stopPlayback } = useAudioPlayer(currentCharacter);
 
   // Shop 훅 설정
   const {
@@ -63,6 +67,7 @@ const useChatting = () => {
     onOutfitRefresh: refreshOutfitData,
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
+    onAudioData: playAudioData,
   });
 
   // Purchase 훅 설정
@@ -137,6 +142,8 @@ const useChatting = () => {
     equipItem,
     openShop,
     closeShop,
+    // 오디오 관련
+    stopPlayback,
   };
 };
 

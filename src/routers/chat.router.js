@@ -138,6 +138,20 @@ router.post('/purchase', async (req, res) => {
     );
     console.log(`Current conversation history length: ${conversationService.getHistory().length}`);
 
+    // 클라이언트용 오디오 데이터 생성
+    let clientAudioData = null;
+    try {
+      clientAudioData = await responseService.playResponse(
+        purchaseResponse.dialogue,
+        purchaseResponse.emotion,
+        purchaseResponse.matureTags,
+        purchaseResponse.segments,
+      );
+    } catch (audioError) {
+      console.error('Error generating audio data:', audioError);
+      clientAudioData = null;
+    }
+
     res.json({
       message: purchaseResponse.dialogue,
       emotion: purchaseResponse.emotion,
@@ -145,15 +159,8 @@ router.post('/purchase', async (req, res) => {
       ...affinityService.getData(),
       purchaseCompleted: true,
       purchasedContent: requestedContent,
+      audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
-
-    // TTS 호출
-    await responseService.playResponse(
-      purchaseResponse.dialogue,
-      purchaseResponse.emotion,
-      purchaseResponse.matureTags,
-      purchaseResponse.segments,
-    );
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(purchaseResponse.pose);
@@ -172,6 +179,11 @@ router.get('/active-character', (req, res) => {
     console.error('Error playing greeting TTS:', error);
   }
 
+  res.json({ activeCharacter: characterService.getActiveCharacter() });
+});
+
+// 활성 캐릭터 정보만 반환하는 엔드포인트 (오디오 재생 없음)
+router.get('/character-info', (req, res) => {
   res.json({ activeCharacter: characterService.getActiveCharacter() });
 });
 
@@ -284,6 +296,20 @@ router.post('/chat', async (req, res) => {
     conversationService.addToHistory('user', userMessage);
     conversationService.addToHistory('assistant', response.dialogue);
 
+    // 클라이언트용 오디오 데이터 생성
+    let clientAudioData = null;
+    try {
+      clientAudioData = await responseService.playResponse(
+        response.dialogue,
+        response.emotion,
+        response.matureTags,
+        response.segments,
+      );
+    } catch (audioError) {
+      console.error('Error generating audio data:', audioError);
+      clientAudioData = null;
+    }
+
     // 클라이언트에 응답 전송
     res.json({
       message: response.dialogue,
@@ -296,15 +322,8 @@ router.post('/chat', async (req, res) => {
       requestedContent: response.requestedContent,
       outfitOn: response.outfitOn,
       outfitOff: response.outfitOff,
+      audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
-
-    // TTS 호출
-    await responseService.playResponse(
-      response.dialogue,
-      response.emotion,
-      response.matureTags,
-      response.segments,
-    );
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);

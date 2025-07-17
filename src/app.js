@@ -20,6 +20,13 @@ app.use(express.json());
 app.use('/', chatRouter);
 app.use('/shop', shopRouter);
 
+// 오디오 파일 제공 API
+app.use('/api/audio', express.static(path.join(__dirname, '..')));
+// 효과음 파일 제공 API
+app.use('/api/effects', express.static(path.join(__dirname, '../mature_tts')));
+// blacknila 효과음 파일 제공 API
+app.use('/api/effects/blacknila', express.static(path.join(__dirname, '../mature_tts/blacknila')));
+
 // 정적 파일 제공 설정
 app.use(express.static(path.join(__dirname, '../front/dist')));
 

@@ -1,6 +1,21 @@
 import { generateChatPrompt } from '../instruction/templateRenderer';
 import { OutfitData, Message } from '../types';
 
+interface AudioSegment {
+  type: 'text' | 'tag';
+  content: string;
+  audioUrl?: string;
+  index: number;
+}
+
+interface AudioData {
+  dialogue: string;
+  emotion: string;
+  segments: AudioSegment[];
+  infiniteTag?: string;
+  matureTags: string[];
+}
+
 interface ChatAPIHandlers {
   currentCharacter: string;
   affinity: number;
@@ -14,6 +29,7 @@ interface ChatAPIHandlers {
   onOutfitRefresh: () => Promise<OutfitData | null>;
   onModalOpen: () => void;
   onPurchaseModalOpen: (content: string, userInput: string) => void;
+  onAudioData: (audioData: AudioData | null) => void;
 }
 
 const useChatAPI = ({
@@ -29,6 +45,7 @@ const useChatAPI = ({
   onOutfitRefresh,
   onModalOpen,
   onPurchaseModalOpen,
+  onAudioData,
 }: ChatAPIHandlers) => {
   const sendMessage = async (userInput: string) => {
     try {
@@ -119,6 +136,11 @@ const useChatAPI = ({
       }
       if (data.emotion) {
         onEmotionUpdate(data.emotion);
+      }
+
+      // 오디오 데이터 처리
+      if (data.audioData) {
+        onAudioData(data.audioData);
       }
     } catch (error) {
       console.error('Error:', error);

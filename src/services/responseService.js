@@ -3,8 +3,9 @@ import { playTTSSupertone } from './ttsService.js';
 import { sendMessageToWarudo } from './warudoService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
-import { playMatureTTS } from './audioService.js';
+import { playMatureTTS, startInfiniteMatureTTS, stopInfiniteMatureTTS } from './audioService.js';
 import fs from 'fs';
+import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import Speaker from 'speaker';
 
@@ -201,12 +202,27 @@ class ResponseService {
 
   async playResponse(dialogue, emotion, matureTags = [], segments = []) {
     try {
+      // 이전 무한재생 중지
+      stopInfiniteMatureTTS();
+
+      // mature 태그 사용 빈도 추적을 위한 맵
+      const tagCountMap = new Map();
+
       if (segments && segments.length > 0) {
-        console.log(`[AUDIO] Starting playback with ${segments.length} segments`);
+        console.log(`[AUDIO] Preparing client-side playback with ${segments.length} segments`);
+
+        // mature 태그 세그먼트 카운트
+        for (const segment of segments) {
+          if (segment.type === 'tag') {
+            const type = segment.content.replace(/_/g, ''); // _moan_ -> moan
+            tagCountMap.set(type, (tagCountMap.get(type) || 0) + 1);
+          }
+        }
+
         // 1단계: TTS 파일들을 한꺼번에 미리 생성 (순서대로)
         const ttsFiles = [];
         let ttsIndex = 0;
-        console.log(`[TTS] Pre-generating all TTS files in order...`);
+        console.log(`[TTS] Pre-generating all TTS files for client...`);
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
           if (segment.type === 'text' && segment.content.trim()) {
@@ -232,76 +248,100 @@ class ResponseService {
         console.log(
           `[TTS] ✓ All ${ttsFiles.filter((f) => f).length}/${ttsFiles.length} TTS files generated successfully`,
         );
-        // 2단계: output에 명시된 순서대로 효과음과 TTS를 순차적으로 재생
-        console.log(`[PLAYBACK] Starting sequential playback in output order...`);
+
+        // 2단계: 클라이언트용 세그먼트 데이터 구성
+        const clientSegments = [];
         ttsIndex = 0;
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
-          const isFirst = i === 0; // 첫 번째 세그먼트
-          const isLast = i === segments.length - 1; // 마지막 세그먼트
+
           if (segment.type === 'text' && segment.content.trim()) {
-            // TTS 세그먼트: 미리 생성된 파일 재생
+            // TTS 세그먼트: 파일 URL 추가
             const ttsFile = ttsFiles[ttsIndex];
             if (ttsFile && fs.existsSync(ttsFile)) {
-              console.log(
-                `[PLAYBACK] Playing TTS ${ttsIndex + 1}: "${segment.content}" (${isFirst ? 'first' : ''}${isLast ? 'last' : ''})`,
-              );
-              try {
-                await this.playTTSFile(ttsFile, isFirst, isLast);
-                console.log(`[PLAYBACK] ✓ TTS ${ttsIndex + 1} completed`);
-              } catch (playError) {
-                console.error(`[PLAYBACK] ✗ Error playing TTS ${ttsIndex + 1}:`, playError);
-              }
+              const fileName = path.basename(ttsFile);
+              clientSegments.push({
+                type: 'text',
+                content: segment.content,
+                audioUrl: `/api/audio/${fileName}`,
+                index: i,
+              });
+              console.log(`[CLIENT] Added TTS segment: ${fileName}`);
             } else {
-              console.warn(`[PLAYBACK] ⚠ TTS file not found for segment ${ttsIndex + 1}`);
+              console.warn(`[CLIENT] ⚠ TTS file not found for segment ${ttsIndex + 1}`);
             }
             ttsIndex++;
           } else if (segment.type === 'tag') {
-            // 태그 세그먼트: mature 효과음 재생
+            // 태그 세그먼트: 정규화된 태그 추가
             const type = segment.content.replace(/_/g, ''); // _moan_ -> moan
-            console.log(
-              `[PLAYBACK] Playing mature effect: ${type} (${isFirst ? 'first' : ''}${isLast ? 'last' : ''})`,
-            );
-            try {
-              await playMatureTTS(type, isFirst, isLast);
-              console.log(`[PLAYBACK] ✓ Mature effect ${type} completed`);
-            } catch (effectError) {
-              console.error(`[PLAYBACK] ✗ Error playing mature effect ${type}:`, effectError);
-            }
+            const effectUrl = this.getRandomEffectUrl(type);
+            clientSegments.push({
+              type: 'tag',
+              content: type,
+              audioUrl: effectUrl,
+              index: i,
+            });
+            console.log(`[CLIENT] Added effect segment: ${type} -> ${effectUrl}`);
           }
         }
-        console.log(`[PLAYBACK] ✓ All segments completed`);
-        // 3단계: 모든 재생 완료 후 TTS 파일들 정리
-        console.log(`[CLEANUP] Cleaning up ${ttsFiles.length} TTS files...`);
-        for (let i = 0; i < ttsFiles.length; i++) {
-          const filePath = ttsFiles[i];
-          if (filePath && fs.existsSync(filePath)) {
-            try {
-              fs.unlinkSync(filePath);
-              console.log(`[CLEANUP] ✓ Deleted: ${filePath}`);
-            } catch (cleanupError) {
-              console.warn(`[CLEANUP] ⚠ Failed to delete ${filePath}:`, cleanupError);
-            }
-          }
+
+        // 3단계: 무한재생 태그 결정
+        let infiniteTag = null;
+        if (tagCountMap.size > 0) {
+          infiniteTag = this.getMostUsedTag(tagCountMap);
+          console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
-        console.log(`[CLEANUP] ✓ Cleanup completed`);
+
+        // 4단계: 무한재생용 효과음 URL 생성
+        let infiniteEffectUrl = null;
+        if (infiniteTag) {
+          infiniteEffectUrl = this.getRandomEffectUrl(infiniteTag);
+        }
+
+        // 5단계: 클라이언트로 전송할 데이터 반환
+        const clientData = {
+          dialogue,
+          emotion,
+          segments: clientSegments,
+          infiniteTag,
+          infiniteEffectUrl,
+          matureTags: Array.from(tagCountMap.keys()),
+        };
+
+        console.log(`[CLIENT] Prepared ${clientSegments.length} segments for client playback`);
+        return clientData;
       } else {
         // segments가 없으면 기존 방식 사용 (호환성)
         console.log(`[AUDIO] Using legacy playback mode (no segments)`);
         await playTTSSupertone(dialogue, emotion);
-        // mature 태그들 순차적으로 재생
+
+        // mature 태그들 순차적으로 재생 및 카운트
         for (const tag of matureTags) {
           const type = tag.replace(/_/g, ''); // _kiss_ -> kiss
+          tagCountMap.set(type, (tagCountMap.get(type) || 0) + 1);
           console.log(`[PLAYBACK] Playing mature effect: ${type}`);
           await playMatureTTS(type);
         }
+
+        // mature 태그가 있었다면 가장 많이 사용된 태그로 무한재생 시작
+        if (tagCountMap.size > 0) {
+          const mostUsedTag = this.getMostUsedTag(tagCountMap);
+          console.log(
+            `[INFINITE] Most used mature tag: ${mostUsedTag} (used ${tagCountMap.get(mostUsedTag)} times)`,
+          );
+          console.log(`[INFINITE] Starting infinite playback of ${mostUsedTag}`);
+          startInfiniteMatureTTS(mostUsedTag);
+        }
+
+        return null; // 기존 방식에서는 클라이언트 데이터 없음
       }
     } catch (error) {
       console.error('[AUDIO] Error during playback:', error);
+      return null;
     }
   }
 
-  // TTS 파일 재생 메서드 (AudioProcessor 사용)
+  // TTS 파일 재생 메서드 (단순한 이벤트 기반)
   async playTTSFile(filePath, isFirst = false, isLast = false) {
     return new Promise((resolve, reject) => {
       const speaker = new Speaker({
@@ -309,6 +349,7 @@ class ResponseService {
         bitDepth: 16,
         sampleRate: 44100,
       });
+
       ffmpeg(filePath)
         .inputFormat('mp3')
         .audioChannels(2)
@@ -319,9 +360,13 @@ class ResponseService {
           reject(err);
         })
         .on('end', () => {
-          resolve();
+          speaker.end();
         })
         .pipe(speaker);
+
+      speaker.on('close', () => {
+        resolve();
+      });
     });
   }
 
@@ -332,6 +377,77 @@ class ResponseService {
         data: pose,
       });
       sendMessageToWarudo(messageWarudo);
+    }
+  }
+
+  // 우선순위 기반 mature 태그 찾기
+  getMostUsedTag(tagCountMap) {
+    // 우선순위: suck > kiss > moan > breath
+    const priorityOrder = ['suck', 'kiss', 'moan', 'breath'];
+
+    // 우선순위가 높은 태그부터 확인
+    for (const priorityTag of priorityOrder) {
+      if (tagCountMap.has(priorityTag)) {
+        console.log(
+          `[PRIORITY] Found priority tag: ${priorityTag} (used ${tagCountMap.get(priorityTag)} times)`,
+        );
+        return priorityTag;
+      }
+    }
+
+    // 우선순위 태그가 없으면 가장 많이 사용된 태그 반환 (fallback)
+    let mostUsedTag = null;
+    let maxCount = 0;
+
+    for (const [tag, count] of tagCountMap.entries()) {
+      if (count > maxCount) {
+        maxCount = count;
+        mostUsedTag = tag;
+      }
+    }
+
+    return mostUsedTag;
+  }
+
+  // 랜덤 효과음 URL 생성
+  getRandomEffectUrl(effectType) {
+    try {
+      // 활성 캐릭터 확인
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+      // 캐릭터별 효과음 폴더 경로 결정
+      let effectDir;
+      if (activeCharacter === 'blacknila') {
+        effectDir = path.join(process.cwd(), 'mature_tts', 'blacknila', effectType);
+      } else {
+        // 기본 효과음 폴더 (shaki 등)
+        effectDir = path.join(process.cwd(), 'mature_tts', effectType);
+      }
+
+      if (!fs.existsSync(effectDir)) {
+        console.warn(`[EFFECT] Effect directory not found: ${effectDir}`);
+        return null;
+      }
+
+      const files = fs.readdirSync(effectDir).filter((file) => file.endsWith('.mp3'));
+      if (files.length === 0) {
+        console.warn(`[EFFECT] No MP3 files found in: ${effectDir}`);
+        return null;
+      }
+
+      const randomFile = files[Math.floor(Math.random() * files.length)];
+      const effectUrl =
+        activeCharacter === 'blacknila'
+          ? `/api/effects/blacknila/${effectType}/${randomFile}`
+          : `/api/effects/${effectType}/${randomFile}`;
+
+      console.log(
+        `[EFFECT] Selected random effect for ${activeCharacter}: ${effectType}/${randomFile}`,
+      );
+      return effectUrl;
+    } catch (error) {
+      console.error(`[EFFECT] Error getting random effect URL for ${effectType}:`, error);
+      return null;
     }
   }
 

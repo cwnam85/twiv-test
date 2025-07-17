@@ -189,5 +189,53 @@ function applyVolumeBoost(pcmData, volumeMultiplier) {
   return result;
 }
 
+// 무한재생을 위한 전역 변수
+let infinitePlaybackActive = false;
+let infinitePlaybackInterval = null;
+
+// 무한재생 시작 함수
+export function startInfiniteMatureTTS(type) {
+  if (infinitePlaybackActive) {
+    console.log(`[INFINITE] Already playing infinite ${type}, stopping current playback`);
+    stopInfiniteMatureTTS();
+  }
+
+  console.log(`[INFINITE] Starting infinite playback of ${type}`);
+  infinitePlaybackActive = true;
+
+  // 즉시 첫 번째 재생 시작
+  playMatureTTS(type, true, false).catch((err) => {
+    console.error(`[INFINITE] Error in first playback:`, err);
+  });
+
+  // 이후 무한 반복
+  infinitePlaybackInterval = setInterval(() => {
+    if (infinitePlaybackActive) {
+      console.log(`[INFINITE] Playing ${type} loop`);
+      playMatureTTS(type, false, false).catch((err) => {
+        console.error(`[INFINITE] Error in loop playback:`, err);
+      });
+    }
+  }, 2000); // 2초 간격으로 재생 (페이드아웃 시간 고려)
+}
+
+// 무한재생 중지 함수
+export function stopInfiniteMatureTTS() {
+  if (infinitePlaybackActive) {
+    console.log(`[INFINITE] Stopping infinite playback`);
+    infinitePlaybackActive = false;
+
+    if (infinitePlaybackInterval) {
+      clearInterval(infinitePlaybackInterval);
+      infinitePlaybackInterval = null;
+    }
+  }
+}
+
+// 무한재생 상태 확인 함수
+export function isInfinitePlaybackActive() {
+  return infinitePlaybackActive;
+}
+
 // 함수들을 export
 export { applyFadeIn, applyFadeOut, applyVolumeBoost };

@@ -35,6 +35,8 @@ function App() {
     equipItem,
     openShop,
     closeShop,
+    // 오디오 관련
+    stopPlayback,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -171,7 +173,13 @@ function App() {
         </div>
 
         {/* 입력 영역 */}
-        <form className="flex gap-2" onSubmit={handleSend}>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            stopPlayback(); // 새 메시지 전송 시 이전 오디오 중지
+            handleSend(e);
+          }}
+        >
           <input
             type="text"
             value={input}
