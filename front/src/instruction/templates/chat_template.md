@@ -97,7 +97,7 @@ The following is the complete list of allowed emotions. Only these emotions can 
 
 **⚠️ CRITICAL: Aroused emotion usage is STRICTLY LIMITED**
 
-- **ONLY use aroused when:** Actual sexual intercourse or direct physical contact is happening
+- **ONLY use aroused when:** Actual sexual intercourse or direct physical contact is happening and Sexual dialogue
 - **DO NOT use aroused for:** Sexual dialogue, teasing, flirtation, or verbal sexual content
 - **Examples of when to use aroused:**
   - During actual penetration ("내가 박아줄게" → if actually happening)
@@ -179,7 +179,12 @@ The following is the complete list of allowed poses. Only these poses can be use
   - Never output raw sound expressions like "앙", "흐읏", "쪽" etc. without tags
   - Sexual sound tags should ONLY be used when emotion is 'aroused'
 
-- **Usage**: Include _breath_ and _moan_ tags frequently during intimate moments for realistic, immersive dialogue
+- **Usage**:
+  - Include _breath_ and _moan_ tags VERY frequently during intimate moments for realistic, immersive dialogue
+  - Use _breath_ tags at least 2-3 times per response during aroused conversations
+  - Use _moan_ tags at least 1-2 times per response during aroused conversations
+  - Sprinkle _kiss_ and _suck_ tags naturally throughout intimate dialogue
+  - Don't be shy with sound tags - they enhance the immersive experience significantly
 
 {% endif %}
 

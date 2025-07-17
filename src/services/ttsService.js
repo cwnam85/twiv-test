@@ -4,7 +4,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import Speaker from 'speaker';
 import { characterVoiceMaps } from '../data/voiceMaps.js';
 
-export async function playTTSSupertone(response, emotion) {
+export async function playTTSSupertone(response, emotion, returnFilePath = false) {
   // 현재 활성화된 캐릭터의 voice map 가져오기
   const activeCharacter = process.env.ACTIVE_CHARACTER || 'shaki';
   const voiceIdMap = characterVoiceMaps[activeCharacter] || characterVoiceMaps['shaki'];
@@ -46,6 +46,12 @@ export async function playTTSSupertone(response, emotion) {
     // 오디오 데이터를 파일로 저장
     fs.writeFileSync(mp3FilePath, apiResponse.data);
 
+    // returnFilePath가 true이면 파일 경로만 반환하고 재생하지 않음
+    if (returnFilePath) {
+      console.log(`[TTS] File created for later playback: ${mp3FilePath}`);
+      return Promise.resolve(mp3FilePath);
+    }
+
     // 스피커로 재생
     const speaker = new Speaker({
       channels: 2,
@@ -79,11 +85,13 @@ export async function playTTSSupertone(response, emotion) {
         .on('end', () => {
           playbackEnded = true;
 
-          // 재생 완료 후 임시 파일 삭제
-          try {
-            fs.unlinkSync(mp3FilePath);
-          } catch (unlinkError) {
-            console.error('Error deleting temp file:', unlinkError);
+          // returnFilePath가 true가 아닐 때만 파일 삭제
+          if (!returnFilePath) {
+            try {
+              fs.unlinkSync(mp3FilePath);
+            } catch (unlinkError) {
+              console.error('Error deleting temp file:', unlinkError);
+            }
           }
 
           // 실제 오디오 길이만큼 대기 (오디오 길이가 없으면 기본값 사용)
@@ -92,7 +100,11 @@ export async function playTTSSupertone(response, emotion) {
           const remaining = Math.max(0, duration - elapsed);
 
           setTimeout(() => {
-            resolve();
+            if (returnFilePath) {
+              resolve(mp3FilePath); // 파일 경로 반환
+            } else {
+              resolve();
+            }
           }, remaining);
         })
         .pipe(speaker);
