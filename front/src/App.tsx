@@ -24,6 +24,8 @@ function App() {
 
     currentCharacter,
     outfitData,
+    outfitStateData,
+    outfitCharacter,
     // Shop 관련
     shopData,
     isShopOpen,
@@ -124,8 +126,10 @@ function App() {
     >
       <OutfitStatus
         outfitData={outfitData}
+        outfitStateData={outfitStateData}
         currentOutfit={currentOutfit}
         shopOutfits={shopData.outfits}
+        currentCharacter={outfitCharacter}
       />
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}

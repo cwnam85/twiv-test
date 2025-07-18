@@ -71,16 +71,47 @@ class CharacterService {
 
   loadOutfitData() {
     try {
+      // 의상 템플릿 로드
       const outfitPath = path.join(
         __dirname,
         `../../vtuber_prompts/characters/${this.activeCharacter}/outfits.json`,
       );
-      if (fs.existsSync(outfitPath)) {
+
+      // 현재 착용 상태 로드
+      const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
+
+      if (fs.existsSync(outfitPath) && fs.existsSync(statePath)) {
         const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
-        return allOutfits[this.initialOutfit] || null;
+        const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+
+        const outfitTemplate = allOutfits[this.initialOutfit];
+        if (!outfitTemplate) {
+          return null;
+        }
+
+        // 템플릿과 상태를 병합하여 완전한 의상 데이터 생성
+        const currentOutfit = JSON.parse(JSON.stringify(outfitTemplate));
+        currentOutfit.current_outfit = this.initialOutfit;
+
+        // enabled 상태 적용
+        const characterState = outfitState[this.activeCharacter];
+        if (characterState) {
+          Object.keys(characterState).forEach((parentCategory) => {
+            if (parentCategory !== 'current_outfit' && currentOutfit.parts[parentCategory]) {
+              Object.keys(characterState[parentCategory]).forEach((category) => {
+                if (currentOutfit.parts[parentCategory][category]) {
+                  currentOutfit.parts[parentCategory][category].enabled =
+                    characterState[parentCategory][category];
+                }
+              });
+            }
+          });
+        }
+
+        return currentOutfit;
       }
     } catch (e) {
-      console.error('outfits.json 로드 오류:', e);
+      console.error('outfit data 로드 오류:', e);
     }
     return null;
   }
@@ -131,22 +162,6 @@ class CharacterService {
       throw new Error('No active character or outfit data');
     }
 
-    const outfitPath = path.join(
-      __dirname,
-      `../../vtuber_prompts/characters/${this.activeCharacter}/outfits.json`,
-    );
-
-    if (!fs.existsSync(outfitPath)) {
-      throw new Error('Outfit file not found');
-    }
-
-    const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
-    const currentOutfit = allOutfits[this.initialOutfit];
-
-    if (!currentOutfit) {
-      throw new Error('Current outfit not found');
-    }
-
     // 카테고리 매핑: 최상위 카테고리와 하위 카테고리 매핑
     const categoryMapping = {
       bra: 'upper_body',
@@ -165,30 +180,46 @@ class CharacterService {
       throw new Error(`Unknown category: ${category}`);
     }
 
-    if (!currentOutfit.parts[parentCategory] || !currentOutfit.parts[parentCategory][category]) {
-      throw new Error(`Category '${category}' not found in ${parentCategory}`);
+    // 현재 착용 상태 파일 로드
+    const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
+    if (!fs.existsSync(statePath)) {
+      throw new Error('Outfit state file not found');
     }
 
-    // 해당 카테고리의 아이템에 대해 복장 상태 변경
-    const item = currentOutfit.parts[parentCategory][category];
-    if (item.name !== 'none') {
-      // 'none'이 아닌 실제 아이템만 처리
+    const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+
+    // 해당 캐릭터의 상태가 없으면 초기화
+    if (!outfitState[this.activeCharacter]) {
+      outfitState[this.activeCharacter] = {
+        current_outfit: this.initialOutfit,
+        upper_body: { bra: true, top: true, outerwear: true },
+        lower_body: { panty: true, bottom: true },
+        feet: { shoes: true },
+        accessories: { hat: false, necklace: true, belt: true },
+      };
+    }
+
+    // 해당 카테고리의 상태 변경
+    if (
+      outfitState[this.activeCharacter][parentCategory] &&
+      outfitState[this.activeCharacter][parentCategory][category] !== undefined
+    ) {
       if (action === 'remove') {
-        item.enabled = false;
+        outfitState[this.activeCharacter][parentCategory][category] = false;
       } else if (action === 'wear') {
-        item.enabled = true;
+        outfitState[this.activeCharacter][parentCategory][category] = true;
       }
     }
 
-    // outfits.json 파일 업데이트
-    fs.writeFileSync(outfitPath, JSON.stringify(allOutfits, null, 2));
+    // 상태 파일 업데이트
+    fs.writeFileSync(statePath, JSON.stringify(outfitState, null, 2));
 
-    // 메모리상의 initialOutfitData도 업데이트
-    this._initialOutfitData = currentOutfit;
+    // 메모리상의 initialOutfitData 업데이트
+    this._initialOutfitData = this.loadOutfitData();
 
     console.log(`Outfit changed: ${action} ${category} for ${this.activeCharacter}`);
 
-    return currentOutfit;
+    return this._initialOutfitData;
   }
 
   // 상점에서 복장 전체를 변경하는 메서드
@@ -212,9 +243,50 @@ class CharacterService {
       throw new Error(`Outfit '${outfitName}' not found`);
     }
 
+    // 현재 착용 상태 파일 업데이트
+    const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
+    if (fs.existsSync(statePath)) {
+      const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+
+      // 해당 캐릭터의 상태가 없으면 초기화
+      if (!outfitState[this.activeCharacter]) {
+        outfitState[this.activeCharacter] = {};
+      }
+
+      // 의상 변경 시 해당 의상의 기본 착용 상태로 초기화
+      outfitState[this.activeCharacter].current_outfit = outfitName;
+
+      // 새로운 의상의 기본 착용 상태 생성
+      const newOutfit = allOutfits[outfitName];
+      const defaultState = {
+        upper_body: {},
+        lower_body: {},
+        feet: {},
+        accessories: {},
+      };
+
+      // 각 카테고리별로 null이 아닌 아이템들을 기본적으로 착용 상태로 설정
+      Object.entries(newOutfit.parts).forEach(([category, items]) => {
+        Object.entries(items).forEach(([itemName, item]) => {
+          if (item !== null) {
+            // null이 아닌 아이템은 기본적으로 착용 상태
+            defaultState[category][itemName] = true;
+          }
+        });
+      });
+
+      // 기존 상태를 새로운 기본 상태로 교체
+      outfitState[this.activeCharacter] = {
+        current_outfit: outfitName,
+        ...defaultState,
+      };
+
+      fs.writeFileSync(statePath, JSON.stringify(outfitState, null, 2));
+    }
+
     // 현재 복장을 새로운 복장으로 변경
     this._initialOutfit = outfitName;
-    this._initialOutfitData = allOutfits[outfitName];
+    this._initialOutfitData = this.loadOutfitData();
 
     console.log(`Outfit changed to: ${outfitName} for ${this.activeCharacter}`);
 

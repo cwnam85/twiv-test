@@ -12,7 +12,7 @@ interface OutfitItem {
 
 interface OutfitParts {
   [category: string]: {
-    [itemName: string]: OutfitItem;
+    [itemName: string]: OutfitItem | null;
   };
 }
 
@@ -96,8 +96,8 @@ function generateOutfitInfo(outfitData?: OutfitData): string {
 
   // enabled된 아이템들만 수집
   Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
-      if (itemData.enabled) {
+    Object.entries(items as Record<string, OutfitItem | null>).forEach(([itemName, itemData]) => {
+      if (itemData && itemData.enabled) {
         enabledItems.push(`${category}.${itemName}: ${itemData.name}`);
       }
     });
@@ -117,8 +117,8 @@ function generateOutfitDetail(outfitData?: OutfitData): string {
 
   // enabled된 아이템들만 수집 (배열 형식)
   Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
-      if (itemData.enabled && itemData.name !== 'none') {
+    Object.entries(items as Record<string, OutfitItem | null>).forEach(([itemName, itemData]) => {
+      if (itemData && itemData.enabled) {
         enabledItems.push(`${category}.${itemName}: ${itemData.name}`);
       }
     });
@@ -142,8 +142,8 @@ function generateUndressableItems(outfitData?: OutfitData, affinity: number = 0)
   Object.entries(data.parts).forEach(([category, items]) => {
     // 허용된 카테고리만 처리
     if (allowedCategories.includes(category)) {
-      Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
-        if (itemData.enabled && itemData.name !== 'none') {
+      Object.entries(items as Record<string, OutfitItem | null>).forEach(([itemName, itemData]) => {
+        if (itemData && itemData.enabled) {
           // removable_affinity가 null이 아니고, 현재 호감도가 충분한 경우
           if (itemData.removable_affinity !== null && affinity >= itemData.removable_affinity) {
             removableItems.push(`${category}.${itemName}`);
@@ -167,8 +167,8 @@ function generateWearableItems(outfitData?: OutfitData): string {
 
   // 현재 착용 가능한 아이템들 수집
   Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
-      if (!itemData.enabled && itemData.name !== 'none') {
+    Object.entries(items as Record<string, OutfitItem | null>).forEach(([itemName, itemData]) => {
+      if (itemData && !itemData.enabled) {
         // 현재 착용하지 않은 아이템들을 착용 가능한 아이템으로 간주
         wearableItems.push(`${category}.${itemName}`);
       }
@@ -189,8 +189,8 @@ function generateLockedItems(outfitData?: OutfitData): string {
 
   // removable_affinity가 null인 아이템들 수집 (절대 벗을 수 없음)
   Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items as Record<string, OutfitItem>).forEach(([itemName, itemData]) => {
-      if (itemData.enabled && itemData.name !== 'none' && itemData.removable_affinity === null) {
+    Object.entries(items as Record<string, OutfitItem | null>).forEach(([itemName, itemData]) => {
+      if (itemData && itemData.enabled && itemData.removable_affinity === null) {
         lockedItems.push(`${category}.${itemName}: ${itemData.name}`);
       }
     });

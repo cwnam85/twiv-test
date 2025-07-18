@@ -17,7 +17,12 @@ const useChatting = () => {
 
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
 
-  const { outfitData, refreshOutfitData } = useOutfit();
+  const {
+    outfitData,
+    outfitStateData,
+    currentCharacter: outfitCharacter,
+    refreshOutfitData,
+  } = useOutfit();
 
   const { messages, addUserMessage, addBotMessageFromMessage } = useMessages(currentCharacter);
 
@@ -50,7 +55,10 @@ const useChatting = () => {
     point,
     onPointUpdate: updatePoint,
     onMessageAdd: addBotMessageFromMessage,
-    refreshOutfitData, // useOutfit의 refreshOutfitData 함수 전달
+    refreshOutfitData: async () => {
+      const result = await refreshOutfitData();
+      return result?.outfitData || null;
+    },
   });
 
   // ChatAPI 훅 설정
@@ -64,7 +72,10 @@ const useChatting = () => {
     onPointUpdate: updatePoint,
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
-    onOutfitRefresh: refreshOutfitData,
+    onOutfitRefresh: async () => {
+      const result = await refreshOutfitData();
+      return result?.outfitData || null;
+    },
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
     onAudioData: playAudioData,
@@ -131,6 +142,8 @@ const useChatting = () => {
     emotion,
     currentCharacter,
     outfitData,
+    outfitStateData,
+    outfitCharacter,
     // Shop 관련
     shopData,
     isShopOpen,

@@ -1,175 +1,115 @@
 {
   "casual": {
-    "current_outfit": "casual",
     "parts": {
       "upper_body": {
         "bra": {
           "name": "black_bra",
-          "enabled": false,
           "removable_affinity": 100
         },
         "top": {
           "name": "white_blouse",
-          "enabled": true,
           "removable_affinity": 80
         },
         "outerwear": {
           "name": "black_cardigan",
-          "enabled": false,
           "removable_affinity": 80
         }
       },
       "lower_body": {
         "panty": {
           "name": "black_panty",
-          "enabled": true,
           "removable_affinity": null
         },
         "bottom": {
           "name": "black_skirt",
-          "enabled": false,
           "removable_affinity": 80
         }
       },
       "feet": {
         "shoes": {
           "name": "black_loafers",
-          "enabled": true,
           "removable_affinity": 80
         }
       },
       "accessories": {
-        "hat": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        },
+        "hat": null,
         "necklace": {
           "name": "silver_choker",
-          "enabled": true,
           "removable_affinity": 100
         },
         "belt": {
           "name": "black_belt",
-          "enabled": true,
           "removable_affinity": 80
         }
       }
     }
   },
   "school_uniform": {
-    "current_outfit": "school_uniform",
     "parts": {
       "upper_body": {
         "bra": {
           "name": "white_bra",
-          "enabled": true,
           "removable_affinity": 100
         },
         "top": {
           "name": "white_shirt",
-          "enabled": true,
           "removable_affinity": 80
         },
         "outerwear": {
           "name": "navy_blazer",
-          "enabled": true,
           "removable_affinity": 80
         }
       },
       "lower_body": {
         "panty": {
           "name": "white_panty",
-          "enabled": true,
           "removable_affinity": null
         },
         "bottom": {
           "name": "navy_skirt",
-          "enabled": true,
           "removable_affinity": 80
         }
       },
       "feet": {
         "shoes": {
           "name": "black_school_shoes",
-          "enabled": true,
           "removable_affinity": 80
         }
       },
       "accessories": {
-        "hat": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        },
+        "hat": null,
         "necklace": {
           "name": "school_tie",
-          "enabled": true,
           "removable_affinity": 80
         },
-        "belt": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        }
+        "belt": null
       }
     }
   },
   "swimsuit": {
-    "current_outfit": "swimsuit",
     "parts": {
       "upper_body": {
         "bra": {
           "name": "bikini_top",
-          "enabled": true,
           "removable_affinity": 100
         },
-        "top": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        },
-        "outerwear": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        }
+        "top": null,
+        "outerwear": null
       },
       "lower_body": {
         "panty": {
           "name": "bikini_bottom",
-          "enabled": true,
           "removable_affinity": null
         },
-        "bottom": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        }
+        "bottom": null
       },
       "feet": {
-        "shoes": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        }
+        "shoes": null
       },
       "accessories": {
-        "hat": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        },
-        "necklace": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        },
-        "belt": {
-          "name": "none",
-          "enabled": false,
-          "removable_affinity": 80
-        }
+        "hat": null,
+        "necklace": null,
+        "belt": null
       }
     }
   }
