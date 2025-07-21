@@ -314,6 +314,62 @@ class ShopService {
       ],
     };
   }
+
+  // 의상 ID를 서버 의상 이름으로 매핑
+  mapOutfitIdToServerName(itemId) {
+    try {
+      // 현재 활성 캐릭터 확인
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+      // 캐릭터의 outfits.json 파일 경로
+      const outfitPath = path.join(
+        process.cwd(),
+        'vtuber_prompts',
+        'characters',
+        activeCharacter,
+        'outfits.json',
+      );
+
+      if (!fs.existsSync(outfitPath)) {
+        console.warn(`Outfit file not found for character: ${activeCharacter}`);
+        return 'casual'; // 기본값
+      }
+
+      // outfits.json 파일 읽기
+      const outfitsData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+
+      // 상점 아이템 목록에서 의상 정보 가져오기
+      const shopItems = this.getShopItems();
+      const outfitItem = shopItems.outfits.find((item) => item.id === itemId);
+
+      if (!outfitItem) {
+        console.warn(`Outfit item not found in shop: ${itemId}`);
+        return 'casual'; // 기본값
+      }
+
+      // 기본 의상인 경우
+      if (itemId === 'default') {
+        return 'casual';
+      }
+
+      // outfits.json에 해당 의상이 존재하는지 확인
+      if (outfitsData[itemId]) {
+        return itemId; // 의상 ID가 그대로 서버 의상 이름이 되는 경우
+      }
+
+      // 특별한 매핑이 필요한 경우 (예: shop_uniform -> school_uniform)
+      const outfitMappings = {
+        school_uniform: 'school_uniform',
+        swimsuit: 'swimsuit',
+        // 추가 매핑이 필요한 경우 여기에 추가
+      };
+
+      return outfitMappings[itemId] || 'casual';
+    } catch (error) {
+      console.error('Error mapping outfit ID to server name:', error);
+      return 'casual'; // 에러 시 기본값
+    }
+  }
 }
 
 export default new ShopService();

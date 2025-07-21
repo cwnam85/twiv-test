@@ -59,14 +59,11 @@ const useChatting = () => {
       const result = await refreshOutfitData();
       return result?.outfitData || null;
     },
+    onAudioData: playAudioData,
   });
 
   // ChatAPI 훅 설정
   const { sendMessage } = useChatAPI({
-    currentCharacter,
-    affinity,
-    outfitData,
-    currentBackground,
     onMessageAdd: addBotMessageFromMessage,
     onAffinityUpdate: updateAffinity,
     onPointUpdate: updatePoint,
@@ -85,9 +82,6 @@ const useChatting = () => {
   const { handlePurchaseAction, handlePurchaseConfirm: purchaseConfirm } = usePurchase({
     addPoints,
     currentCharacter,
-    affinity,
-    outfitData,
-    currentBackground,
     onMessageAdd: addBotMessageFromMessage,
     onAffinityUpdate: updateAffinity,
     onPointUpdate: updatePoint,

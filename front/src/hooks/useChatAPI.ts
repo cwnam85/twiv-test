@@ -1,4 +1,3 @@
-import { generateChatPrompt } from '../instruction/templateRenderer';
 import { OutfitData, Message } from '../types';
 
 interface AudioSegment {
@@ -17,10 +16,6 @@ interface AudioData {
 }
 
 interface ChatAPIHandlers {
-  currentCharacter: string;
-  affinity: number;
-  outfitData: OutfitData | null;
-  currentBackground: string;
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
@@ -33,10 +28,6 @@ interface ChatAPIHandlers {
 }
 
 const useChatAPI = ({
-  currentCharacter,
-  affinity,
-  outfitData,
-  currentBackground,
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
@@ -49,22 +40,14 @@ const useChatAPI = ({
 }: ChatAPIHandlers) => {
   const sendMessage = async (userInput: string) => {
     try {
-      // 백엔드 API 호출
-      const chatPrompt = await generateChatPrompt(
-        currentCharacter,
-        affinity,
-        userInput,
-        outfitData || undefined,
-        currentBackground,
-      );
-
+      // 백엔드 API 호출 (템플릿은 백엔드에서 처리)
       const response: Response = await fetch('http://localhost:3333/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: chatPrompt,
+          message: userInput,
           history: userInput,
         }),
       });

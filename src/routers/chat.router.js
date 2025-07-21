@@ -9,11 +9,13 @@ import affinityService from '../services/affinityService.js';
 import characterService from '../services/characterService.js';
 import conversationService from '../services/conversationService.js';
 import responseService from '../services/responseService.js';
+import shopService from '../services/shopService.js';
 import {
   processAIResponse,
   isValidResponse,
   createResponseSummary,
 } from '../utils/responseProcessor.js';
+import { generateChatPrompt } from '../utils/templateRenderer.js';
 
 const router = express.Router();
 
@@ -80,6 +82,135 @@ async function processLLMResponseWithRetry(
 
   // 모든 시도 실패 시 마지막 에러 던지기
   throw lastError;
+}
+
+// 핵심 채팅 처리 함수 (다른 라우터에서도 사용 가능)
+export async function processChatMessage(userMessage, realMessage, skipPointCheck = false) {
+  // 포인트 체크 (skipPointCheck가 true면 건너뛰기)
+  if (!skipPointCheck && !affinityService.hasEnoughPoints()) {
+    const activeCharacter = characterService.getActiveCharacter();
+    const characterMessage = CHARACTER_MESSAGES[activeCharacter] || CHARACTER_MESSAGES.meuaeng;
+
+    // 랜덤하게 메시지 선택
+    const randomMessage =
+      characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
+
+    // 포인트가 0일 때 TTS로 메시지 재생
+    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], []);
+
+    return {
+      message: randomMessage.message,
+      isPaid: false,
+      isPointDepleted: true,
+      ...affinityService.getData(),
+      pose: characterMessage.pose,
+      emotion: randomMessage.emotion,
+    };
+  }
+
+  try {
+    const requestHistory = conversationService.getRequestHistory();
+    const currentModel = conversationService.getCurrentModel();
+
+    // 시스템 프롬프트는 캐릭터의 main_template.md 사용
+    const systemPrompt = characterService.getSystemPrompt();
+
+    // 사용자 메시지에 컨텍스트 정보 추가
+    const shopData = shopService.getOwnedItems();
+    const promptContext = {
+      userInput: realMessage,
+      affinity: affinityService.getData().affinity || 0,
+      currentBackground: shopData.currentBackground,
+      currentOutfit: shopData.currentOutfit,
+      outfitData: characterService.getOutfitData(),
+      ownedBackgrounds: shopData.ownedBackgrounds.join(', ') || 'none',
+      ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
+      isAdultCharacter: characterService.isJailbreakCharacter(),
+      character: characterService.getActiveCharacter(),
+    };
+
+    const contextMessage = generateChatPrompt(promptContext);
+
+    // LLM 응답 처리 (컨텍스트가 포함된 메시지 사용)
+    const response = await processLLMResponseWithRetry(
+      requestHistory,
+      contextMessage || realMessage,
+      currentModel,
+      systemPrompt,
+    );
+
+    // outfitOn/outfitOff 처리
+    responseService.processOutfitChange(response.outfitOn, response.outfitOff);
+
+    // 구매 필요 감지 및 처리
+    if (response.purchaseRequired && response.requestedContent) {
+      console.log(`Purchase required for: ${response.requestedContent}`);
+
+      try {
+        const purchaseResponse = await processLLMResponseWithRetry(
+          requestHistory,
+          contextMessage || userMessage,
+          currentModel,
+          systemPrompt,
+        );
+
+        // 구매 확인 메시지로 대체
+        if (purchaseResponse.dialogue) {
+          response.dialogue = purchaseResponse.dialogue;
+          response.emotion = purchaseResponse.emotion || response.emotion;
+          response.pose = purchaseResponse.pose || response.pose;
+        }
+      } catch (purchaseError) {
+        console.error('구매 확인 메시지 생성 오류:', purchaseError);
+      }
+    }
+
+    // 프리미엄 콘텐츠 자동 감지 및 수정
+    if (response.requestedContent && !response.purchaseRequired) {
+      console.log(
+        `Auto-detected premium content: ${response.requestedContent}, forcing purchaseRequired to true`,
+      );
+      response.purchaseRequired = true;
+    }
+
+    // 응답 처리 후에 실제 사용자 메시지만 history에 추가
+    conversationService.addToHistory('user', userMessage);
+    conversationService.addToHistory('assistant', response.dialogue);
+
+    // 클라이언트용 오디오 데이터 생성
+    let clientAudioData = null;
+    try {
+      clientAudioData = await responseService.playResponse(
+        response.dialogue,
+        response.emotion,
+        response.matureTags,
+        response.segments,
+      );
+    } catch (audioError) {
+      console.error('Error generating audio data:', audioError);
+      clientAudioData = null;
+    }
+
+    // Warudo에 포즈 변경 메시지 전송
+    responseService.sendPoseToWarudo(response.pose);
+
+    return {
+      message: response.dialogue,
+      isPaid: false,
+      ...affinityService.getData(),
+      pose: response.pose,
+      emotion: response.emotion,
+      usage: response.usage,
+      purchaseRequired: response.purchaseRequired,
+      requestedContent: response.requestedContent,
+      outfitOn: response.outfitOn,
+      outfitOff: response.outfitOff,
+      audioData: clientAudioData,
+    };
+  } catch (error) {
+    console.error(`Error calling ${conversationService.getCurrentModel()} API:`, error);
+    throw error;
+  }
 }
 
 // 현재 호감도와 레벨 가져오기
@@ -250,12 +381,40 @@ router.post('/chat', async (req, res) => {
   try {
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
+
+    // 시스템 프롬프트는 캐릭터의 main_template.md 사용
     const systemPrompt = characterService.getSystemPrompt();
 
-    // LLM 응답 처리
+    // 사용자 메시지에 컨텍스트 정보 추가
+    const shopData = shopService.getOwnedItems();
+    const promptContext = {
+      userInput: realMessage,
+      affinity: affinityService.getData().affinity || 0,
+      currentBackground: shopData.currentBackground,
+      currentOutfit: shopData.currentOutfit,
+      outfitData: characterService.getOutfitData(),
+      ownedBackgrounds: shopData.ownedBackgrounds.join(', ') || 'none',
+      ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
+      isAdultCharacter: characterService.isJailbreakCharacter(),
+      character: characterService.getActiveCharacter(),
+    };
+
+    const contextMessage = generateChatPrompt(promptContext);
+
+    // 디버깅: 시스템 프롬프트와 컨텍스트 메시지 확인
+    console.log('=== DEBUG ===');
+    console.log('System prompt length:', systemPrompt ? systemPrompt.length : 'null');
+    console.log('Context message length:', contextMessage ? contextMessage.length : 'null');
+    console.log(
+      'First 200 chars of context message:',
+      contextMessage ? contextMessage.substring(0, 200) : 'null',
+    );
+    console.log('=== END DEBUG ===');
+
+    // LLM 응답 처리 (컨텍스트가 포함된 메시지 사용)
     const response = await processLLMResponseWithRetry(
       requestHistory,
-      realMessage,
+      contextMessage || realMessage,
       currentModel,
       systemPrompt,
     );
@@ -270,7 +429,7 @@ router.post('/chat', async (req, res) => {
       try {
         const purchaseResponse = await processLLMResponseWithRetry(
           requestHistory,
-          userMessage,
+          contextMessage || userMessage,
           currentModel,
           systemPrompt,
         );

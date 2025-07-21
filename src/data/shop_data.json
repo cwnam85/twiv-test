@@ -1,11 +1,12 @@
 {
   "ownedBackgrounds": [],
   "ownedOutfits": [
-    "school_uniform"
+    "school_uniform",
+    "swimsuit"
   ],
   "ownedBoosters": [],
   "currentBackground": "default",
-  "currentOutfit": "casual",
+  "currentOutfit": "swimsuit",
   "activeBooster": null,
   "purchaseHistory": [
     {
@@ -31,6 +32,12 @@
       "itemType": "booster",
       "price": 200,
       "purchasedAt": "2025-07-09T07:46:02.708Z"
+    },
+    {
+      "itemId": "swimsuit",
+      "itemType": "outfit",
+      "price": 150,
+      "purchasedAt": "2025-07-21T02:00:39.010Z"
     }
   ]
 }

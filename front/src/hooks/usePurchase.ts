@@ -1,14 +1,9 @@
 import { CHARACTER_MESSAGES } from '../data/characterMessages';
-import { ThankYouPrompt } from '../instruction/input_instruction';
-
-import { OutfitData, Message } from '../types';
+import { Message } from '../types';
 
 interface PurchaseHandlers {
   addPoints: (points: number) => Promise<number>;
   currentCharacter: string;
-  affinity: number;
-  outfitData: OutfitData | null;
-  currentBackground: string;
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
@@ -19,9 +14,6 @@ interface PurchaseHandlers {
 const usePurchase = ({
   addPoints,
   currentCharacter,
-  affinity,
-  outfitData,
-  currentBackground,
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
@@ -39,21 +31,13 @@ const usePurchase = ({
         const randomThankYou =
           characterMessages.thankYou[Math.floor(Math.random() * characterMessages.thankYou.length)];
 
-        const thankYouPrompt = await ThankYouPrompt(
-          currentCharacter,
-          affinity,
-          randomThankYou.message,
-          outfitData || undefined,
-          currentBackground,
-        );
-
         const chatResponse = await fetch('http://localhost:3333/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: thankYouPrompt,
+            message: randomThankYou.message,
             history: `시스템 : 사용자가 포인트를 결제하였습니다. 사용자에게 감사하다는 인사를 자연스럽게 해주세요. 예시는 이렇습니다.\n예시 : ${randomThankYou.message}`,
           }),
         });
