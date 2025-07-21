@@ -38,11 +38,15 @@ const useShop = ({
     backgrounds: [],
     outfits: [],
     boosters: [],
+    rpPacks: [],
   });
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [currentBackground, setCurrentBackground] = useState('default');
   const [currentOutfit, setCurrentOutfit] = useState('default');
   const [boosterStatus, setBoosterStatus] = useState<BoosterStatus | null>(null);
+  const [activeRpPack, setActiveRpPack] = useState<{ id: string; activatedAt: string } | null>(
+    null,
+  );
 
   // 상점 데이터 가져오기
   const fetchShopData = async () => {
@@ -78,6 +82,7 @@ const useShop = ({
       if (response.ok) {
         const data = await response.json();
         setBoosterStatus(data);
+        setActiveRpPack(data.activeRpPack);
       }
     } catch (error) {
       console.error('Error fetching booster status:', error);
@@ -149,6 +154,55 @@ const useShop = ({
       }
     } catch (error) {
       console.error('Error using booster:', error);
+      throw error;
+    }
+  };
+
+  // RP팩 활성화
+  const activateRpPack = async (rpPackId: string) => {
+    try {
+      const response = await fetch('http://localhost:3333/shop/activate-rp-pack', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rpPackId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await fetchBoosterStatus();
+        return data;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'RP팩 활성화에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Error activating RP pack:', error);
+      throw error;
+    }
+  };
+
+  // RP팩 비활성화
+  const deactivateRpPack = async () => {
+    try {
+      const response = await fetch('http://localhost:3333/shop/deactivate-rp-pack', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await fetchBoosterStatus();
+        return data;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'RP팩 비활성화에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Error deactivating RP pack:', error);
       throw error;
     }
   };
@@ -226,8 +280,11 @@ const useShop = ({
     currentBackground,
     currentOutfit,
     boosterStatus,
+    activeRpPack,
     purchaseItem,
     useBooster,
+    activateRpPack,
+    deactivateRpPack,
     equipItem,
     equipItems,
     openShop,

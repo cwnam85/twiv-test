@@ -124,14 +124,14 @@ class ResponseService {
     };
   }
 
-  processAffinityChange(affinityChange) {
+  async processAffinityChange(affinityChange) {
     const change = parseInt(affinityChange);
     if (!isNaN(change)) {
       const result = affinityService.updateAffinity(change);
 
       if (result.affinityChanged) {
         // affinity 변경 시 시스템 프롬프트 업데이트
-        characterService.updateSystemPrompt();
+        await characterService.updateSystemPrompt();
         console.log(`Affinity changed to ${result.newAffinity}`);
       }
     }

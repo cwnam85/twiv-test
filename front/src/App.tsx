@@ -32,8 +32,11 @@ function App() {
     currentBackground,
     currentOutfit,
     boosterStatus,
+    activeRpPack,
     purchaseItem,
     useBooster,
+    activateRpPack,
+    deactivateRpPack,
     equipItems,
     openShop,
     closeShop,
@@ -231,11 +234,14 @@ function App() {
           point={point}
           currentBackground={currentBackground}
           currentOutfit={currentOutfit}
+          activeRpPack={activeRpPack}
           onPurchase={(item) => purchaseItem(item.id, item.type, item.price)}
           onEquip={(items) =>
             equipItems(items.map((item) => ({ itemId: item.id, itemType: item.type })))
           }
           onUseBooster={useBooster}
+          onActivateRpPack={activateRpPack}
+          onDeactivateRpPack={deactivateRpPack}
           onClose={closeShop}
         />
       )}

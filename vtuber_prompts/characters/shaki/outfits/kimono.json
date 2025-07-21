@@ -1,0 +1,42 @@
+{
+  "name": "기모노",
+  "price": 300,
+  "description": "우아한 기모노를 입어보세요. 특별한 속옷도 함께 착용됩니다.",
+  "parts": {
+    "upper_body": {
+      "bra": {
+        "name": "rope_bra",
+        "removable_affinity": 100
+      },
+      "top": {
+        "name": "kimono",
+        "removable_affinity": 80
+      },
+      "outerwear": null
+    },
+    "lower_body": {
+      "panty": {
+        "name": "rope_panty",
+        "removable_affinity": null
+      },
+      "bottom": {
+        "name": "kimono_obi",
+        "removable_affinity": 80
+      }
+    },
+    "feet": {
+      "shoes": {
+        "name": "geta_sandals",
+        "removable_affinity": 80
+      }
+    },
+    "accessories": {
+      "hat": null,
+      "necklace": {
+        "name": "rope_choker",
+        "removable_affinity": 100
+      },
+      "belt": null
+    }
+  }
+}

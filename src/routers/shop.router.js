@@ -37,6 +37,10 @@ router.get('/items', (req, res) => {
         ...item,
         isOwned: ownedData.ownedBoosters.includes(item.id),
       })),
+      rpPacks: shopItems.rpPacks.map((item) => ({
+        ...item,
+        isOwned: ownedData.ownedRpPacks.includes(item.id),
+      })),
     };
 
     res.json(itemsWithOwnedStatus);
@@ -109,6 +113,7 @@ router.get('/booster-status', (req, res) => {
   try {
     const boosterStatus = shopService.checkBoosterExpiration();
     const affinityData = affinityService.getData();
+    const activeRpPack = shopService.getActiveRpPack();
 
     res.json({
       shopBoosterStatus: boosterStatus,
@@ -116,6 +121,7 @@ router.get('/booster-status', (req, res) => {
         boosterActive: affinityData.boosterActive,
         boosterRemainingTime: affinityData.boosterRemainingTime,
       },
+      activeRpPack: activeRpPack,
     });
   } catch (error) {
     console.error('Error checking booster status:', error);
@@ -253,6 +259,56 @@ router.post('/equip', async (req, res) => {
     });
   } catch (error) {
     console.error('Error equipping item:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// RP팩 활성화
+router.post('/activate-rp-pack', (req, res) => {
+  try {
+    const { rpPackId } = req.body;
+
+    if (!rpPackId) {
+      return res.status(400).json({ error: 'RP팩 ID가 누락되었습니다.' });
+    }
+
+    // RP팩 활성화 처리
+    const activateResult = shopService.activateRpPack(rpPackId);
+
+    // 캐릭터 서비스에서 프롬프트 새로고침
+    characterService.refreshPromptForRpPack();
+
+    res.json({
+      success: true,
+      message: 'RP팩이 활성화되었습니다.',
+      activeRpPack: activateResult.activeRpPack,
+      backgroundChanged: activateResult.backgroundChanged,
+      newBackground: activateResult.newBackground,
+    });
+  } catch (error) {
+    console.error('Error activating RP pack:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// RP팩 비활성화
+router.post('/deactivate-rp-pack', (req, res) => {
+  try {
+    // RP팩 비활성화 처리
+    const deactivateResult = shopService.deactivateRpPack();
+
+    // 캐릭터 서비스에서 프롬프트 새로고침
+    characterService.refreshPromptForRpPack();
+
+    res.json({
+      success: true,
+      message: 'RP팩이 비활성화되었습니다.',
+      activeRpPack: deactivateResult.activeRpPack,
+      backgroundChanged: deactivateResult.backgroundChanged,
+      previousBackground: deactivateResult.previousBackground,
+    });
+  } catch (error) {
+    console.error('Error deactivating RP pack:', error);
     res.status(400).json({ error: error.message });
   }
 });

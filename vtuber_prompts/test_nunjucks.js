@@ -10,7 +10,7 @@ async function testNunjucksTemplate() {
 
   // 테스트 케이스 1: 기본 설정
   console.log('1. 기본 설정 (Level 1, SFW)');
-  const basicPrompt = loader.buildPrompt({
+  const basicPrompt = await loader.buildPrompt({
     affinityLevel: 1,
     isNSFW: false,
     user: '테스트유저',
@@ -23,7 +23,7 @@ async function testNunjucksTemplate() {
 
   // 테스트 케이스 2: 높은 친밀도
   console.log('2. 높은 친밀도 (Level 4, NSFW)');
-  const highAffinityPrompt = loader.buildPrompt({
+  const highAffinityPrompt = await loader.buildPrompt({
     affinityLevel: 4,
     isNSFW: true,
     user: '테스트유저',
@@ -44,7 +44,7 @@ async function testNunjucksTemplate() {
 
   // 테스트 케이스 3: 복장 정보 포함
   console.log('3. 복장 정보 포함');
-  const outfitPrompt = loader.buildPrompt({
+  const outfitPrompt = await loader.buildPrompt({
     affinityLevel: 2,
     isNSFW: false,
     user: '테스트유저',

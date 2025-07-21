@@ -185,6 +185,7 @@ export function generateChatPrompt(context) {
     ownedOutfits: context.ownedOutfits || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
     character: context.character || 'shaki',
+    activeRpPack: context.activeRpPack || null,
   };
 
   console.log('Template context:', JSON.stringify(templateContext, null, 2));
@@ -217,6 +218,7 @@ export function generateThankYouPrompt(context) {
     ownedOutfits: context.ownedOutfits || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
     character: context.character || 'shaki',
+    activeRpPack: context.activeRpPack || null,
   };
 
   return renderTemplate(template, templateContext);

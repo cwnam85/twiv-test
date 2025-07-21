@@ -40,17 +40,24 @@ export interface Message {
 export interface ShopItem {
   id: string;
   name: string;
-  type: 'background' | 'outfit' | 'booster';
+  type: 'background' | 'outfit' | 'booster' | 'rp_pack';
   price: number;
   description: string;
   image?: string;
   isOwned: boolean;
 }
 
+export interface RpPackItem extends ShopItem {
+  type: 'rp_pack';
+  globalnoteFile?: string;
+  autoPurchaseOutfits?: string[];
+}
+
 export interface ShopData {
   backgrounds: ShopItem[];
   outfits: ShopItem[];
   boosters: ShopItem[];
+  rpPacks: RpPackItem[];
 }
 
 export interface BoosterStatus {

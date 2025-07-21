@@ -140,7 +140,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     );
 
     // outfitOn/outfitOff 처리
-    responseService.processOutfitChange(response.outfitOn, response.outfitOff);
+    await responseService.processOutfitChange(response.outfitOn, response.outfitOff);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -254,6 +254,7 @@ router.post('/purchase', async (req, res) => {
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
     const systemPrompt = characterService.getSystemPrompt();
+    const activeRpPack = shopService.getActiveRpPack();
 
     const purchaseResponse = await processLLMResponseWithRetry(
       requestHistory,

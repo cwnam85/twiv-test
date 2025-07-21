@@ -52,6 +52,22 @@ export const SHOP_DATA: ShopData = {
       description: '활기찬 수영복으로 즐거운 시간을 보내세요.',
       isOwned: false,
     },
+    {
+      id: 'kimono',
+      name: '기모노',
+      type: 'outfit',
+      price: 300,
+      description: '우아한 기모노를 입어보세요. 특별한 속옷도 함께 착용됩니다.',
+      isOwned: false,
+    },
+    {
+      id: 'gown',
+      name: '가운',
+      type: 'outfit',
+      price: 250,
+      description: '우아한 가운을 입어보세요. 특별한 속옷도 함께 착용됩니다.',
+      isOwned: false,
+    },
   ],
   boosters: [
     {
@@ -60,6 +76,18 @@ export const SHOP_DATA: ShopData = {
       type: 'booster',
       price: 200,
       description: '호감도를 100으로 설정하고 10분간 유지합니다.',
+      isOwned: false,
+    },
+  ],
+  rpPacks: [
+    {
+      id: 'onsen_rp_pack',
+      name: '온천 RP팩',
+      type: 'rp_pack',
+      price: 500,
+      description: '온천에서의 특별한 롤플레잉을 경험해보세요.',
+      globalnoteFile: 'onsendate/globalnote.md',
+      autoPurchaseOutfits: ['kimono', 'gown'],
       isOwned: false,
     },
   ],

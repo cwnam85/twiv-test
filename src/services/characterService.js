@@ -152,6 +152,20 @@ class CharacterService {
     return null;
   }
 
+  // RP팩 활성화/비활성화 시 프롬프트 새로고침
+  refreshPromptForRpPack() {
+    try {
+      // 현재 프롬프트를 새로 로드
+      const newPrompt = this.loadSystemPrompt();
+      if (newPrompt) {
+        this.currentSystemPrompt = newPrompt;
+        console.log('System prompt refreshed for RP pack activation/deactivation');
+      }
+    } catch (error) {
+      console.error('Error refreshing prompt for RP pack:', error);
+    }
+  }
+
   updateSystemPrompt(outfitData = null) {
     this._systemPrompt = this.loadSystemPrompt(outfitData);
     return this._systemPrompt;

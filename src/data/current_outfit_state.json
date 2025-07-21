@@ -1,10 +1,9 @@
 {
   "shaki": {
-    "current_outfit": "school_uniform",
+    "current_outfit": "kimono",
     "upper_body": {
       "bra": true,
-      "top": true,
-      "outerwear": true
+      "top": true
     },
     "lower_body": {
       "panty": true,

@@ -6,9 +6,12 @@ interface ShopProps {
   point: number;
   currentBackground: string;
   currentOutfit: string;
+  activeRpPack?: { id: string; activatedAt: string } | null;
   onPurchase: (item: ShopItem) => void;
   onEquip: (items: ShopItem[]) => void;
   onUseBooster?: (boosterId: string) => void;
+  onActivateRpPack?: (rpPackId: string) => void;
+  onDeactivateRpPack?: () => void;
   onClose: () => void;
 }
 
@@ -17,12 +20,17 @@ const Shop = ({
   point,
   currentBackground,
   currentOutfit,
+  activeRpPack,
   onPurchase,
   onEquip,
   onUseBooster,
+  onActivateRpPack,
+  onDeactivateRpPack,
   onClose,
 }: ShopProps) => {
-  const [activeTab, setActiveTab] = useState<'backgrounds' | 'outfits' | 'boosters'>('backgrounds');
+  const [activeTab, setActiveTab] = useState<'backgrounds' | 'outfits' | 'boosters' | 'rpPacks'>(
+    'backgrounds',
+  );
   const [cart, setCart] = useState<ShopItem[]>([]);
 
   // 장바구니에 아이템 추가
@@ -62,11 +70,13 @@ const Shop = ({
       (item.type === 'background' && currentBackground === item.id) ||
       (item.type === 'outfit' && currentOutfit === item.id);
 
+    const isActiveRpPack = item.type === 'rp_pack' && activeRpPack?.id === item.id;
+
     return (
       <div
         key={item.id}
         className={`bg-white rounded-lg p-4 border-2 ${
-          isEquipped ? 'border-blue-500' : 'border-gray-200'
+          isEquipped || isActiveRpPack ? 'border-blue-500' : 'border-gray-200'
         }`}
       >
         <div className="flex justify-between items-start mb-2">
@@ -83,6 +93,22 @@ const Shop = ({
               >
                 사용하기
               </button>
+            ) : item.type === 'rp_pack' ? (
+              isActiveRpPack ? (
+                <button
+                  onClick={() => onDeactivateRpPack?.()}
+                  className="px-3 py-1 rounded text-sm bg-red-500 text-white hover:bg-red-600"
+                >
+                  비활성화
+                </button>
+              ) : (
+                <button
+                  onClick={() => onActivateRpPack?.(item.id)}
+                  className="px-3 py-1 rounded text-sm bg-purple-500 text-white hover:bg-purple-600"
+                >
+                  활성화
+                </button>
+              )
             ) : (
               <div className="flex gap-2">
                 {isInCart(item.id) ? (
@@ -146,6 +172,12 @@ const Shop = ({
             {shopData.boosters.map(renderShopItem)}
           </div>
         );
+      case 'rpPacks':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {shopData.rpPacks.map(renderShopItem)}
+          </div>
+        );
       default:
         return null;
     }
@@ -195,6 +227,16 @@ const Shop = ({
             }`}
           >
             부스터
+          </button>
+          <button
+            onClick={() => setActiveTab('rpPacks')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'rpPacks'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            RP팩
           </button>
         </div>
 

@@ -93,9 +93,11 @@ class ShopService {
       ownedBackgrounds: shopData.ownedBackgrounds || [],
       ownedOutfits: shopData.ownedOutfits || [],
       ownedBoosters: shopData.ownedBoosters || [],
+      ownedRpPacks: shopData.ownedRpPacks || [],
       currentBackground: shopData.currentBackground || 'default',
       currentOutfit: shopData.currentOutfit || 'default',
       activeBooster: shopData.activeBooster || null,
+      activeRpPack: shopData.activeRpPack || null,
     };
   }
 
@@ -111,6 +113,8 @@ class ShopService {
       isAlreadyOwned = (shopData.ownedOutfits || []).includes(itemId);
     } else if (itemType === 'booster') {
       isAlreadyOwned = (shopData.ownedBoosters || []).includes(itemId);
+    } else if (itemType === 'rp_pack') {
+      isAlreadyOwned = (shopData.ownedRpPacks || []).includes(itemId);
     }
 
     if (isAlreadyOwned) {
@@ -132,6 +136,20 @@ class ShopService {
     } else if (itemType === 'booster') {
       if (!shopData.ownedBoosters) shopData.ownedBoosters = [];
       shopData.ownedBoosters.push(itemId);
+    } else if (itemType === 'rp_pack') {
+      if (!shopData.ownedRpPacks) shopData.ownedRpPacks = [];
+      shopData.ownedRpPacks.push(itemId);
+
+      // RP팩 구매 시 자동으로 의상들도 구매
+      const shopItems = this.getShopItems();
+      const rpPack = shopItems.rpPacks.find((pack) => pack.id === itemId);
+      if (rpPack && rpPack.autoPurchaseOutfits) {
+        for (const outfitId of rpPack.autoPurchaseOutfits) {
+          if (!shopData.ownedOutfits.includes(outfitId)) {
+            shopData.ownedOutfits.push(outfitId);
+          }
+        }
+      }
     }
 
     if (!shopData.purchaseHistory) shopData.purchaseHistory = [];
@@ -153,6 +171,7 @@ class ShopService {
       ownedBackgrounds: shopData.ownedBackgrounds || [],
       ownedOutfits: shopData.ownedOutfits || [],
       ownedBoosters: shopData.ownedBoosters || [],
+      ownedRpPacks: shopData.ownedRpPacks || [],
     };
   }
 
@@ -290,6 +309,17 @@ class ShopService {
           description: '호감도를 100으로 설정하고 10분간 유지합니다.',
         },
       ],
+      rpPacks: [
+        {
+          id: 'onsen_rp_pack',
+          name: '온천 RP팩',
+          type: 'rp_pack',
+          price: 500,
+          description: '온천에서의 특별한 롤플레잉을 경험해보세요.',
+          globalnoteFile: 'onsendate/globalnote.md',
+          autoPurchaseOutfits: ['kimono', 'gown'],
+        },
+      ],
     };
   }
 
@@ -411,6 +441,92 @@ class ShopService {
       console.error('Error mapping outfit ID to server name:', error);
       return 'casual'; // 에러 시 기본값
     }
+  }
+
+  // RP팩 활성화
+  activateRpPack(rpPackId) {
+    const shopData = this.getShopData();
+
+    // RP팩을 소유하고 있는지 확인
+    if (!(shopData.ownedRpPacks || []).includes(rpPackId)) {
+      throw new Error('구매하지 않은 RP팩입니다.');
+    }
+
+    // 이미 활성화된 RP팩이 있는지 확인
+    if (shopData.activeRpPack) {
+      throw new Error('이미 활성화된 RP팩이 있습니다.');
+    }
+
+    // RP팩별 배경 매핑
+    const rpPackBackgrounds = {
+      onsen_rp_pack: 'onsen',
+    };
+
+    // RP팩 활성화
+    shopData.activeRpPack = {
+      id: rpPackId,
+      activatedAt: new Date().toISOString(),
+    };
+
+    // RP팩에 해당하는 배경이 있으면 배경도 변경
+    const newBackground = rpPackBackgrounds[rpPackId];
+    if (newBackground) {
+      // 온천 배경을 소유하고 있지 않으면 추가
+      if (!shopData.ownedBackgrounds.includes(newBackground)) {
+        shopData.ownedBackgrounds.push(newBackground);
+      }
+      shopData.currentBackground = newBackground;
+      console.log(`Background changed to ${newBackground} for RP pack ${rpPackId}`);
+    }
+
+    // 데이터 저장
+    if (!this.saveShopData(shopData)) {
+      throw new Error('RP팩 활성화 중 오류가 발생했습니다.');
+    }
+
+    return {
+      success: true,
+      activeRpPack: shopData.activeRpPack,
+      backgroundChanged: !!newBackground,
+      newBackground: newBackground,
+    };
+  }
+
+  // RP팩 비활성화
+  deactivateRpPack() {
+    const shopData = this.getShopData();
+
+    if (!shopData.activeRpPack) {
+      throw new Error('활성화된 RP팩이 없습니다.');
+    }
+
+    // RP팩 비활성화 전에 원래 배경으로 되돌리기
+    const previousBackground = shopData.currentBackground;
+    shopData.activeRpPack = null;
+
+    // 온천 배경이었으면 학교로 되돌리기
+    if (previousBackground === 'onsen') {
+      shopData.currentBackground = 'school';
+      console.log('Background changed back to school after RP pack deactivation');
+    }
+
+    // 데이터 저장
+    if (!this.saveShopData(shopData)) {
+      throw new Error('RP팩 비활성화 중 오류가 발생했습니다.');
+    }
+
+    return {
+      success: true,
+      activeRpPack: null,
+      backgroundChanged: previousBackground === 'onsen',
+      previousBackground: previousBackground,
+    };
+  }
+
+  // 활성화된 RP팩 정보 가져오기
+  getActiveRpPack() {
+    const shopData = this.getShopData();
+    return shopData.activeRpPack || null;
   }
 }
 

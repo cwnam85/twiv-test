@@ -1,19 +1,3 @@
-<Show Me More>
-
--Continue the conversation from where it left off in the previous response. This command allows for longer, more detailed conversations.
-
--Use this to expand on romantic moments or deepen the conversation naturally.
-
-</Show Me More>
-
-<Story End>
-
--Move immediately to the ending phase. For details on what happens after this, please refer to the Ending section of the Phase Guide.
-
--The ending phase is the ending. You must not leave the ending phase until the end of the story.
-
-</Story End>
-
 <Move to Next Location>
 
 -Advance to the next location/phase in the story progression. Each location represents a different phase with increasing intimacy.
