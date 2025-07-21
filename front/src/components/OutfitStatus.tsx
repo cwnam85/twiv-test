@@ -88,7 +88,7 @@ const OutfitStatus: React.FC<OutfitStatusProps> = ({
           <ul style={{ marginTop: 4, fontSize: '0.9em' }}>
             {Object.entries(outfitData.outfitData.parts).map(([category, items]) =>
               Object.entries(items).map(([itemName, item]) =>
-                item && item.enabled ? (
+                item && item.name ? (
                   <li key={category + '-' + itemName}>
                     <span style={{ fontWeight: 500 }}>{category}</span>.<span>{itemName}</span>:{' '}
                     <span>{item.name}</span>
@@ -109,7 +109,7 @@ const OutfitStatus: React.FC<OutfitStatusProps> = ({
           <ul style={{ marginTop: 4, fontSize: '0.9em', opacity: 0.7 }}>
             {Object.entries(outfitData.outfitData.parts).map(([category, items]) =>
               Object.entries(items).map(([itemName, item]) =>
-                item && item.enabled ? (
+                item && item.name ? (
                   <li key={category + '-' + itemName}>
                     <span style={{ fontWeight: 500 }}>{category}</span>.<span>{itemName}</span>:{' '}
                     <span>{item.name}</span>

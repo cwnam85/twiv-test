@@ -74,17 +74,16 @@ class CharacterService {
       // 의상 템플릿 로드
       const outfitPath = path.join(
         __dirname,
-        `../../vtuber_prompts/characters/${this.activeCharacter}/outfits.json`,
+        `../../vtuber_prompts/characters/${this.activeCharacter}/outfits/${this.initialOutfit}.json`,
       );
 
       // 현재 착용 상태 로드
       const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
 
       if (fs.existsSync(outfitPath) && fs.existsSync(statePath)) {
-        const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+        const outfitTemplate = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
         const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
 
-        const outfitTemplate = allOutfits[this.initialOutfit];
         if (!outfitTemplate) {
           return null;
         }
@@ -93,13 +92,14 @@ class CharacterService {
         const currentOutfit = JSON.parse(JSON.stringify(outfitTemplate));
         currentOutfit.current_outfit = this.initialOutfit;
 
-        // enabled 상태 적용
+        // 착용 상태 적용 (enabled 대신 착용 여부를 직접 확인)
         const characterState = outfitState[this.activeCharacter];
         if (characterState) {
           Object.keys(characterState).forEach((parentCategory) => {
             if (parentCategory !== 'current_outfit' && currentOutfit.parts[parentCategory]) {
               Object.keys(characterState[parentCategory]).forEach((category) => {
                 if (currentOutfit.parts[parentCategory][category]) {
+                  // 착용 상태를 enabled 속성으로 추가
                   currentOutfit.parts[parentCategory][category].enabled =
                     characterState[parentCategory][category];
                 }
@@ -230,18 +230,14 @@ class CharacterService {
 
     const outfitPath = path.join(
       __dirname,
-      `../../vtuber_prompts/characters/${this.activeCharacter}/outfits.json`,
+      `../../vtuber_prompts/characters/${this.activeCharacter}/outfits/${outfitName}.json`,
     );
 
     if (!fs.existsSync(outfitPath)) {
-      throw new Error('Outfit file not found');
+      throw new Error(`Outfit file not found: ${outfitPath}`);
     }
 
-    const allOutfits = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
-
-    if (!allOutfits[outfitName]) {
-      throw new Error(`Outfit '${outfitName}' not found`);
-    }
+    const outfitData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
 
     // 현재 착용 상태 파일 업데이트
     const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
@@ -257,7 +253,7 @@ class CharacterService {
       outfitState[this.activeCharacter].current_outfit = outfitName;
 
       // 새로운 의상의 기본 착용 상태 생성
-      const newOutfit = allOutfits[outfitName];
+      const newOutfit = outfitData;
       const defaultState = {
         upper_body: {},
         lower_body: {},

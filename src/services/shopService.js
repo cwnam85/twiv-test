@@ -280,29 +280,7 @@ class ShopService {
           description: '아름다운 해변에서 휴식을 취해보세요.',
         },
       ],
-      outfits: [
-        {
-          id: 'default',
-          name: '기본 의상',
-          type: 'outfit',
-          price: 0,
-          description: '기본 의상으로 돌아갑니다.',
-        },
-        {
-          id: 'school_uniform',
-          name: '교복',
-          type: 'outfit',
-          price: 100,
-          description: '깔끔한 학교 교복을 입어보세요.',
-        },
-        {
-          id: 'swimsuit',
-          name: '수영복',
-          type: 'outfit',
-          price: 150,
-          description: '활기찬 수영복으로 즐거운 시간을 보내세요.',
-        },
-      ],
+      outfits: this.getOutfitsFromJson(),
       boosters: [
         {
           id: 'affinity_booster',
@@ -315,56 +293,120 @@ class ShopService {
     };
   }
 
+  // outfits 폴더에서 의상 정보를 읽어와서 상점 아이템 형태로 변환
+  getOutfitsFromJson() {
+    try {
+      // 현재 활성 캐릭터 확인
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+      // 캐릭터의 outfits 폴더 경로
+      const outfitsDir = path.join(
+        process.cwd(),
+        'vtuber_prompts',
+        'characters',
+        activeCharacter,
+        'outfits',
+      );
+
+      if (!fs.existsSync(outfitsDir)) {
+        console.warn(`Outfits directory not found for character: ${activeCharacter}`);
+        return [
+          {
+            id: 'default',
+            name: '기본 의상',
+            type: 'outfit',
+            price: 0,
+            description: '기본 의상으로 돌아갑니다.',
+          },
+        ];
+      }
+
+      // outfits 폴더의 모든 JSON 파일 읽기
+      const outfitFiles = fs.readdirSync(outfitsDir).filter((file) => file.endsWith('.json'));
+
+      if (outfitFiles.length === 0) {
+        console.warn(`No outfit files found in directory: ${outfitsDir}`);
+        return [
+          {
+            id: 'default',
+            name: '기본 의상',
+            type: 'outfit',
+            price: 0,
+            description: '기본 의상으로 돌아갑니다.',
+          },
+        ];
+      }
+
+      // 각 의상 파일을 읽어서 상점 아이템 형태로 변환
+      const outfits = outfitFiles.map((filename) => {
+        const outfitId = filename.replace('.json', '');
+        const outfitPath = path.join(outfitsDir, filename);
+
+        try {
+          const outfitData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
+          return {
+            id: outfitId,
+            name: outfitData.name || outfitId,
+            type: 'outfit',
+            price: outfitData.price || 0,
+            description:
+              outfitData.description || `${outfitData.name || outfitId}을(를) 입어보세요.`,
+          };
+        } catch (error) {
+          console.error(`Error reading outfit file ${filename}:`, error);
+          return {
+            id: outfitId,
+            name: outfitId,
+            type: 'outfit',
+            price: 0,
+            description: `${outfitId}을(를) 입어보세요.`,
+          };
+        }
+      });
+
+      return outfits;
+    } catch (error) {
+      console.error('Error reading outfits from directory:', error);
+      return [
+        {
+          id: 'default',
+          name: '기본 의상',
+          type: 'outfit',
+          price: 0,
+          description: '기본 의상으로 돌아갑니다.',
+        },
+      ];
+    }
+  }
+
   // 의상 ID를 서버 의상 이름으로 매핑
   mapOutfitIdToServerName(itemId) {
     try {
       // 현재 활성 캐릭터 확인
       const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
-      // 캐릭터의 outfits.json 파일 경로
-      const outfitPath = path.join(
+      // 캐릭터의 outfits 폴더 경로
+      const outfitsDir = path.join(
         process.cwd(),
         'vtuber_prompts',
         'characters',
         activeCharacter,
-        'outfits.json',
+        'outfits',
       );
-
-      if (!fs.existsSync(outfitPath)) {
-        console.warn(`Outfit file not found for character: ${activeCharacter}`);
-        return 'casual'; // 기본값
-      }
-
-      // outfits.json 파일 읽기
-      const outfitsData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
-
-      // 상점 아이템 목록에서 의상 정보 가져오기
-      const shopItems = this.getShopItems();
-      const outfitItem = shopItems.outfits.find((item) => item.id === itemId);
-
-      if (!outfitItem) {
-        console.warn(`Outfit item not found in shop: ${itemId}`);
-        return 'casual'; // 기본값
-      }
 
       // 기본 의상인 경우
       if (itemId === 'default') {
         return 'casual';
       }
 
-      // outfits.json에 해당 의상이 존재하는지 확인
-      if (outfitsData[itemId]) {
-        return itemId; // 의상 ID가 그대로 서버 의상 이름이 되는 경우
+      // 해당 의상 파일이 존재하는지 확인
+      const outfitPath = path.join(outfitsDir, `${itemId}.json`);
+      if (fs.existsSync(outfitPath)) {
+        return itemId; // 의상 ID가 그대로 서버 의상 이름이 됨
       }
 
-      // 특별한 매핑이 필요한 경우 (예: shop_uniform -> school_uniform)
-      const outfitMappings = {
-        school_uniform: 'school_uniform',
-        swimsuit: 'swimsuit',
-        // 추가 매핑이 필요한 경우 여기에 추가
-      };
-
-      return outfitMappings[itemId] || 'casual';
+      console.warn(`Outfit file not found: ${outfitPath}`);
+      return 'casual'; // 기본값
     } catch (error) {
       console.error('Error mapping outfit ID to server name:', error);
       return 'casual'; // 에러 시 기본값
