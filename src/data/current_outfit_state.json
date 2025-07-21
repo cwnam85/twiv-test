@@ -1,14 +1,21 @@
 {
   "shaki": {
-    "current_outfit": "swimsuit",
+    "current_outfit": "school_uniform",
     "upper_body": {
-      "bra": true
+      "bra": true,
+      "top": true,
+      "outerwear": true
     },
     "lower_body": {
-      "panty": true
+      "panty": true,
+      "bottom": true
     },
-    "feet": {},
-    "accessories": {}
+    "feet": {
+      "shoes": true
+    },
+    "accessories": {
+      "necklace": true
+    }
   },
   "blacknila": {
     "current_outfit": "casual",

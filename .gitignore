@@ -20,3 +20,5 @@ logs
 #호감도 데이터
 src/data/affinity.json
 src/data/point.json
+src/data/current_outfit_state.json
+src/data/shop_items.json
