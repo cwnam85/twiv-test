@@ -25,6 +25,7 @@ interface ChatAPIHandlers {
   onModalOpen: () => void;
   onPurchaseModalOpen: (content: string, userInput: string) => void;
   onAudioData: (audioData: AudioData | null) => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 const useChatAPI = ({
@@ -37,9 +38,12 @@ const useChatAPI = ({
   onModalOpen,
   onPurchaseModalOpen,
   onAudioData,
+  onLoadingChange,
 }: ChatAPIHandlers) => {
   const sendMessage = async (userInput: string) => {
     try {
+      // 로딩 시작
+      onLoadingChange?.(true);
       // 백엔드 API 호출 (템플릿은 백엔드에서 처리)
       const response: Response = await fetch('http://localhost:3333/chat', {
         method: 'POST',
@@ -129,6 +133,9 @@ const useChatAPI = ({
       console.error('Error:', error);
       // 에러 발생시 에러 메시지 표시
       onMessageAdd({ text: '죄송합니다. 오류가 발생했습니다.', isUser: false });
+    } finally {
+      // 로딩 종료
+      onLoadingChange?.(false);
     }
   };
 

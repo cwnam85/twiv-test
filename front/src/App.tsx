@@ -34,11 +34,13 @@ function App() {
     boosterStatus,
     purchaseItem,
     useBooster,
-    equipItem,
+    equipItems,
     openShop,
     closeShop,
     // 오디오 관련
     stopPlayback,
+    // 로딩 상태
+    isLoading,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -190,9 +192,22 @@ function App() {
             onChange={(e) => setInput(e.target.value)}
             className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="메시지를 입력하세요..."
+            disabled={isLoading}
           />
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-            전송
+          <button
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+              isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+            } text-white`}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                대기중...
+              </>
+            ) : (
+              '전송'
+            )}
           </button>
         </form>
       </div>
@@ -216,8 +231,10 @@ function App() {
           point={point}
           currentBackground={currentBackground}
           currentOutfit={currentOutfit}
-          onPurchase={purchaseItem}
-          onEquip={equipItem}
+          onPurchase={(item) => purchaseItem(item.id, item.type, item.price)}
+          onEquip={(items) =>
+            equipItems(items.map((item) => ({ itemId: item.id, itemType: item.type })))
+          }
           onUseBooster={useBooster}
           onClose={closeShop}
         />

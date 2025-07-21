@@ -11,6 +11,7 @@ import { useAudioPlayer } from './useAudioPlayer';
 
 const useChatting = () => {
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // 각각의 작은 훅들을 사용
   const { currentCharacter, pose, emotion, updatePose, updateEmotion } = useCharacter();
@@ -49,17 +50,18 @@ const useChatting = () => {
     purchaseItem,
     useBooster,
     equipItem,
+    equipItems,
     openShop,
     closeShop,
   } = useShop({
-    point,
     onPointUpdate: updatePoint,
-    onMessageAdd: addBotMessageFromMessage,
+    onMessageAdd: (message: string) => addBotMessageFromMessage({ text: message, isUser: false }),
     refreshOutfitData: async () => {
       const result = await refreshOutfitData();
       return result?.outfitData || null;
     },
     onAudioData: playAudioData,
+    onLoadingChange: setIsLoading,
   });
 
   // ChatAPI 훅 설정
@@ -76,6 +78,7 @@ const useChatting = () => {
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
     onAudioData: playAudioData,
+    onLoadingChange: setIsLoading,
   });
 
   // Purchase 훅 설정
@@ -147,10 +150,13 @@ const useChatting = () => {
     purchaseItem,
     useBooster,
     equipItem,
+    equipItems,
     openShop,
     closeShop,
     // 오디오 관련
     stopPlayback,
+    // 로딩 상태
+    isLoading,
   };
 };
 

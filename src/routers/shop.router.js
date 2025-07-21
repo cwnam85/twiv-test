@@ -124,79 +124,132 @@ router.get('/booster-status', (req, res) => {
 });
 
 // 아이템 착용
-router.post('/equip', (req, res) => {
+router.post('/equip', async (req, res) => {
   try {
-    const { itemId, itemType } = req.body;
+    const { items } = req.body;
+    console.log('Equip request received:', { items });
 
-    if (!itemId || !itemType) {
-      return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: '아이템 정보가 누락되었습니다.' });
     }
 
-    // 착용 처리 (기본 의상은 구매 여부 체크 생략)
-    const equipResult = shopService.equipItem(itemId, itemType);
+    // 각 아이템 착용 처리
+    const equipResults = [];
+    const changedItems = [];
 
-    // 복장을 착용한 경우 서버의 복장 데이터도 업데이트
-    if (itemType === 'outfit') {
-      try {
-        // 동적으로 의상 ID를 서버 의상 이름으로 매핑
-        const outfitName = shopService.mapOutfitIdToServerName(itemId);
+    for (const item of items) {
+      const { itemId, itemType } = item;
+      if (!itemId || !itemType) {
+        return res.status(400).json({ error: '아이템 정보가 올바르지 않습니다.' });
+      }
 
-        // 서버 복장 전체 변경
-        characterService.changeToOutfit(outfitName);
+      const equipResult = shopService.equipItem(itemId, itemType);
+      equipResults.push(equipResult);
 
-        // 시스템 프롬프트 업데이트
-        characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
+      // 변경된 아이템 정보 수집
+      changedItems.push({ itemId, itemType });
+    }
 
-        console.log(`Server outfit changed to: ${outfitName}`);
+    console.log('Equip results:', equipResults);
 
-        // 상점 데이터에도 서버 복장 정보 반영
-        const shopData = shopService.getShopData();
-        shopData.currentOutfit = outfitName;
-        shopService.saveShopData(shopData);
+    // 변경된 아이템들에 대한 서버 처리
+    let outfitChanged = false;
+    let backgroundChanged = false;
+    let changedOutfitName = null;
+    let changedBackgroundName = null;
+    const shopItems = shopService.getShopItems();
 
-        // 의상 착용 완료 후 챗 라우터를 통해 LLM에게 알림
+    for (const item of changedItems) {
+      const { itemId, itemType } = item;
+
+      if (itemType === 'outfit') {
         try {
-          const shopItems = shopService.getShopItems();
-          const outfitItem = shopItems.outfits.find((item) => item.id === itemId);
-          const outfitDisplayName = outfitItem ? outfitItem.name : itemId;
+          // 동적으로 의상 ID를 서버 의상 이름으로 매핑
+          const outfitName = shopService.mapOutfitIdToServerName(itemId);
 
-          // 챗 라우터의 /chat 엔드포인트를 호출하여 의상 착용 반응 생성
-          const outfitReactionMessage = `캐릭터가 유저의 요청에 의해 ${outfitDisplayName}을(를) 착용했습니다. 이에 대한 자연스러운 반응을 해주세요.`;
+          // 서버 복장 전체 변경
+          characterService.changeToOutfit(outfitName);
 
-          // 비동기로 챗 라우터 함수 호출 (응답을 기다리지 않음)
-          processChatMessage(outfitReactionMessage, outfitReactionMessage, true) // skipPointCheck = true
-            .then((data) => {
-              console.log('Outfit reaction generated via chat router function:', data.message);
-              console.log('Audio data generated:', data.audioData ? 'success' : 'failed');
+          // 시스템 프롬프트 업데이트
+          characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
 
-              // 클라이언트에 알림을 위한 상태 업데이트
-              // (클라이언트에서 주기적으로 확인할 수 있도록)
-              const notificationData = {
-                type: 'outfit_reaction',
-                message: data.message,
-                audioData: data.audioData,
-                timestamp: Date.now(),
-              };
+          console.log(`Server outfit changed to: ${outfitName}`);
 
-              // 전역 상태에 저장 (클라이언트가 확인할 수 있도록)
-              global.outfitReactionNotification = notificationData;
-            })
-            .catch((error) => {
-              console.error('Error calling chat router function for outfit reaction:', error);
-            });
-        } catch (chatError) {
-          console.error('Error sending outfit change to chat router:', chatError);
+          // 상점 데이터에도 서버 복장 정보 반영
+          const shopData = shopService.getShopData();
+          shopData.currentOutfit = outfitName;
+          shopService.saveShopData(shopData);
+
+          outfitChanged = true;
+          changedOutfitName = outfitName;
+        } catch (outfitError) {
+          console.error('Error updating server outfit:', outfitError);
         }
-      } catch (outfitError) {
-        console.error('Error updating server outfit:', outfitError);
+      } else if (itemType === 'background') {
+        backgroundChanged = true;
+        const backgroundItem = shopItems.backgrounds.find((item) => item.id === itemId);
+        changedBackgroundName = backgroundItem ? backgroundItem.name : itemId;
       }
     }
 
+    // 변경사항이 있으면 LLM에게 알림
+    if (outfitChanged || backgroundChanged) {
+      try {
+        let reactionMessage = '캐릭터가 유저의 요청에 의해 ';
+        const changes = [];
+
+        if (outfitChanged) {
+          const outfitItem = shopItems.outfits.find(
+            (item) => item.id === changedItems.find((i) => i.itemType === 'outfit')?.itemId,
+          );
+          const outfitDisplayName = outfitItem ? outfitItem.name : changedOutfitName;
+          changes.push(`${outfitDisplayName}을(를) 착용`);
+        }
+
+        if (backgroundChanged) {
+          const backgroundItem = shopItems.backgrounds.find(
+            (item) => item.id === changedItems.find((i) => i.itemType === 'background')?.itemId,
+          );
+          const backgroundDisplayName = backgroundItem
+            ? backgroundItem.name
+            : changedBackgroundName;
+          changes.push(`${backgroundDisplayName}으로 이동`);
+        }
+
+        reactionMessage +=
+          changes.join('하고 ') + '했습니다. 이에 대한 자연스러운 반응을 해주세요.';
+
+        // 동기적으로 챗 라우터 함수 호출 (응답을 기다림)
+        console.log('Starting outfit/background reaction generation...');
+        const reactionData = await processChatMessage(reactionMessage, reactionMessage, true); // skipPointCheck = true
+
+        console.log('Reaction generated via chat router function:', reactionData.message);
+        console.log('Audio data generated:', reactionData.audioData ? 'success' : 'failed');
+
+        // 응답에 반응 포함
+        const responseData = {
+          success: true,
+          message: '착용이 완료되었습니다.',
+          currentBackground: equipResults[equipResults.length - 1].currentBackground,
+          currentOutfit: equipResults[equipResults.length - 1].currentOutfit,
+          outfitReaction: {
+            message: reactionData.message,
+            audioData: reactionData.audioData,
+          },
+        };
+
+        return res.json(responseData);
+      } catch (chatError) {
+        console.error('Error sending outfit/background change to chat router:', chatError);
+      }
+    }
+
+    // 변경사항이 없으면 기본 응답
     res.json({
       success: true,
       message: '착용이 완료되었습니다.',
-      currentBackground: equipResult.currentBackground,
-      currentOutfit: equipResult.currentOutfit,
+      currentBackground: equipResults[equipResults.length - 1].currentBackground,
+      currentOutfit: equipResults[equipResults.length - 1].currentOutfit,
     });
   } catch (error) {
     console.error('Error equipping item:', error);
@@ -208,10 +261,12 @@ router.post('/equip', (req, res) => {
 router.get('/outfit-reaction-notification', (req, res) => {
   try {
     const notification = global.outfitReactionNotification;
+    console.log('Checking for outfit reaction notification:', notification ? 'found' : 'not found');
 
     if (notification) {
       // 알림을 반환하고 즉시 삭제 (한 번만 전송)
       delete global.outfitReactionNotification;
+      console.log('Returning notification and deleting from global');
       res.json(notification);
     } else {
       res.json(null);

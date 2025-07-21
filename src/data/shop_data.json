@@ -1,12 +1,15 @@
 {
-  "ownedBackgrounds": [],
+  "ownedBackgrounds": [
+    "school",
+    "beach"
+  ],
   "ownedOutfits": [
     "school_uniform",
     "swimsuit"
   ],
   "ownedBoosters": [],
-  "currentBackground": "default",
-  "currentOutfit": "swimsuit",
+  "currentBackground": "school",
+  "currentOutfit": "school_uniform",
   "activeBooster": null,
   "purchaseHistory": [
     {
@@ -38,6 +41,18 @@
       "itemType": "outfit",
       "price": 150,
       "purchasedAt": "2025-07-21T02:00:39.010Z"
+    },
+    {
+      "itemId": "school",
+      "itemType": "background",
+      "price": 50,
+      "purchasedAt": "2025-07-21T03:28:51.971Z"
+    },
+    {
+      "itemId": "beach",
+      "itemType": "background",
+      "price": 80,
+      "purchasedAt": "2025-07-21T03:29:00.811Z"
     }
   ]
 }

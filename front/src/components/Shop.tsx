@@ -7,7 +7,7 @@ interface ShopProps {
   currentBackground: string;
   currentOutfit: string;
   onPurchase: (item: ShopItem) => void;
-  onEquip: (item: ShopItem) => void;
+  onEquip: (items: ShopItem[]) => void;
   onUseBooster?: (boosterId: string) => void;
   onClose: () => void;
 }
@@ -23,6 +23,39 @@ const Shop = ({
   onClose,
 }: ShopProps) => {
   const [activeTab, setActiveTab] = useState<'backgrounds' | 'outfits' | 'boosters'>('backgrounds');
+  const [cart, setCart] = useState<ShopItem[]>([]);
+
+  // 장바구니에 아이템 추가
+  const addToCart = (item: ShopItem) => {
+    // 같은 타입의 아이템이 이미 있으면 교체
+    const existingItemIndex = cart.findIndex((cartItem) => cartItem.type === item.type);
+    if (existingItemIndex !== -1) {
+      const newCart = [...cart];
+      newCart[existingItemIndex] = item;
+      setCart(newCart);
+    } else {
+      setCart([...cart, item]);
+    }
+  };
+
+  // 장바구니에서 아이템 제거
+  const removeFromCart = (itemId: string) => {
+    setCart(cart.filter((item) => item.id !== itemId));
+  };
+
+  // 장바구니 적용
+  const applyCart = async () => {
+    if (cart.length > 0) {
+      onClose(); // 상점 모달 닫기
+      await onEquip(cart);
+      setCart([]); // 장바구니 비우기
+    }
+  };
+
+  // 장바구니에 있는지 확인
+  const isInCart = (itemId: string) => {
+    return cart.some((item) => item.id === itemId);
+  };
 
   const renderShopItem = (item: ShopItem) => {
     const isEquipped =
@@ -51,18 +84,29 @@ const Shop = ({
                 사용하기
               </button>
             ) : (
-              <button
-                onClick={() => onEquip(item)}
-                className={`px-3 py-1 rounded text-sm ${
-                  isEquipped
-                    ? 'bg-blue-500 text-white'
-                    : item.price === 0
-                      ? 'bg-purple-200 text-purple-700 hover:bg-purple-300'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {isEquipped ? '착용 중' : item.price === 0 ? '착용하기 (무료)' : '착용하기'}
-              </button>
+              <div className="flex gap-2">
+                {isInCart(item.id) ? (
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="px-3 py-1 rounded text-sm bg-red-500 text-white hover:bg-red-600"
+                  >
+                    담기 취소
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => addToCart(item)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      isEquipped
+                        ? 'bg-blue-500 text-white'
+                        : item.price === 0
+                          ? 'bg-purple-200 text-purple-700 hover:bg-purple-300'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {isEquipped ? '착용 중' : '담기'}
+                  </button>
+                )}
+              </div>
             )
           ) : (
             <button
@@ -155,6 +199,32 @@ const Shop = ({
         </div>
 
         <div className="space-y-6">{renderTabContent()}</div>
+
+        {/* 장바구니 영역 */}
+        {cart.length > 0 && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">장바구니</h3>
+            <div className="space-y-2 mb-4">
+              {cart.map((item) => (
+                <div key={item.id} className="flex justify-between items-center">
+                  <span className="text-sm">{item.name}</span>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={applyCart}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 font-medium"
+            >
+              적용하기 ({cart.length}개 아이템)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

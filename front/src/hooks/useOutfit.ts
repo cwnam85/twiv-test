@@ -26,17 +26,19 @@ const useOutfit = () => {
       try {
         // 기존 의상 데이터 (템플릿 + 상태 병합된 데이터)
         const outfitResponse = await fetch('http://localhost:3333/current-outfit');
-        const outfitData = await outfitResponse.json();
-        if (outfitData.outfitData) {
-          setOutfitData(outfitData);
+        if (outfitResponse.ok) {
+          const outfitData = await outfitResponse.json();
+          if (outfitData.outfitData) {
+            setOutfitData(outfitData);
+          }
         }
 
-        // 새로운 의상 상태 데이터 (캐릭터별 상태)
-        const stateResponse = await fetch('http://localhost:3333/outfit-state');
-        if (stateResponse.ok) {
-          const stateData = await stateResponse.json();
-          setOutfitStateData(stateData);
-        }
+        // 새로운 의상 상태 데이터 (캐릭터별 상태) - 엔드포인트가 없으므로 주석 처리
+        // const stateResponse = await fetch('http://localhost:3333/outfit-state');
+        // if (stateResponse.ok) {
+        //   const stateData = await stateResponse.json();
+        //   setOutfitStateData(stateData);
+        // }
       } catch (error) {
         console.error('Error fetching outfit data:', error);
       }
@@ -66,13 +68,13 @@ const useOutfit = () => {
         }
       }
 
-      // 새로운 의상 상태 데이터 새로고침
-      const stateResponse = await fetch('http://localhost:3333/outfit-state');
-      if (stateResponse.ok) {
-        const newStateData = await stateResponse.json();
-        setOutfitStateData(newStateData);
-        return { outfitData: newOutfitData, stateData: newStateData };
-      }
+      // 새로운 의상 상태 데이터 새로고침 - 엔드포인트가 없으므로 주석 처리
+      // const stateResponse = await fetch('http://localhost:3333/outfit-state');
+      // if (stateResponse.ok) {
+      //   const newStateData = await stateResponse.json();
+      //   setOutfitStateData(newStateData);
+      //   return { outfitData: newOutfitData, stateData: newStateData };
+      // }
 
       return { outfitData: newOutfitData, stateData: null };
     } catch (error) {
