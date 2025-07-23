@@ -181,10 +181,8 @@ router.post('/equip', async (req, res) => {
 
           console.log(`Server outfit changed to: ${outfitName}`);
 
-          // 상점 데이터에도 서버 복장 정보 반영
-          const shopData = shopService.getShopData();
-          shopData.currentOutfit = outfitName;
-          shopService.saveShopData(shopData);
+          // character_state.json에서 복장 정보 관리 (이미 characterService에서 처리됨)
+          console.log(`Character state updated for outfit: ${outfitName}`);
 
           outfitChanged = true;
           changedOutfitName = outfitName;
@@ -264,7 +262,7 @@ router.post('/equip', async (req, res) => {
 });
 
 // RP팩 활성화
-router.post('/activate-rp-pack', (req, res) => {
+router.post('/activate-rp-pack', async (req, res) => {
   try {
     const { rpPackId } = req.body;
 
@@ -278,12 +276,54 @@ router.post('/activate-rp-pack', (req, res) => {
     // 캐릭터 서비스에서 프롬프트 새로고침
     characterService.refreshPromptForRpPack();
 
+    // RP팩 활성화에 대한 LLM 반응 생성
+    let rpPackReaction = null;
+    try {
+      const shopItems = shopService.getShopItems();
+      let reactionMessage = '캐릭터가 유저와 함께 ';
+
+      const changes = [];
+      if (activateResult.backgroundChanged) {
+        const backgroundItem = shopItems.backgrounds.find(
+          (item) => item.id === activateResult.newBackground,
+        );
+        const backgroundName = backgroundItem ? backgroundItem.name : activateResult.newBackground;
+        changes.push(`${backgroundName}에 도착`);
+      }
+      if (activateResult.outfitChanged) {
+        const outfitItem = shopItems.outfits.find((item) => item.id === activateResult.newOutfit);
+        const outfitName = outfitItem ? outfitItem.name : activateResult.newOutfit;
+        changes.push(`${outfitName}을(를) 착용`);
+      }
+
+      if (changes.length > 0) {
+        reactionMessage +=
+          changes.join(' and ') +
+          '. Please provide a natural reaction to this special situation. In your response, do not include outfitOn or outfitOff fields in the output.';
+
+        console.log('Starting RP pack activation reaction generation...');
+        const reactionData = await processChatMessage(reactionMessage, reactionMessage, true);
+
+        rpPackReaction = {
+          message: reactionData.message,
+          audioData: reactionData.audioData,
+        };
+
+        console.log('RP pack activation reaction generated:', reactionData.message);
+      }
+    } catch (chatError) {
+      console.error('Error generating RP pack activation reaction:', chatError);
+    }
+
     res.json({
       success: true,
       message: 'RP팩이 활성화되었습니다.',
       activeRpPack: activateResult.activeRpPack,
       backgroundChanged: activateResult.backgroundChanged,
       newBackground: activateResult.newBackground,
+      outfitChanged: activateResult.outfitChanged,
+      newOutfit: activateResult.newOutfit,
+      rpPackReaction: rpPackReaction,
     });
   } catch (error) {
     console.error('Error activating RP pack:', error);
@@ -292,7 +332,7 @@ router.post('/activate-rp-pack', (req, res) => {
 });
 
 // RP팩 비활성화
-router.post('/deactivate-rp-pack', (req, res) => {
+router.post('/deactivate-rp-pack', async (req, res) => {
   try {
     // RP팩 비활성화 처리
     const deactivateResult = shopService.deactivateRpPack();
@@ -300,12 +340,54 @@ router.post('/deactivate-rp-pack', (req, res) => {
     // 캐릭터 서비스에서 프롬프트 새로고침
     characterService.refreshPromptForRpPack();
 
+    // RP팩 비활성화에 대한 LLM 반응 생성
+    let rpPackReaction = null;
+    try {
+      const shopItems = shopService.getShopItems();
+      let reactionMessage = '캐릭터가 ';
+
+      const changes = [];
+      if (deactivateResult.backgroundChanged) {
+        const backgroundItem = shopItems.backgrounds.find(
+          (item) => item.id === deactivateResult.previousBackground,
+        );
+        const backgroundName = backgroundItem
+          ? backgroundItem.name
+          : deactivateResult.previousBackground;
+        changes.push(`${backgroundName}에서 돌아옴`);
+      }
+      if (deactivateResult.outfitChanged) {
+        changes.push('일상복으로 갈아입음');
+      }
+
+      if (changes.length > 0) {
+        reactionMessage +=
+          changes.join(' and ') +
+          '. Please provide a natural reaction to this situation. In your response, do not include outfitOn or outfitOff fields in the output.';
+
+        console.log('Starting RP pack deactivation reaction generation...');
+        const reactionData = await processChatMessage(reactionMessage, reactionMessage, true);
+
+        rpPackReaction = {
+          message: reactionData.message,
+          audioData: reactionData.audioData,
+        };
+
+        console.log('RP pack deactivation reaction generated:', reactionData.message);
+      }
+    } catch (chatError) {
+      console.error('Error generating RP pack deactivation reaction:', chatError);
+    }
+
     res.json({
       success: true,
       message: 'RP팩이 비활성화되었습니다.',
       activeRpPack: deactivateResult.activeRpPack,
       backgroundChanged: deactivateResult.backgroundChanged,
       previousBackground: deactivateResult.previousBackground,
+      outfitChanged: deactivateResult.outfitChanged,
+      previousOutfit: deactivateResult.previousOutfit,
+      rpPackReaction: rpPackReaction,
     });
   } catch (error) {
     console.error('Error deactivating RP pack:', error);

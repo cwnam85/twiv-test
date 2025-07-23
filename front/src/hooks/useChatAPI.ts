@@ -25,6 +25,7 @@ interface ChatAPIHandlers {
   onModalOpen: () => void;
   onPurchaseModalOpen: (content: string, userInput: string) => void;
   onAudioData: (audioData: AudioData | null) => void;
+  onLocationUpdate?: (location: string | null) => void; // RP팩 위치 업데이트
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
@@ -38,6 +39,7 @@ const useChatAPI = ({
   onModalOpen,
   onPurchaseModalOpen,
   onAudioData,
+  onLocationUpdate,
   onLoadingChange,
 }: ChatAPIHandlers) => {
   const sendMessage = async (userInput: string) => {
@@ -128,6 +130,13 @@ const useChatAPI = ({
       // 오디오 데이터 처리
       if (data.audioData) {
         onAudioData(data.audioData);
+      }
+
+      // RP팩 위치 업데이트 (RP팩이 활성화된 경우에만)
+      console.log('Location data received:', data.location);
+      if (data.location && onLocationUpdate) {
+        console.log('Updating location to:', data.location);
+        onLocationUpdate(data.location);
       }
     } catch (error) {
       console.error('Error:', error);

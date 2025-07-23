@@ -12,6 +12,7 @@ import { useAudioPlayer } from './useAudioPlayer';
 const useChatting = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
 
   // 각각의 작은 훅들을 사용
   const { currentCharacter, pose, emotion, updatePose, updateEmotion } = useCharacter();
@@ -81,6 +82,7 @@ const useChatting = () => {
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
     onAudioData: playAudioData,
+    onLocationUpdate: setCurrentLocation,
     onLoadingChange: setIsLoading,
   });
 
@@ -163,6 +165,8 @@ const useChatting = () => {
     stopPlayback,
     // 로딩 상태
     isLoading,
+    // RP팩 위치
+    currentLocation,
   };
 };
 

@@ -37,11 +37,4 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
-
-  // 서버 시작 시 상점 복장과 동기화
-  try {
-    characterService.syncWithShopOutfit();
-  } catch (error) {
-    console.error('Error syncing outfit on server start:', error);
-  }
 });

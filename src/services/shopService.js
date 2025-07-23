@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import characterStateService from './characterStateService.js';
 
 class ShopService {
   constructor() {
@@ -89,13 +90,15 @@ class ShopService {
   // 구매한 아이템 목록 가져오기
   getOwnedItems() {
     const shopData = this.getShopData();
+    const defaultState = characterStateService.getDefaultCurrentState();
+
     return {
       ownedBackgrounds: shopData.ownedBackgrounds || [],
       ownedOutfits: shopData.ownedOutfits || [],
       ownedBoosters: shopData.ownedBoosters || [],
       ownedRpPacks: shopData.ownedRpPacks || [],
-      currentBackground: shopData.currentBackground || 'default',
-      currentOutfit: shopData.currentOutfit || 'default',
+      currentBackground: defaultState.currentBackground,
+      currentOutfit: defaultState.currentOutfit,
       activeBooster: shopData.activeBooster || null,
       activeRpPack: shopData.activeRpPack || null,
     };
@@ -254,11 +257,13 @@ class ShopService {
       throw new Error('구매하지 않은 상품입니다.');
     }
 
-    // 착용 처리
+    // 착용 처리 - character_state.json에서 관리
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
     if (itemType === 'background') {
-      shopData.currentBackground = itemId;
+      characterStateService.setCurrentBackground(activeCharacter, itemId);
     } else if (itemType === 'outfit') {
-      shopData.currentOutfit = itemId;
+      characterStateService.setCurrentOutfit(activeCharacter, itemId);
     }
 
     // 데이터 저장
@@ -266,10 +271,11 @@ class ShopService {
       throw new Error('착용 처리 중 오류가 발생했습니다.');
     }
 
+    const currentState = characterStateService.getCharacterState(activeCharacter);
     return {
       success: true,
-      currentBackground: shopData.currentBackground,
-      currentOutfit: shopData.currentOutfit,
+      currentBackground: currentState?.current_background || 'default',
+      currentOutfit: currentState?.current_outfit || 'default',
     };
   }
 
@@ -524,9 +530,13 @@ class ShopService {
       throw new Error('이미 활성화된 RP팩이 있습니다.');
     }
 
-    // RP팩별 배경 매핑
+    // RP팩별 배경 및 의상 매핑
     const rpPackBackgrounds = {
       onsen_rp_pack: 'onsen',
+    };
+
+    const rpPackOutfits = {
+      onsen_rp_pack: 'kimono',
     };
 
     // RP팩 활성화
@@ -535,15 +545,28 @@ class ShopService {
       activatedAt: new Date().toISOString(),
     };
 
-    // RP팩에 해당하는 배경이 있으면 배경도 변경
+    // RP팩에 해당하는 배경과 의상이 있으면 변경
     const newBackground = rpPackBackgrounds[rpPackId];
+    const newOutfit = rpPackOutfits[rpPackId];
+
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
     if (newBackground) {
       // 온천 배경을 소유하고 있지 않으면 추가
       if (!shopData.ownedBackgrounds.includes(newBackground)) {
         shopData.ownedBackgrounds.push(newBackground);
       }
-      shopData.currentBackground = newBackground;
+      characterStateService.setCurrentBackground(activeCharacter, newBackground);
       console.log(`Background changed to ${newBackground} for RP pack ${rpPackId}`);
+    }
+
+    if (newOutfit) {
+      // 기모노를 소유하고 있지 않으면 추가
+      if (!shopData.ownedOutfits.includes(newOutfit)) {
+        shopData.ownedOutfits.push(newOutfit);
+      }
+      characterStateService.setCurrentOutfit(activeCharacter, newOutfit);
+      console.log(`Outfit changed to ${newOutfit} for RP pack ${rpPackId}`);
     }
 
     // 데이터 저장
@@ -556,6 +579,8 @@ class ShopService {
       activeRpPack: shopData.activeRpPack,
       backgroundChanged: !!newBackground,
       newBackground: newBackground,
+      outfitChanged: !!newOutfit,
+      newOutfit: newOutfit,
     };
   }
 
@@ -567,15 +592,18 @@ class ShopService {
       throw new Error('활성화된 RP팩이 없습니다.');
     }
 
-    // RP팩 비활성화 전에 원래 배경으로 되돌리기
-    const previousBackground = shopData.currentBackground;
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+    // RP팩 비활성화 전에 원래 배경과 의상으로 되돌리기
+    const currentState = characterStateService.getCharacterState(activeCharacter);
+    const previousBackground = currentState?.current_background || 'default';
+    const previousOutfit = currentState?.current_outfit || 'default';
     shopData.activeRpPack = null;
 
-    // 온천 배경이었으면 학교로 되돌리기
-    if (previousBackground === 'onsen') {
-      shopData.currentBackground = 'school';
-      console.log('Background changed back to school after RP pack deactivation');
-    }
+    // RP팩 비활성화 시 무조건 기본 배경과 기본 의상으로 되돌리기
+    characterStateService.setCurrentBackground(activeCharacter, 'default');
+    characterStateService.setCurrentOutfit(activeCharacter, 'default');
+    console.log('Background and outfit changed back to default after RP pack deactivation');
 
     // 데이터 저장
     if (!this.saveShopData(shopData)) {
@@ -587,6 +615,8 @@ class ShopService {
       activeRpPack: null,
       backgroundChanged: previousBackground === 'onsen',
       previousBackground: previousBackground,
+      outfitChanged: previousOutfit === 'kimono',
+      previousOutfit: previousOutfit,
     };
   }
 

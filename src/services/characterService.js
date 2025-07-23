@@ -7,6 +7,7 @@ import { JAILBREAK_CHARACTERS } from '../../vtuber_prompts/character_settings.js
 import { CHARACTER_SETTINGS } from '../../vtuber_prompts/character_settings.js';
 import SectionLoader from '../../vtuber_prompts/section-loader.js';
 import affinityService from './affinityService.js';
+import characterStateService from './characterStateService.js';
 
 // 환경 변수 로드
 dotenv.config();
@@ -30,16 +31,14 @@ class CharacterService {
   }
 
   get initialOutfit() {
-    if (this._initialOutfit === null) {
-      this._initialOutfit = this.getInitialOutfit();
-    }
+    // 항상 최신 값을 읽도록 캐시 무효화
+    this._initialOutfit = this.getInitialOutfit();
     return this._initialOutfit;
   }
 
   get initialOutfitData() {
-    if (this._initialOutfitData === null) {
-      this._initialOutfitData = this.loadOutfitData();
-    }
+    // 항상 최신 값을 읽도록 캐시 무효화
+    this._initialOutfitData = this.loadOutfitData();
     return this._initialOutfitData;
   }
 
@@ -52,21 +51,8 @@ class CharacterService {
   }
 
   getInitialOutfit() {
-    // 상점 데이터에서 복장 정보를 우선으로 가져오기
-    try {
-      const shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
-      if (fs.existsSync(shopDataPath)) {
-        const shopData = JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
-        if (shopData.currentOutfit) {
-          return shopData.currentOutfit;
-        }
-      }
-    } catch (error) {
-      console.error('Error reading shop data for initial outfit:', error);
-    }
-
-    // 상점 데이터가 없으면 기본값 사용
-    return 'casual';
+    // character_state.json에서 복장 정보를 가져오기
+    return characterStateService.getCurrentOutfit(this.activeCharacter);
   }
 
   loadOutfitData() {
@@ -77,12 +63,8 @@ class CharacterService {
         `../../vtuber_prompts/characters/${this.activeCharacter}/outfits/${this.initialOutfit}.json`,
       );
 
-      // 현재 착용 상태 로드
-      const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
-
-      if (fs.existsSync(outfitPath) && fs.existsSync(statePath)) {
+      if (fs.existsSync(outfitPath)) {
         const outfitTemplate = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
-        const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
 
         if (!outfitTemplate) {
           return null;
@@ -92,11 +74,15 @@ class CharacterService {
         const currentOutfit = JSON.parse(JSON.stringify(outfitTemplate));
         currentOutfit.current_outfit = this.initialOutfit;
 
-        // 착용 상태 적용 (enabled 대신 착용 여부를 직접 확인)
-        const characterState = outfitState[this.activeCharacter];
+        // character_state.json에서 착용 상태 가져오기
+        const characterState = characterStateService.getCharacterState(this.activeCharacter);
         if (characterState) {
           Object.keys(characterState).forEach((parentCategory) => {
-            if (parentCategory !== 'current_outfit' && currentOutfit.parts[parentCategory]) {
+            if (
+              parentCategory !== 'current_outfit' &&
+              parentCategory !== 'current_background' &&
+              currentOutfit.parts[parentCategory]
+            ) {
               Object.keys(characterState[parentCategory]).forEach((category) => {
                 if (currentOutfit.parts[parentCategory][category]) {
                   // 착용 상태를 enabled 속성으로 추가
@@ -190,39 +176,18 @@ class CharacterService {
       throw new Error(`Unknown category: ${category}`);
     }
 
-    // 현재 착용 상태 파일 로드
-    const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
-    if (!fs.existsSync(statePath)) {
-      throw new Error('Outfit state file not found');
-    }
+    // character_state.json에서 상태 변경
+    const characterState = characterStateService.getCharacterState(this.activeCharacter);
 
-    const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-
-    // 해당 캐릭터의 상태가 없으면 초기화
-    if (!outfitState[this.activeCharacter]) {
-      outfitState[this.activeCharacter] = {
-        current_outfit: this.initialOutfit,
-        upper_body: { bra: true, top: true, outerwear: true },
-        lower_body: { panty: true, bottom: true },
-        feet: { shoes: true },
-        accessories: { hat: false, necklace: true, belt: true },
-      };
+    if (!characterState) {
+      throw new Error('Character state not found');
     }
 
     // 해당 카테고리의 상태 변경
-    if (
-      outfitState[this.activeCharacter][parentCategory] &&
-      outfitState[this.activeCharacter][parentCategory][category] !== undefined
-    ) {
-      if (action === 'remove') {
-        outfitState[this.activeCharacter][parentCategory][category] = false;
-      } else if (action === 'wear') {
-        outfitState[this.activeCharacter][parentCategory][category] = true;
-      }
+    if (characterState[parentCategory] && characterState[parentCategory][category] !== undefined) {
+      const enabled = action === 'wear';
+      characterStateService.setOutfitPart(this.activeCharacter, parentCategory, category, enabled);
     }
-
-    // 상태 파일 업데이트
-    fs.writeFileSync(statePath, JSON.stringify(outfitState, null, 2));
 
     // 메모리상의 initialOutfitData 업데이트
     this._initialOutfitData = this.loadOutfitData();
@@ -249,46 +214,27 @@ class CharacterService {
 
     const outfitData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
 
-    // 현재 착용 상태 파일 업데이트
-    const statePath = path.join(process.cwd(), 'src', 'data', 'current_outfit_state.json');
-    if (fs.existsSync(statePath)) {
-      const outfitState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    // character_state.json에서 복장 변경
+    characterStateService.setCurrentOutfit(this.activeCharacter, outfitName);
 
-      // 해당 캐릭터의 상태가 없으면 초기화
-      if (!outfitState[this.activeCharacter]) {
-        outfitState[this.activeCharacter] = {};
-      }
+    // 새로운 의상의 기본 착용 상태 생성
+    const newOutfit = outfitData;
+    const defaultState = {
+      upper_body: {},
+      lower_body: {},
+      feet: {},
+      accessories: {},
+    };
 
-      // 의상 변경 시 해당 의상의 기본 착용 상태로 초기화
-      outfitState[this.activeCharacter].current_outfit = outfitName;
-
-      // 새로운 의상의 기본 착용 상태 생성
-      const newOutfit = outfitData;
-      const defaultState = {
-        upper_body: {},
-        lower_body: {},
-        feet: {},
-        accessories: {},
-      };
-
-      // 각 카테고리별로 null이 아닌 아이템들을 기본적으로 착용 상태로 설정
-      Object.entries(newOutfit.parts).forEach(([category, items]) => {
-        Object.entries(items).forEach(([itemName, item]) => {
-          if (item !== null) {
-            // null이 아닌 아이템은 기본적으로 착용 상태
-            defaultState[category][itemName] = true;
-          }
-        });
+    // 각 카테고리별로 null이 아닌 아이템들을 기본적으로 착용 상태로 설정
+    Object.entries(newOutfit.parts).forEach(([category, items]) => {
+      Object.entries(items).forEach(([itemName, item]) => {
+        if (item !== null) {
+          // null이 아닌 아이템은 기본적으로 착용 상태
+          characterStateService.setOutfitPart(this.activeCharacter, category, itemName, true);
+        }
       });
-
-      // 기존 상태를 새로운 기본 상태로 교체
-      outfitState[this.activeCharacter] = {
-        current_outfit: outfitName,
-        ...defaultState,
-      };
-
-      fs.writeFileSync(statePath, JSON.stringify(outfitState, null, 2));
-    }
+    });
 
     // 현재 복장을 새로운 복장으로 변경
     this._initialOutfit = outfitName;
@@ -299,36 +245,16 @@ class CharacterService {
     return this._initialOutfitData;
   }
 
-  // 상점 복장 정보와 서버 복장을 동기화하는 메서드
-  syncWithShopOutfit() {
-    try {
-      const shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
-
-      if (fs.existsSync(shopDataPath)) {
-        const shopData = JSON.parse(fs.readFileSync(shopDataPath, 'utf8'));
-        const currentShopOutfit = shopData.currentOutfit || 'casual';
-
-        // 상점에서 착용 중인 복장이 있으면 항상 동기화
-        if (currentShopOutfit && currentShopOutfit !== this.initialOutfit) {
-          console.log(`Syncing server outfit with shop outfit: ${currentShopOutfit}`);
-          this.changeToOutfit(currentShopOutfit);
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('Error syncing with shop outfit:', error);
-    }
-    return false;
-  }
-
   getActiveCharacter() {
     return this.activeCharacter;
   }
 
   getOutfitData() {
+    // 항상 최신 데이터를 로드
+    const currentOutfitData = this.loadOutfitData();
     return {
       outfitName: this.initialOutfit,
-      outfitData: this.initialOutfitData,
+      outfitData: currentOutfitData,
     };
   }
 

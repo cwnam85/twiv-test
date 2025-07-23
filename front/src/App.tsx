@@ -25,7 +25,6 @@ function App() {
     currentCharacter,
     outfitData,
     outfitStateData,
-    outfitCharacter,
     // Shop 관련
     shopData,
     isShopOpen,
@@ -44,6 +43,8 @@ function App() {
     stopPlayback,
     // 로딩 상태
     isLoading,
+    // RP팩 위치
+    currentLocation,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -129,13 +130,7 @@ function App() {
     <div
       className={`min-h-screen flex flex-col items-center justify-center p-4 ${getBackgroundStyle()}`}
     >
-      <OutfitStatus
-        outfitData={outfitData}
-        outfitStateData={outfitStateData}
-        currentOutfit={currentOutfit}
-        shopOutfits={shopData.outfits}
-        currentCharacter={outfitCharacter}
-      />
+      <OutfitStatus outfitData={outfitData} outfitStateData={outfitStateData} />
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}
         <div className="flex flex-col gap-2 mb-4">
@@ -162,6 +157,17 @@ function App() {
             <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-purple-800 font-semibold">포즈: {pose}</span>
             </div>
+            {/* 디버깅용: RP팩 상태와 위치 정보 확인 */}
+            <div className="bg-gray-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-gray-800 font-semibold">
+                RP팩: {activeRpPack ? '활성' : '비활성'} | 위치: {currentLocation || '없음'}
+              </span>
+            </div>
+            {activeRpPack && currentLocation && (
+              <div className="bg-orange-100 px-4 py-2 rounded-lg flex-1">
+                <span className="text-orange-800 font-semibold">위치: {currentLocation}</span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -117,6 +117,7 @@ export function processAIResponse(rawResponse) {
         // mature 태그 처리
         const { segments, tags } = extractMatureTags(dialogue);
 
+        console.log('Parsed JSON location:', jsonData.location);
         return {
           dialogue: segments
             .filter((seg) => seg.type === 'text')
@@ -127,6 +128,7 @@ export function processAIResponse(rawResponse) {
           affinity: jsonData.affinity || '0',
           outfitOn: jsonData.outfitOn || [], // 새로운 형식
           outfitOff: jsonData.outfitOff || [], // 새로운 형식
+          location: jsonData.location || null, // RP팩 위치 정보
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };
@@ -147,6 +149,7 @@ export function processAIResponse(rawResponse) {
       affinity: '0',
       outfitOn: [],
       outfitOff: [],
+      location: null, // RP팩 위치 정보
       matureTags: tags,
       segments: segments, // 세그먼트 정보 추가
     };
@@ -159,6 +162,7 @@ export function processAIResponse(rawResponse) {
       affinity: '0',
       outfitOn: [],
       outfitOff: [],
+      location: null, // RP팩 위치 정보
       matureTags: [],
       segments: [],
     };

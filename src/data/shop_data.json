@@ -8,11 +8,10 @@
     "school_uniform",
     "swimsuit",
     "kimono",
-    "gown"
+    "gown",
+    "casual"
   ],
   "ownedBoosters": [],
-  "currentBackground": "school",
-  "currentOutfit": "kimono",
   "activeBooster": null,
   "purchaseHistory": [
     {
@@ -62,10 +61,19 @@
       "itemType": "rp_pack",
       "price": 500,
       "purchasedAt": "2025-07-21T08:37:35.390Z"
+    },
+    {
+      "itemId": "casual",
+      "itemType": "outfit",
+      "price": 0,
+      "purchasedAt": "2025-07-23T01:01:51.045Z"
     }
   ],
   "ownedRpPacks": [
     "onsen_rp_pack"
   ],
-  "activeRpPack": null
+  "activeRpPack": {
+    "id": "onsen_rp_pack",
+    "activatedAt": "2025-07-23T04:10:40.182Z"
+  }
 }

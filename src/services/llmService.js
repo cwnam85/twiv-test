@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
+import shopService from './shopService.js';
 
 dotenv.config();
 
@@ -17,6 +18,9 @@ const claudeClient = new Anthropic({
 });
 
 export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
+  // RP팩 활성화 상태에 따라 max_tokens 조정
+  const activeRpPack = shopService.getActiveRpPack();
+  const maxTokens = activeRpPack ? 2000 : 800;
   try {
     if (model === 'grok') {
       const requestBody = {
@@ -25,6 +29,7 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
           role: msg.role,
           content: msg.content[0].text,
         })),
+        max_tokens: maxTokens,
       };
       console.log('Grok API Request:', JSON.stringify(requestBody, null, 2));
 
@@ -51,7 +56,7 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
           content: msg.content[0].text,
         })),
         system: systemPrompt,
-        max_tokens: 800,
+        max_tokens: maxTokens,
         stream: false,
       };
       console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));

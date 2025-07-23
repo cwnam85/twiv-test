@@ -41,11 +41,17 @@ Your response MUST be in the following JSON format:
 "outfitOn": [],
 "outfitOff": []
 {% if activeRpPack %}
-,"phase": "<current_phase>"
+,"location": "<current_location>"
 {% endif %}
 }
 
-**⚠️ DIALOGUE: The "dialogue" field must be maximum 80 characters including spaces and contain ONLY spoken words. NO action descriptions, gestures, or physical movements. (최대 80자 공백 포함)**
+{% if activeRpPack %}
+**⚠️ RP PACK DIALOGUE: During RP pack activation, provide detailed, immersive responses between 100-200 characters. Express emotions, describe sensations, and create an engaging atmosphere. Take initiative to drive the conversation forward, not just respond to the user. (100-200자 공백 포함)**
+
+**⚠️ DIALOGUE: The "dialogue" field must contain ONLY spoken words. NO adverbs describing HOW they speak, NO action descriptions, gestures, or physical movements.**
+{% else %}
+**⚠️ DIALOGUE: The "dialogue" field must be maximum 80 characters including spaces and contain ONLY spoken words. NO adverbs describing HOW they speak, NO action descriptions, gestures, or physical movements. (최대 80자 공백 포함)**
+{% endif %}
 
 ⚠️ Outfit Change Command Processing
 

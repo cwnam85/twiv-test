@@ -172,6 +172,19 @@ const useShop = ({
       if (response.ok) {
         const data = await response.json();
         await fetchBoosterStatus();
+        await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
+        await refreshOutfitData(); // 의상 데이터 새로고침
+
+        // RP팩 반응 처리
+        if (data.rpPackReaction) {
+          console.log('RP pack reaction received from server:', data.rpPackReaction);
+          onMessageAdd(data.rpPackReaction.message);
+          if (data.rpPackReaction.audioData) {
+            console.log('Playing RP pack audio data:', data.rpPackReaction.audioData);
+            onAudioData(data.rpPackReaction.audioData);
+          }
+        }
+
         return data;
       } else {
         const errorData = await response.json();
@@ -196,6 +209,19 @@ const useShop = ({
       if (response.ok) {
         const data = await response.json();
         await fetchBoosterStatus();
+        await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
+        await refreshOutfitData(); // 의상 데이터 새로고침
+
+        // RP팩 반응 처리
+        if (data.rpPackReaction) {
+          console.log('RP pack reaction received from server:', data.rpPackReaction);
+          onMessageAdd(data.rpPackReaction.message);
+          if (data.rpPackReaction.audioData) {
+            console.log('Playing RP pack audio data:', data.rpPackReaction.audioData);
+            onAudioData(data.rpPackReaction.audioData);
+          }
+        }
+
         return data;
       } else {
         const errorData = await response.json();

@@ -7,6 +7,7 @@ import {
 } from '../data/initialConversation.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
+import characterStateService from './characterStateService.js';
 import fs from 'fs';
 import path from 'path';
 import nunjucks from 'nunjucks';
@@ -29,14 +30,15 @@ class ConversationService {
 
     // 현재 상점 데이터 가져오기
     const shopData = this.getShopData();
-    const currentBackground =
-      shopData && shopData.currentBackground
-        ? this.getBackgroundName(shopData.currentBackground)
-        : 'Default Background';
-    const currentOutfit =
-      shopData && shopData.currentOutfit
-        ? this.getOutfitName(shopData.currentOutfit)
-        : 'Default Outfit';
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+    const characterState = characterStateService.getCharacterState(activeCharacter);
+
+    const currentBackground = characterState?.current_background
+      ? this.getBackgroundName(characterState.current_background)
+      : 'Default Background';
+    const currentOutfit = characterState?.current_outfit
+      ? this.getOutfitName(characterState.current_outfit)
+      : 'Default Outfit';
 
     // 보유한 아이템들 정보 가져오기
     const ownedBackgrounds =

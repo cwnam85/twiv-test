@@ -1,0 +1,43 @@
+{
+  "shaki": {
+    "current_outfit": "kimono",
+    "current_background": "onsen",
+    "upper_body": {
+      "bra": true,
+      "top": true,
+      "outerwear": true
+    },
+    "lower_body": {
+      "panty": true,
+      "bottom": true
+    },
+    "feet": {
+      "shoes": true
+    },
+    "accessories": {
+      "necklace": true,
+      "belt": true
+    }
+  },
+  "blacknila": {
+    "current_outfit": "casual",
+    "current_background": "onsen",
+    "upper_body": {
+      "bra": true,
+      "top": true,
+      "outerwear": true
+    },
+    "lower_body": {
+      "panty": true,
+      "bottom": false
+    },
+    "feet": {
+      "shoes": true
+    },
+    "accessories": {
+      "hat": false,
+      "necklace": true,
+      "belt": true
+    }
+  }
+}

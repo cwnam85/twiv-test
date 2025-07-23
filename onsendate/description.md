@@ -40,20 +40,10 @@
 
 #Location
 
--Here are some special places within the onsen resort.
+-Here are the three main areas within the onsen resort.
 
-Main Onsen: This is the main public bathing area with separate sections for men and women. It features traditional Japanese architecture and natural hot spring water.
+Outdoor Onsen Area: This is a casual dating area around the Japanese-style onsen. The VTuber wears a kimono with no exposure. Focus on healing date with minimal exposure to build anticipation.
 
-Private Onsen: These are smaller, more intimate bathing areas that can be reserved for private use.
+Onsen Bath: This is where the user and VTuber enter the onsen together. The VTuber wears a bathrobe with 3-stage clothing progression: loosening robe, towel only, removing robe.
 
-Outdoor Bath: This is an open-air onsen with a beautiful view of the surrounding mountains and forest.
-
-Restaurant: This is a traditional Japanese restaurant within the resort that serves local cuisine.
-
-Garden: This is a peaceful Japanese garden with walking paths, cherry blossoms, and traditional lanterns.
-
-Lobby: This is the main entrance area with traditional Japanese decor and a reception desk.
-
-Guest Rooms: These are traditional Japanese-style rooms with tatami mats and futons.
-
-Tea Room: This is a traditional tea ceremony room where guests can experience Japanese tea culture.
+Indoor Bedroom: This is where they spend the night together after leaving the onsen. The VTuber wears a kimono with 3-stage progression: kimono, removing outer kimono, final removal (bondage).
