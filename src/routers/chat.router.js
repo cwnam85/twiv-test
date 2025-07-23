@@ -127,6 +127,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
+      activeRpPack: shopService.getActiveRpPack(),
     };
 
     const contextMessage = generateChatPrompt(promptContext);
@@ -398,19 +399,10 @@ router.post('/chat', async (req, res) => {
       ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
+      activeRpPack: shopService.getActiveRpPack(),
     };
 
     const contextMessage = generateChatPrompt(promptContext);
-
-    // 디버깅: 시스템 프롬프트와 컨텍스트 메시지 확인
-    console.log('=== DEBUG ===');
-    console.log('System prompt length:', systemPrompt ? systemPrompt.length : 'null');
-    console.log('Context message length:', contextMessage ? contextMessage.length : 'null');
-    console.log(
-      'First 200 chars of context message:',
-      contextMessage ? contextMessage.substring(0, 200) : 'null',
-    );
-    console.log('=== END DEBUG ===');
 
     // LLM 응답 처리 (컨텍스트가 포함된 메시지 사용)
     const response = await processLLMResponseWithRetry(

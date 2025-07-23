@@ -40,6 +40,9 @@ Your response MUST be in the following JSON format:
 "affinity": "<affinity>",
 "outfitOn": [],
 "outfitOff": []
+{% if activeRpPack %}
+,"phase": "<current_phase>"
+{% endif %}
 }
 
 **⚠️ DIALOGUE: The "dialogue" field must be maximum 80 characters including spaces and contain ONLY spoken words. NO action descriptions, gestures, or physical movements. (최대 80자 공백 포함)**

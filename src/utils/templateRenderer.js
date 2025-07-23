@@ -163,9 +163,6 @@ function generateLockedItems(outfitData) {
 
 // 채팅 프롬프트 생성
 export function generateChatPrompt(context) {
-  console.log('=== TEMPLATE RENDERER DEBUG ===');
-  console.log('Context received:', JSON.stringify(context, null, 2));
-
   const template = readTemplate('chat_template');
   if (!template) {
     console.error('Chat template not found');
@@ -188,12 +185,7 @@ export function generateChatPrompt(context) {
     activeRpPack: context.activeRpPack || null,
   };
 
-  console.log('Template context:', JSON.stringify(templateContext, null, 2));
-
   const result = renderTemplate(template, templateContext);
-  console.log('Template rendering result length:', result ? result.length : 'null');
-  console.log('=== END TEMPLATE DEBUG ===');
-
   return result;
 }
 

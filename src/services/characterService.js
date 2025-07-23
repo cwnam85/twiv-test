@@ -131,9 +131,6 @@ class CharacterService {
         });
 
         if (prompt) {
-          console.log(
-            `Loaded ${isNSFW ? 'NSFW' : 'SFW'} prompt for ${this.activeCharacter} (Affinity: ${affinity}, Outfit: ${outfitData?.current_outfit || this.initialOutfit})`,
-          );
           return prompt;
         }
       }
@@ -159,7 +156,6 @@ class CharacterService {
       const newPrompt = this.loadSystemPrompt();
       if (newPrompt) {
         this.currentSystemPrompt = newPrompt;
-        console.log('System prompt refreshed for RP pack activation/deactivation');
       }
     } catch (error) {
       console.error('Error refreshing prompt for RP pack:', error);

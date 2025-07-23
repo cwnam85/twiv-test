@@ -276,29 +276,7 @@ class ShopService {
   // 상점 아이템 목록 가져오기
   getShopItems() {
     return {
-      backgrounds: [
-        {
-          id: 'default',
-          name: '기본 배경',
-          type: 'background',
-          price: 0,
-          description: '기본 배경으로 돌아갑니다.',
-        },
-        {
-          id: 'school',
-          name: '학교',
-          type: 'background',
-          price: 50,
-          description: '학교 배경으로 교실에서 대화를 나눠보세요.',
-        },
-        {
-          id: 'beach',
-          name: '해변',
-          type: 'background',
-          price: 80,
-          description: '아름다운 해변에서 휴식을 취해보세요.',
-        },
-      ],
+      backgrounds: this.getBackgroundsFromJson(),
       outfits: this.getOutfitsFromJson(),
       boosters: [
         {
@@ -321,6 +299,95 @@ class ShopService {
         },
       ],
     };
+  }
+
+  // backgrounds 폴더에서 배경 정보를 읽어와서 상점 아이템 형태로 변환
+  getBackgroundsFromJson() {
+    try {
+      // 현재 활성 캐릭터 확인
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+      // 캐릭터의 backgrounds 폴더 경로
+      const backgroundsDir = path.join(
+        process.cwd(),
+        'vtuber_prompts',
+        'characters',
+        activeCharacter,
+        'backgrounds',
+      );
+
+      if (!fs.existsSync(backgroundsDir)) {
+        console.warn(`Backgrounds directory not found for character: ${activeCharacter}`);
+        return [
+          {
+            id: 'default',
+            name: '기본 배경',
+            type: 'background',
+            price: 0,
+            description: '기본 배경으로 돌아갑니다.',
+          },
+        ];
+      }
+
+      // backgrounds 폴더의 모든 JSON 파일 읽기
+      const backgroundFiles = fs
+        .readdirSync(backgroundsDir)
+        .filter((file) => file.endsWith('.json'));
+
+      if (backgroundFiles.length === 0) {
+        console.warn(`No background files found in directory: ${backgroundsDir}`);
+        return [
+          {
+            id: 'default',
+            name: '기본 배경',
+            type: 'background',
+            price: 0,
+            description: '기본 배경으로 돌아갑니다.',
+          },
+        ];
+      }
+
+      // 각 배경 파일을 읽어서 상점 아이템 형태로 변환
+      const backgrounds = backgroundFiles.map((filename) => {
+        const backgroundId = filename.replace('.json', '');
+        const backgroundPath = path.join(backgroundsDir, filename);
+
+        try {
+          const backgroundData = JSON.parse(fs.readFileSync(backgroundPath, 'utf8'));
+          return {
+            id: backgroundId,
+            name: backgroundData.name || backgroundId,
+            type: 'background',
+            price: backgroundData.price || 0,
+            description:
+              backgroundData.description ||
+              `${backgroundData.name || backgroundId} 배경을 사용해보세요.`,
+          };
+        } catch (error) {
+          console.error(`Error reading background file ${filename}:`, error);
+          return {
+            id: backgroundId,
+            name: backgroundId,
+            type: 'background',
+            price: 0,
+            description: `${backgroundId} 배경을 사용해보세요.`,
+          };
+        }
+      });
+
+      return backgrounds;
+    } catch (error) {
+      console.error('Error reading backgrounds from directory:', error);
+      return [
+        {
+          id: 'default',
+          name: '기본 배경',
+          type: 'background',
+          price: 0,
+          description: '기본 배경으로 돌아갑니다.',
+        },
+      ];
+    }
   }
 
   // outfits 폴더에서 의상 정보를 읽어와서 상점 아이템 형태로 변환

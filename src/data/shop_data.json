@@ -11,7 +11,7 @@
     "gown"
   ],
   "ownedBoosters": [],
-  "currentBackground": "onsen",
+  "currentBackground": "school",
   "currentOutfit": "kimono",
   "activeBooster": null,
   "purchaseHistory": [
@@ -67,8 +67,5 @@
   "ownedRpPacks": [
     "onsen_rp_pack"
   ],
-  "activeRpPack": {
-    "id": "onsen_rp_pack",
-    "activatedAt": "2025-07-21T09:40:56.936Z"
-  }
+  "activeRpPack": null
 }

@@ -42,7 +42,6 @@ class SectionLoader {
     try {
       // shopService를 통해 활성화된 RP팩 정보 가져오기
       const result = shopService.getActiveRpPack();
-      console.log('getActiveRpPack result:', result);
       return result;
     } catch (error) {
       console.error('Error getting active RP pack:', error);
@@ -112,10 +111,8 @@ class SectionLoader {
   readRpPackFile(filePath) {
     try {
       const fullPath = path.join(process.cwd(), filePath);
-      console.log(`Trying to read RP pack file: ${fullPath}`);
       if (fs.existsSync(fullPath)) {
         const content = fs.readFileSync(fullPath, 'utf8');
-        console.log(`Successfully read file: ${filePath}, content length: ${content.length}`);
         return content;
       }
       console.warn(`RP pack file not found: ${fullPath}`);
@@ -156,7 +153,6 @@ class SectionLoader {
 
     // RP팩 활성화 상태 확인
     const activeRpPack = this.getActiveRpPack();
-    console.log('Active RP Pack:', activeRpPack);
 
     // RP팩 내용 준비
     let rpPackDescription = '';
@@ -176,14 +172,9 @@ class SectionLoader {
       };
 
       const files = rpPackFiles[rpPackId];
-      console.log('RP Pack files:', files);
       if (files) {
         // description.md 내용
         const descriptionContent = this.readRpPackFile(files.description);
-        console.log(
-          'Description content length:',
-          descriptionContent ? descriptionContent.length : 0,
-        );
         if (descriptionContent) {
           rpPackDescription = descriptionContent;
         }
@@ -192,10 +183,6 @@ class SectionLoader {
         const globalnoteContent = this.readRpPackFile(files.globalnote);
         const phaseguideContent = this.readRpPackFile(files.phaseguide);
         const commandContent = this.readRpPackFile(files.command);
-
-        console.log('Globalnote content length:', globalnoteContent ? globalnoteContent.length : 0);
-        console.log('Phaseguide content length:', phaseguideContent ? phaseguideContent.length : 0);
-        console.log('Command content length:', commandContent ? commandContent.length : 0);
 
         if (globalnoteContent) {
           rpPackGlobalNote = globalnoteContent;
@@ -224,11 +211,6 @@ class SectionLoader {
       rpPackCommands,
     };
 
-    console.log('Template context - rpPackDescription length:', rpPackDescription.length);
-    console.log('Template context - rpPackGlobalNote length:', rpPackGlobalNote.length);
-    console.log('Template context - rpPackPhaseGuide length:', rpPackPhaseGuide.length);
-    console.log('Template context - rpPackCommands length:', rpPackCommands.length);
-
     // 공통 메인 템플릿 로드 및 렌더링
     const sharedTemplatePath = path.join(this.sharedPath, 'main_template.md');
 
@@ -237,7 +219,6 @@ class SectionLoader {
         let renderedPrompt = this.env.render('main_template.md', templateContext);
 
         // nunjucks가 자동으로 profile.md의 동적 섹션을 처리하므로 별도 교체 로직 불필요
-        console.log('Using shared nunjucks template rendering for dynamic content');
 
         // 줄바꿈 문자 정규화
         return this.normalizeLineEndings(renderedPrompt);
