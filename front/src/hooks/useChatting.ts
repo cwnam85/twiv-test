@@ -14,6 +14,12 @@ const useChatting = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
 
+  // 위치 업데이트 함수에 로그 추가
+  const handleLocationUpdate = (location: string | null) => {
+    console.log('handleLocationUpdate called with:', location);
+    setCurrentLocation(location);
+  };
+
   // 각각의 작은 훅들을 사용
   const { currentCharacter, pose, emotion, updatePose, updateEmotion } = useCharacter();
 
@@ -66,6 +72,7 @@ const useChatting = () => {
     },
     onAudioData: playAudioData,
     onLoadingChange: setIsLoading,
+    onLocationUpdate: handleLocationUpdate,
   });
 
   // ChatAPI 훅 설정
@@ -82,7 +89,7 @@ const useChatting = () => {
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
     onAudioData: playAudioData,
-    onLocationUpdate: setCurrentLocation,
+    onLocationUpdate: handleLocationUpdate,
     onLoadingChange: setIsLoading,
   });
 

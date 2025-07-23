@@ -307,6 +307,7 @@ router.post('/activate-rp-pack', async (req, res) => {
         rpPackReaction = {
           message: reactionData.message,
           audioData: reactionData.audioData,
+          location: reactionData.location, // 위치 정보 추가
         };
 
         console.log('RP pack activation reaction generated:', reactionData.message);
@@ -324,6 +325,7 @@ router.post('/activate-rp-pack', async (req, res) => {
       outfitChanged: activateResult.outfitChanged,
       newOutfit: activateResult.newOutfit,
       rpPackReaction: rpPackReaction,
+      location: rpPackReaction?.location || null, // 위치 정보 추가
     });
   } catch (error) {
     console.error('Error activating RP pack:', error);
@@ -371,6 +373,7 @@ router.post('/deactivate-rp-pack', async (req, res) => {
         rpPackReaction = {
           message: reactionData.message,
           audioData: reactionData.audioData,
+          location: reactionData.location, // 위치 정보 추가
         };
 
         console.log('RP pack deactivation reaction generated:', reactionData.message);
@@ -388,6 +391,7 @@ router.post('/deactivate-rp-pack', async (req, res) => {
       outfitChanged: deactivateResult.outfitChanged,
       previousOutfit: deactivateResult.previousOutfit,
       rpPackReaction: rpPackReaction,
+      location: rpPackReaction?.location || null, // 위치 정보 추가
     });
   } catch (error) {
     console.error('Error deactivating RP pack:', error);

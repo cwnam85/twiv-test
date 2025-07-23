@@ -49,6 +49,7 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
+  console.log('App rendered, currentLocation:', currentLocation);
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
@@ -92,6 +93,8 @@ function App() {
         return 'bg-gradient-to-br from-blue-100 to-blue-200';
       case 'beach':
         return 'bg-gradient-to-br from-yellow-100 to-blue-100';
+      case 'onsen':
+        return 'bg-gradient-to-br from-red-50 to-orange-50';
       default:
         return 'bg-white';
     }
@@ -163,11 +166,6 @@ function App() {
                 RP팩: {activeRpPack ? '활성' : '비활성'} | 위치: {currentLocation || '없음'}
               </span>
             </div>
-            {activeRpPack && currentLocation && (
-              <div className="bg-orange-100 px-4 py-2 rounded-lg flex-1">
-                <span className="text-orange-800 font-semibold">위치: {currentLocation}</span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -191,6 +189,7 @@ function App() {
         <form
           className="flex gap-2"
           onSubmit={(e) => {
+            console.log('=== FORM SUBMITTED ===');
             stopPlayback(); // 새 메시지 전송 시 이전 오디오 중지
             handleSend(e);
           }}

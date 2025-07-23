@@ -594,15 +594,10 @@ class ShopService {
 
     const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
-    // RP팩 비활성화 전에 원래 배경과 의상으로 되돌리기
-    const currentState = characterStateService.getCharacterState(activeCharacter);
-    const previousBackground = currentState?.current_background || 'default';
-    const previousOutfit = currentState?.current_outfit || 'default';
-    shopData.activeRpPack = null;
-
     // RP팩 비활성화 시 무조건 기본 배경과 기본 의상으로 되돌리기
+    shopData.activeRpPack = null;
     characterStateService.setCurrentBackground(activeCharacter, 'default');
-    characterStateService.setCurrentOutfit(activeCharacter, 'default');
+    characterStateService.setCurrentOutfit(activeCharacter, 'casual');
     console.log('Background and outfit changed back to default after RP pack deactivation');
 
     // 데이터 저장
@@ -613,10 +608,10 @@ class ShopService {
     return {
       success: true,
       activeRpPack: null,
-      backgroundChanged: previousBackground === 'onsen',
-      previousBackground: previousBackground,
-      outfitChanged: previousOutfit === 'kimono',
-      previousOutfit: previousOutfit,
+      backgroundChanged: true,
+      newBackground: 'default',
+      outfitChanged: true,
+      newOutfit: 'casual',
     };
   }
 

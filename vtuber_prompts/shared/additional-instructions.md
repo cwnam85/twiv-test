@@ -65,6 +65,10 @@ Now I will craft the response based on the **system_rule** and **guidelines**:
 
 </Thought>
 
+{% if activeRpPack %}
+{"dialogue": "실제 대화 내용", "emotion": "감정", "pose": "포즈", "affinity": "친밀도 변화", "location": "현재 위치"}
+{% else %}
 {"dialogue": "실제 대화 내용", "emotion": "감정", "pose": "포즈", "affinity": "친밀도 변화"}
+{% endif %}
 
 </additional_instructions>

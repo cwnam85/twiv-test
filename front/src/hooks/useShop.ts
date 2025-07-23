@@ -25,6 +25,7 @@ interface UseShopProps {
   } | null>;
   onAudioData: (audioData: AudioData | null) => void;
   onLoadingChange?: (isLoading: boolean) => void;
+  onLocationUpdate?: (location: string | null) => void; // 위치 업데이트 콜백 추가
 }
 
 const useShop = ({
@@ -33,6 +34,7 @@ const useShop = ({
   refreshOutfitData,
   onAudioData,
   onLoadingChange,
+  onLocationUpdate,
 }: UseShopProps) => {
   const [shopData, setShopData] = useState<ShopData>({
     backgrounds: [],
@@ -41,8 +43,8 @@ const useShop = ({
     rpPacks: [],
   });
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [currentBackground, setCurrentBackground] = useState('default');
-  const [currentOutfit, setCurrentOutfit] = useState('default');
+  const [currentBackground, setCurrentBackground] = useState<string>('');
+  const [currentOutfit, setCurrentOutfit] = useState<string>('');
   const [boosterStatus, setBoosterStatus] = useState<BoosterStatus | null>(null);
   const [activeRpPack, setActiveRpPack] = useState<{ id: string; activatedAt: string } | null>(
     null,
@@ -64,11 +66,15 @@ const useShop = ({
   // 소유한 아이템 가져오기
   const fetchOwnedItems = async () => {
     try {
+      console.log('Fetching owned items from server...');
       const response = await fetch('http://localhost:3333/shop/owned');
       if (response.ok) {
         const data = await response.json();
-        setCurrentBackground(data.currentBackground || 'default');
-        setCurrentOutfit(data.currentOutfit || 'default');
+        console.log('Owned items response:', data);
+        console.log('Setting current background to:', data.currentBackground || '');
+        console.log('Setting current outfit to:', data.currentOutfit || '');
+        setCurrentBackground(data.currentBackground || '');
+        setCurrentOutfit(data.currentOutfit || '');
       }
     } catch (error) {
       console.error('Error fetching owned items:', error);
@@ -171,6 +177,17 @@ const useShop = ({
 
       if (response.ok) {
         const data = await response.json();
+
+        // 즉시 UI 업데이트 (서버 응답 기반)
+        if (data.backgroundChanged && data.newBackground) {
+          console.log('Immediately setting background to:', data.newBackground);
+          setCurrentBackground(data.newBackground);
+        }
+        if (data.outfitChanged && data.newOutfit) {
+          console.log('Immediately setting outfit to:', data.newOutfit);
+          setCurrentOutfit(data.newOutfit);
+        }
+
         await fetchBoosterStatus();
         await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
         await refreshOutfitData(); // 의상 데이터 새로고침
@@ -183,6 +200,12 @@ const useShop = ({
             console.log('Playing RP pack audio data:', data.rpPackReaction.audioData);
             onAudioData(data.rpPackReaction.audioData);
           }
+        }
+
+        // 위치 정보 처리
+        if (data.location && onLocationUpdate) {
+          console.log('Location update from RP pack activation:', data.location);
+          onLocationUpdate(data.location);
         }
 
         return data;
@@ -199,6 +222,7 @@ const useShop = ({
   // RP팩 비활성화
   const deactivateRpPack = async () => {
     try {
+      console.log('Starting RP pack deactivation...');
       const response = await fetch('http://localhost:3333/shop/deactivate-rp-pack', {
         method: 'POST',
         headers: {
@@ -208,8 +232,25 @@ const useShop = ({
 
       if (response.ok) {
         const data = await response.json();
+        console.log('RP pack deactivation response:', data);
+
+        // 즉시 UI 업데이트 (서버 응답 기반)
+        if (data.backgroundChanged && data.newBackground) {
+          console.log('Immediately setting background to:', data.newBackground);
+          setCurrentBackground(data.newBackground);
+        }
+        if (data.outfitChanged && data.newOutfit) {
+          console.log('Immediately setting outfit to:', data.newOutfit);
+          setCurrentOutfit(data.newOutfit);
+        }
+
+        console.log('Fetching booster status...');
         await fetchBoosterStatus();
+
+        console.log('Fetching owned items...');
         await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
+
+        console.log('Refreshing outfit data...');
         await refreshOutfitData(); // 의상 데이터 새로고침
 
         // RP팩 반응 처리

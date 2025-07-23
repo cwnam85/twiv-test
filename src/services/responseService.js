@@ -54,6 +54,7 @@ class ResponseService {
       const affinity = processedResponse.affinity;
       const outfitOn = processedResponse.outfitOn || [];
       const outfitOff = processedResponse.outfitOff || [];
+      const location = processedResponse.location || null; // 위치 정보 추가
       matureTags = processedResponse.matureTags || [];
       segments = processedResponse.segments || [];
 
@@ -72,6 +73,7 @@ class ResponseService {
         affinity,
         outfitOn,
         outfitOff,
+        location, // 위치 정보 추가
         matureTags,
         segments,
       };

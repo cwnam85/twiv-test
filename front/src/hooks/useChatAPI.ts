@@ -59,6 +59,9 @@ const useChatAPI = ({
       });
 
       const data = await response.json();
+      console.log('=== SERVER RESPONSE ===');
+      console.log('Full server response:', data);
+      console.log('Response keys:', Object.keys(data));
 
       // outfitOn/outfitOff 처리 (배열 형태 지원)
       if (
@@ -134,9 +137,18 @@ const useChatAPI = ({
 
       // RP팩 위치 업데이트 (RP팩이 활성화된 경우에만)
       console.log('Location data received:', data.location);
+      console.log('onLocationUpdate function exists:', !!onLocationUpdate);
+      console.log('Full response data:', data);
       if (data.location && onLocationUpdate) {
         console.log('Updating location to:', data.location);
         onLocationUpdate(data.location);
+      } else {
+        console.log(
+          'Location update skipped - location:',
+          data.location,
+          'onLocationUpdate:',
+          !!onLocationUpdate,
+        );
       }
     } catch (error) {
       console.error('Error:', error);
