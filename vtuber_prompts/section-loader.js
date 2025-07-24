@@ -60,7 +60,6 @@ class SectionLoader {
           description: 'onsendate/description.md',
           globalnote: 'onsendate/globalnote.md',
           locationguide: 'onsendate/locationguide.md',
-          command: 'onsendate/command.md',
         },
       };
 
@@ -79,10 +78,9 @@ class SectionLoader {
         rpPackContent += descriptionContent + '\n\n';
       }
 
-      // 2. globalnote, locationguide, command 내용 추가
+      // 2. globalnote, locationguide 내용 추가
       const globalnoteContent = this.readRpPackFile(files.globalnote);
       const locationguideContent = this.readRpPackFile(files.locationguide);
-      const commandContent = this.readRpPackFile(files.command);
 
       if (globalnoteContent) {
         rpPackContent += globalnoteContent + '\n\n';
@@ -90,10 +88,6 @@ class SectionLoader {
 
       if (locationguideContent) {
         rpPackContent += locationguideContent + '\n\n';
-      }
-
-      if (commandContent) {
-        rpPackContent += commandContent + '\n\n';
       }
 
       // rp_pack_content.md 파일에 통합 내용 저장
@@ -158,7 +152,6 @@ class SectionLoader {
     let rpPackDescription = '';
     let rpPackGlobalNote = '';
     let rpPackLocationGuide = '';
-    let rpPackCommands = '';
 
     if (activeRpPack) {
       const rpPackId = activeRpPack.id;
@@ -167,7 +160,6 @@ class SectionLoader {
           description: 'onsendate/description.md',
           globalnote: 'onsendate/globalnote.md',
           locationguide: 'onsendate/locationguide.md',
-          command: 'onsendate/command.md',
         },
       };
 
@@ -179,19 +171,15 @@ class SectionLoader {
           rpPackDescription = descriptionContent;
         }
 
-        // globalnote, locationguide, command 내용을 각각 분리
+        // globalnote, locationguide 내용을 각각 분리
         const globalnoteContent = this.readRpPackFile(files.globalnote);
         const locationguideContent = this.readRpPackFile(files.locationguide);
-        const commandContent = this.readRpPackFile(files.command);
 
         if (globalnoteContent) {
           rpPackGlobalNote = globalnoteContent;
         }
         if (locationguideContent) {
           rpPackLocationGuide = locationguideContent;
-        }
-        if (commandContent) {
-          rpPackCommands = commandContent;
         }
       }
     }
@@ -208,7 +196,6 @@ class SectionLoader {
       rpPackDescription,
       rpPackGlobalNote,
       rpPackLocationGuide,
-      rpPackCommands,
     };
 
     // 공통 메인 템플릿 로드 및 렌더링

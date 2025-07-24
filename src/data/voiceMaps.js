@@ -8,7 +8,7 @@ export const characterVoiceMaps = {
     sad: '1ZGUVjuoNk52se64NfSpVN',
     embarrassed: 'ob4wAp1heaDzEqDepEpJ5Z',
     dominating: 'axwTSPmp7hCxS4r5HmV8aP',
-    aroused: '4YzPr4g1EKLp2HDiZdPgDA',
+    aroused: 'nsm6fjSRCZimZCR5mwbSAX',
     angry: 'axwTSPmp7hCxS4r5HmV8aP',
   },
   meuaeng: {

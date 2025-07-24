@@ -5,37 +5,28 @@
   "parts": {
     "upper_body": {
       "bra": {
-        "name": "rope_bra",
+        "name": "bath_towel",
         "removable_affinity": 100
       },
       "top": {
-        "name": "silk_gown",
+        "name": "onsen_gown",
         "removable_affinity": 80
       },
       "outerwear": null
     },
     "lower_body": {
       "panty": {
-        "name": "rope_panty",
+        "name": "onsen_panty",
         "removable_affinity": null
       },
-      "bottom": {
-        "name": "gown_belt",
-        "removable_affinity": 80
-      }
+      "bottom": null
     },
     "feet": {
-      "shoes": {
-        "name": "silk_slippers",
-        "removable_affinity": 80
-      }
+      "shoes": null
     },
     "accessories": {
       "hat": null,
-      "necklace": {
-        "name": "rope_choker",
-        "removable_affinity": 100
-      },
+      "necklace": null,
       "belt": null
     }
   }
