@@ -9,9 +9,9 @@
 
 {{ rpPackGlobalNote }}
 
-## RP Pack Phase Guide
+## RP Pack Location Guide
 
-{{ rpPackPhaseGuide }}
+{{ rpPackLocationGuide }}
 
 ## RP Pack Commands
 

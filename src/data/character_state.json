@@ -1,7 +1,7 @@
 {
   "shaki": {
-    "current_outfit": "kimono",
-    "current_background": "onsen",
+    "current_outfit": "casual",
+    "current_background": "default",
     "upper_body": {
       "bra": true,
       "top": true,

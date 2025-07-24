@@ -1,16 +1,6 @@
 {
-  "ownedBackgrounds": [
-    "school",
-    "beach",
-    "onsen"
-  ],
-  "ownedOutfits": [
-    "school_uniform",
-    "swimsuit",
-    "kimono",
-    "gown",
-    "casual"
-  ],
+  "ownedBackgrounds": ["school", "beach", "onsen"],
+  "ownedOutfits": ["school_uniform", "swimsuit", "kimono", "gown", "casual"],
   "ownedBoosters": [],
   "activeBooster": null,
   "purchaseHistory": [
@@ -69,11 +59,6 @@
       "purchasedAt": "2025-07-23T01:01:51.045Z"
     }
   ],
-  "ownedRpPacks": [
-    "onsen_rp_pack"
-  ],
-  "activeRpPack": {
-    "id": "onsen_rp_pack",
-    "activatedAt": "2025-07-23T06:39:01.460Z"
-  }
+  "ownedRpPacks": ["onsen_rp_pack"],
+  "activeRpPack": null
 }

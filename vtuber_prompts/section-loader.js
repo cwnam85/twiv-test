@@ -59,7 +59,7 @@ class SectionLoader {
         onsen_rp_pack: {
           description: 'onsendate/description.md',
           globalnote: 'onsendate/globalnote.md',
-          phaseguide: 'onsendate/phaseguide.md',
+          locationguide: 'onsendate/locationguide.md',
           command: 'onsendate/command.md',
         },
       };
@@ -79,17 +79,17 @@ class SectionLoader {
         rpPackContent += descriptionContent + '\n\n';
       }
 
-      // 2. globalnote, phaseguide, command 내용 추가
+      // 2. globalnote, locationguide, command 내용 추가
       const globalnoteContent = this.readRpPackFile(files.globalnote);
-      const phaseguideContent = this.readRpPackFile(files.phaseguide);
+      const locationguideContent = this.readRpPackFile(files.locationguide);
       const commandContent = this.readRpPackFile(files.command);
 
       if (globalnoteContent) {
         rpPackContent += globalnoteContent + '\n\n';
       }
 
-      if (phaseguideContent) {
-        rpPackContent += phaseguideContent + '\n\n';
+      if (locationguideContent) {
+        rpPackContent += locationguideContent + '\n\n';
       }
 
       if (commandContent) {
@@ -157,7 +157,7 @@ class SectionLoader {
     // RP팩 내용 준비
     let rpPackDescription = '';
     let rpPackGlobalNote = '';
-    let rpPackPhaseGuide = '';
+    let rpPackLocationGuide = '';
     let rpPackCommands = '';
 
     if (activeRpPack) {
@@ -166,7 +166,7 @@ class SectionLoader {
         onsen_rp_pack: {
           description: 'onsendate/description.md',
           globalnote: 'onsendate/globalnote.md',
-          phaseguide: 'onsendate/phaseguide.md',
+          locationguide: 'onsendate/locationguide.md',
           command: 'onsendate/command.md',
         },
       };
@@ -179,16 +179,16 @@ class SectionLoader {
           rpPackDescription = descriptionContent;
         }
 
-        // globalnote, phaseguide, command 내용을 각각 분리
+        // globalnote, locationguide, command 내용을 각각 분리
         const globalnoteContent = this.readRpPackFile(files.globalnote);
-        const phaseguideContent = this.readRpPackFile(files.phaseguide);
+        const locationguideContent = this.readRpPackFile(files.locationguide);
         const commandContent = this.readRpPackFile(files.command);
 
         if (globalnoteContent) {
           rpPackGlobalNote = globalnoteContent;
         }
-        if (phaseguideContent) {
-          rpPackPhaseGuide = phaseguideContent;
+        if (locationguideContent) {
+          rpPackLocationGuide = locationguideContent;
         }
         if (commandContent) {
           rpPackCommands = commandContent;
@@ -207,7 +207,7 @@ class SectionLoader {
       activeRpPack,
       rpPackDescription,
       rpPackGlobalNote,
-      rpPackPhaseGuide,
+      rpPackLocationGuide,
       rpPackCommands,
     };
 
