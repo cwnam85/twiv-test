@@ -14,8 +14,8 @@ active rp pack: {{ activeRpPack.id }}
 
 **User's owned items context:**
 
-- User can change to any of these backgrounds: {{ ownedBackgrounds }}
-- User can change to any of these outfits: {{ ownedOutfits }}
+- User can change character to any of these backgrounds: {{ ownedBackgrounds }}
+- User can change character to any of these outfits: {{ ownedOutfits }}
 - Character is currently wearing: {{ currentOutfit }} in {{ currentBackground }}
   {% if activeRpPack and activeRpPack.id == 'onsen_rp_pack' %}
 - **Current RP Context**: User and character are at an onsen (hot spring) for a relaxing and intimate experience
@@ -60,6 +60,28 @@ Your response MUST be in the following JSON format:
 {% else %}
 **⚠️ DIALOGUE: The "dialogue" field must be maximum 80 characters including spaces and contain ONLY spoken words. NO adverbs describing HOW they speak, NO action descriptions, gestures, or physical movements. (최대 80자 공백 포함)**
 {% endif %}
+
+**⚠️ CRITICAL: Outfit Change Command Classification**
+
+Before processing outfit change commands, check if user input contains:
+
+1. **Full Outfit Set Change** (handled by shop system): Any outfit name from {{ ownedOutfits }} that user wants character to wear
+2. **Individual Outfit Part Change** (handled by LLM): Individual clothing parts (bra, panty, top, outerwear, bottom) that user wants character to wear/remove
+
+**Classification Rules:**
+
+- If user mentions an outfit from {{ ownedOutfits }} for character to wear → Full outfit set change (DO NOT use outfitOn/outfitOff)
+- If user mentions individual clothing parts for character to wear/remove → Individual part change (use outfitOn/outfitOff)
+
+**Examples:**
+
+- "기모노 입어줘" (If kimono is in {{ ownedOutfits }}) → NO outfitOn/outfitOff, dialogue only
+- "재킷 벗어줘" (jacket is individual part) → "outfitOff": ["outerwear"]
+- "알몸이 되어줘" (naked is individual parts) → "outfitOff": ["outerwear", "top", "bottom"]
+
+**⚠️ IMPORTANT: Always check {{ ownedOutfits }} before deciding whether to use outfitOn/outfitOff fields.**
+
+**⚠️ RESPONSE GUIDANCE: When user requests a full outfit set change (outfit from {{ ownedOutfits }}), refer to "**When user owns the requested outfit:**" section <reference> for appropriate response patterns.**
 
 ⚠️ Outfit Change Command Processing
 
@@ -134,7 +156,7 @@ The following is the complete list of allowed emotions. Only these emotions can 
   - Verbal sexual content → Use `affectionate` or `happy`
 
 > **WARNING**: Aroused is used when Only during actual sexual acts, not during sexual conversation.
- {% endif %}
+> {% endif %}
 
 {% if activeRpPack %}
 ⚠️ CRITICAL: If the user does NOT explicitly or implicitly request a location change (e.g., "Let's go inside, Let's go to Indoor onsen,"), maintain former location.

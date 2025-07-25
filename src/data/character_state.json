@@ -1,10 +1,10 @@
 {
   "shaki": {
-    "current_outfit": "casual",
-    "current_background": "default",
+    "current_outfit": "gown",
+    "current_background": "onsen",
     "upper_body": {
       "bra": true,
-      "top": true,
+      "top": false,
       "outerwear": true
     },
     "lower_body": {
