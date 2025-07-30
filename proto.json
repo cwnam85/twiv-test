@@ -1,0 +1,14 @@
+{
+  "OutfitStatus": {
+    "bra": true,
+    "top": true,
+    "outerwear": true,
+    "panty": true,
+    "bottom": true,
+    "shoes": true
+  },
+  "LocationStatus": {
+    "location": "Onsen",
+    "spot": "Outside Onsen Area"
+  }
+}

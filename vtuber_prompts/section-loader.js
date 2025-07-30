@@ -37,6 +37,18 @@ class SectionLoader {
       .replace(/\r/g, '\n'); // Mac CR을 LF로
   }
 
+  // shopService 인스턴스 가져오기
+  getShopService() {
+    try {
+      // 동적 import로 shopService 가져오기
+      const shopService = require('../src/services/shopService.js').default;
+      return shopService;
+    } catch (error) {
+      console.error('Error getting shop service:', error);
+      return null;
+    }
+  }
+
   // 활성화된 RP팩 정보 가져오기
   getActiveRpPack() {
     try {
@@ -155,31 +167,16 @@ class SectionLoader {
 
     if (activeRpPack) {
       const rpPackId = activeRpPack.id;
-      const rpPackFiles = {
-        onsen_rp_pack: {
-          description: 'onsendate/description.md',
-          globalnote: 'onsendate/globalnote.md',
-          locationguide: 'onsendate/locationguide.md',
-        },
-      };
 
-      const files = rpPackFiles[rpPackId];
-      if (files) {
-        // description.md 내용
-        const descriptionContent = this.readRpPackFile(files.description);
-        if (descriptionContent) {
-          rpPackDescription = descriptionContent;
-        }
+      // 새로운 JSON 기반 RP 팩 시스템 사용
+      const shopService = this.getShopService();
+      if (shopService) {
+        const rpPackContent = shopService.loadRpPackContent(rpPackId, this.character);
 
-        // globalnote, locationguide 내용을 각각 분리
-        const globalnoteContent = this.readRpPackFile(files.globalnote);
-        const locationguideContent = this.readRpPackFile(files.locationguide);
-
-        if (globalnoteContent) {
-          rpPackGlobalNote = globalnoteContent;
-        }
-        if (locationguideContent) {
-          rpPackLocationGuide = locationguideContent;
+        if (rpPackContent) {
+          rpPackDescription = rpPackContent.description || '';
+          rpPackGlobalNote = rpPackContent.globalnote || '';
+          rpPackLocationGuide = rpPackContent.locationguide || '';
         }
       }
     }

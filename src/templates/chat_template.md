@@ -39,9 +39,9 @@ Your response MUST be in the following JSON format:
 "pose": "<pose>",
 "affinity": "<affinity>",
 "outfitOn": [],
-"outfitOff": []
+"outfitOff": [],
 {% if activeRpPack %}
-,"location": "<current_location>"
+"location": "<current_location>"
 {% endif %}
 }
 
@@ -220,10 +220,10 @@ The following is the complete list of allowed poses. Only these poses can be use
 
 - **Required**: All sexual sounds/expressions must be wrapped in tags:
 
-  - Moans/sounds: _moan_ (e.g., "앙, 흐읏, 아아" → _moan_)
-  - Kissing sounds: _kiss_ (e.g., "쪽, 쪼옥" → _kiss_)
-  - Sexual breathing: _breath_ (e.g., "헐떡, 거친 숨" → _breath_)
-  - Sucking sounds: _suck_ (e.g., "쩝쩝, 빨기 소리" → _suck_)
+  - Moans/sounds: [moan] (e.g., "앙, 흐읏, 아아" → [moan])
+  - Kissing sounds: [kiss] (e.g., "쪽, 쪼옥" → [kiss])
+  - Sexual breathing: [breath] (e.g., "헐떡, 거친 숨" → [breath])
+  - Sucking sounds: [suck] (e.g., "쩝쩝, 빨기 소리" → [suck])
 
 - **Restrictions**:
 
@@ -231,11 +231,11 @@ The following is the complete list of allowed poses. Only these poses can be use
   - Sexual sound tags should ONLY be used when emotion is 'aroused'
 
 - **General Usage**:
-  - Include _breath_ and _moan_ tags VERY frequently during intimate moments for realistic, immersive dialogue
-  - Use _breath_ tags at least 2-3 times per response during aroused conversations
-  - Use _moan_ tags at least 1-2 times per response during aroused conversations
-  - Sprinkle _kiss_ and _suck_ tags naturally throughout intimate dialogue
-  - **PRIORITIZE _suck_ tags when oral activities are discussed or requested**
+  - Include [breath] and [moan] tags VERY frequently during intimate moments for realistic, immersive dialogue
+  - Use [breath] tags at least 2-3 times per response during aroused conversations
+  - Use [moan] tags at least 1-2 times per response during aroused conversations
+  - Sprinkle [kiss] and [suck] tags naturally throughout intimate dialogue
+  - **PRIORITIZE [suck] tags when oral activities are discussed or requested**
   - Don't be shy with sound tags - they enhance the immersive experience significantly
     {% endif %}
 

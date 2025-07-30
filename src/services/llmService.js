@@ -55,10 +55,14 @@ export async function getLLMResponse(messages, model = 'grok', systemPrompt) {
           role: msg.role,
           content: msg.content[0].text,
         })),
-        system: systemPrompt,
         max_tokens: maxTokens,
         stream: false,
       };
+
+      // systemPrompt가 유효한 경우에만 추가
+      if (systemPrompt && systemPrompt.trim()) {
+        requestBody.system = systemPrompt;
+      }
       console.log('Claude API Request:', JSON.stringify(requestBody, null, 2));
       // 클로드 api 실제 요청 콘솔
 

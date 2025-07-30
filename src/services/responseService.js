@@ -211,7 +211,7 @@ class ResponseService {
         // mature 태그 세그먼트 카운트
         for (const segment of segments) {
           if (segment.type === 'tag') {
-            const type = segment.content.replace(/_/g, ''); // _moan_ -> moan
+            const type = segment.content.replace(/[\[\]]/g, ''); // [moan] -> moan
             tagCountMap.set(type, (tagCountMap.get(type) || 0) + 1);
           }
         }
@@ -270,7 +270,7 @@ class ResponseService {
             ttsIndex++;
           } else if (segment.type === 'tag') {
             // 태그 세그먼트: 정규화된 태그 추가
-            const type = segment.content.replace(/_/g, ''); // _moan_ -> moan
+            const type = segment.content.replace(/[\[\]]/g, ''); // [moan] -> moan
             const effectUrl = this.getRandomEffectUrl(type);
             clientSegments.push({
               type: 'tag',
@@ -314,7 +314,7 @@ class ResponseService {
 
         // mature 태그 카운트
         for (const tag of matureTags) {
-          const type = tag.replace(/_/g, ''); // _kiss_ -> kiss
+          const type = tag.replace(/[\[\]]/g, ''); // [kiss] -> kiss
           tagCountMap.set(type, (tagCountMap.get(type) || 0) + 1);
         }
 

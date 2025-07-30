@@ -14,7 +14,7 @@ function extractMatureTags(text) {
   let currentText = '';
 
   // 정규식으로 태그를 찾되, 위치 정보도 함께 저장
-  const tagRegex = /(_kiss_|_moan_|_breath_|_suck_)/g;
+  const tagRegex = /(\[kiss\]|\[moan\]|\[breath\]|\[suck\])/g;
   let match;
   let lastIndex = 0;
 

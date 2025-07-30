@@ -442,9 +442,9 @@ Your response MUST be in the following JSON format:
 "pose": "<pose>",
 "affinity": "<affinity>",
 "outfitOn": [],
-"outfitOff": []
+"outfitOff": [],
 {% if activeRpPack %}
-,"location": "<current_location>"
+"location": "<current_location>"
 {% endif %}
 }
 

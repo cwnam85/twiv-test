@@ -1,0 +1,11 @@
+{
+  "id": "onsen_rp_pack",
+  "name": "온천에서 하룻밤 보내기",
+  "price": 1000,
+  "adult": true,
+  "description": "onsendate/description.md",
+  "globalnote": "onsendate/globalnote.md",
+  "locationguide": "onsendate/locationguide.md",
+  "autoPurchaseOutfits": ["kimono", "gown"],
+  "autoPurchaseBackgrounds": ["onsen"]
+}

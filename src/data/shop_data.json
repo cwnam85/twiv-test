@@ -4,9 +4,9 @@
   ],
   "ownedOutfits": [
     "swimsuit",
+    "casual",
     "kimono",
-    "gown",
-    "casual"
+    "gown"
   ],
   "ownedBoosters": [],
   "activeBooster": null,
@@ -18,16 +18,16 @@
       "purchasedAt": "2025-07-25T05:50:02.077Z"
     },
     {
-      "itemId": "onsen_rp_pack",
-      "itemType": "rp_pack",
-      "price": 500,
-      "purchasedAt": "2025-07-25T05:53:57.769Z"
-    },
-    {
       "itemId": "casual",
       "itemType": "outfit",
       "price": 0,
       "purchasedAt": "2025-07-25T06:29:47.012Z"
+    },
+    {
+      "itemId": "onsen_rp_pack",
+      "itemType": "rp_pack",
+      "price": 500,
+      "purchasedAt": "2025-07-28T05:19:30.188Z"
     }
   ],
   "ownedRpPacks": [
@@ -35,6 +35,6 @@
   ],
   "activeRpPack": {
     "id": "onsen_rp_pack",
-    "activatedAt": "2025-07-25T08:46:20.306Z"
+    "activatedAt": "2025-07-29T09:24:47.871Z"
   }
 }

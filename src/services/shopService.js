@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import characterStateService from './characterStateService.js';
 
+// RP 팩 JSON 파일 경로
+const RP_PACKS_BASE_PATH = path.join(process.cwd(), 'vtuber_prompts', 'characters');
+
 class ShopService {
   constructor() {
     this.shopDataPath = path.join(process.cwd(), 'src', 'data', 'shop_data.json');
@@ -566,7 +569,20 @@ class ShopService {
         shopData.ownedOutfits.push(newOutfit);
       }
       characterStateService.setCurrentOutfit(activeCharacter, newOutfit);
-      console.log(`Outfit changed to ${newOutfit} for RP pack ${rpPackId}`);
+
+      // RP 팩 의상 변경 시 착용 상태 초기화
+      try {
+        const characterService = require('./characterService.js').default;
+        characterService.changeToOutfit(newOutfit);
+        console.log(
+          `Outfit changed to ${newOutfit} for RP pack ${rpPackId} with proper initialization`,
+        );
+      } catch (error) {
+        console.error('Error initializing outfit state for RP pack:', error);
+        // fallback: 기본 의상 변경만 수행
+        characterStateService.setCurrentOutfit(activeCharacter, newOutfit);
+        console.log(`Outfit changed to ${newOutfit} for RP pack ${rpPackId} (fallback)`);
+      }
     }
 
     // 데이터 저장
@@ -597,8 +613,22 @@ class ShopService {
     // RP팩 비활성화 시 무조건 기본 배경과 기본 의상으로 되돌리기
     shopData.activeRpPack = null;
     characterStateService.setCurrentBackground(activeCharacter, 'default');
-    characterStateService.setCurrentOutfit(activeCharacter, 'casual');
-    console.log('Background and outfit changed back to default after RP pack deactivation');
+
+    // RP 팩 비활성화 시 의상 변경 및 착용 상태 초기화
+    try {
+      const characterService = require('./characterService.js').default;
+      characterService.changeToOutfit('casual');
+      console.log(
+        'Background and outfit changed back to default after RP pack deactivation with proper initialization',
+      );
+    } catch (error) {
+      console.error('Error initializing outfit state for RP pack deactivation:', error);
+      // fallback: 기본 의상 변경만 수행
+      characterStateService.setCurrentOutfit(activeCharacter, 'casual');
+      console.log(
+        'Background and outfit changed back to default after RP pack deactivation (fallback)',
+      );
+    }
 
     // 데이터 저장
     if (!this.saveShopData(shopData)) {
@@ -619,6 +649,82 @@ class ShopService {
   getActiveRpPack() {
     const shopData = this.getShopData();
     return shopData.activeRpPack || null;
+  }
+
+  // RP 팩 JSON 파일 로드
+  loadRpPack(character, rpPackId) {
+    try {
+      const rpPackPath = path.join(RP_PACKS_BASE_PATH, character, 'rppacks', `${rpPackId}.json`);
+
+      if (!fs.existsSync(rpPackPath)) {
+        console.warn(`RP pack file not found: ${rpPackPath}`);
+        return null;
+      }
+
+      const rpPackData = fs.readFileSync(rpPackPath, 'utf8');
+      return JSON.parse(rpPackData);
+    } catch (error) {
+      console.error(`Error loading RP pack ${rpPackId} for character ${character}:`, error);
+      return null;
+    }
+  }
+
+  // 캐릭터별 RP 팩 목록 가져오기
+  getCharacterRpPacks(character) {
+    try {
+      const rppacksDir = path.join(RP_PACKS_BASE_PATH, character, 'rppacks');
+
+      if (!fs.existsSync(rppacksDir)) {
+        return [];
+      }
+
+      const files = fs.readdirSync(rppacksDir);
+      return files
+        .filter((file) => file.endsWith('.json'))
+        .map((file) => file.replace('.json', ''));
+    } catch (error) {
+      console.error(`Error getting RP packs for character ${character}:`, error);
+      return [];
+    }
+  }
+
+  // RP 팩 내용 로드 (마크다운 파일 읽기)
+  loadRpPackContent(rpPackId, character = 'shaki') {
+    try {
+      const rpPack = this.loadRpPack(character, rpPackId);
+      if (!rpPack) return null;
+
+      const content = {};
+
+      // description 파일 읽기
+      if (rpPack.description) {
+        const descriptionPath = path.join(process.cwd(), rpPack.description);
+        if (fs.existsSync(descriptionPath)) {
+          content.description = fs.readFileSync(descriptionPath, 'utf8');
+        }
+      }
+
+      // globalnote 파일 읽기
+      if (rpPack.globalnote) {
+        const globalnotePath = path.join(process.cwd(), rpPack.globalnote);
+        if (fs.existsSync(globalnotePath)) {
+          content.globalnote = fs.readFileSync(globalnotePath, 'utf8');
+        }
+      }
+
+      // locationguide 파일 읽기
+      if (rpPack.locationguide) {
+        const locationguidePath = path.join(process.cwd(), rpPack.locationguide);
+        if (fs.existsSync(locationguidePath)) {
+          content.locationguide = fs.readFileSync(locationguidePath, 'utf8');
+        }
+      }
+
+      return content;
+    } catch (error) {
+      console.error(`Error loading RP pack content for ${rpPackId}:`, error);
+      return null;
+    }
   }
 }
 
