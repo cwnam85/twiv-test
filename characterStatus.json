@@ -1,0 +1,11 @@
+{
+    "outfit": {
+      "bra": true,
+      "top": false,
+      "outerwear": false,
+      "panty": true,
+      "bottom": true,
+      "shoes": true
+    },
+    "spot": "Outdoor Onsen Area"
+  }

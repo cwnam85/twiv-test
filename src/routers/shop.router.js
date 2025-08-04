@@ -280,7 +280,7 @@ router.post('/activate-rp-pack', async (req, res) => {
     let rpPackReaction = null;
     try {
       const shopItems = shopService.getShopItems();
-      let reactionMessage = '캐릭터가 유저와 함께 ';
+      let reactionMessage = 'The character arrives with the user at ';
 
       const changes = [];
       if (activateResult.backgroundChanged) {
@@ -288,12 +288,12 @@ router.post('/activate-rp-pack', async (req, res) => {
           (item) => item.id === activateResult.newBackground,
         );
         const backgroundName = backgroundItem ? backgroundItem.name : activateResult.newBackground;
-        changes.push(`${backgroundName}에 도착`);
+        changes.push(`${backgroundName}`);
       }
       if (activateResult.outfitChanged) {
         const outfitItem = shopItems.outfits.find((item) => item.id === activateResult.newOutfit);
         const outfitName = outfitItem ? outfitItem.name : activateResult.newOutfit;
-        changes.push(`${outfitName}을(를) 착용`);
+        changes.push(`wearing ${outfitName}`);
       }
 
       if (changes.length > 0) {

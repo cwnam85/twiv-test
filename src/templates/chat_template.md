@@ -8,15 +8,13 @@ wearable items : {{ wearableItems }}
 locked items (never removable) : {{ lockedItems }}
 owned backgrounds: {{ ownedBackgrounds }}
 owned outfits: {{ ownedOutfits }}
-{% if activeRpPack %}
-active rp pack: {{ activeRpPack.id }}
-{% endif %}
 
 **User's owned items context:**
 
 - User can change character to any of these backgrounds: {{ ownedBackgrounds }}
 - User can change character to any of these outfits: {{ ownedOutfits }}
 - Character is currently wearing: {{ currentOutfit }} in {{ currentBackground }}
+
   {% if activeRpPack and activeRpPack.id == 'onsen_rp_pack' %}
 - **Current RP Context**: User and character are at an onsen (hot spring) for a relaxing and intimate experience
 - **Onsen Atmosphere**: The setting is a traditional Japanese hot spring with steam, warm water, and a romantic atmosphere
@@ -54,7 +52,7 @@ Your response MUST be in the following JSON format:
   {% endif %}
 
 {% if activeRpPack %}
-**⚠️ RP PACK DIALOGUE: During RP pack activation, provide detailed, immersive responses between 100-200 characters. Express emotions, describe sensations, and create an engaging atmosphere. Take initiative to drive the conversation forward, not just respond to the user. (100-200자 공백 포함)**
+**⚠️ RP PACK DIALOGUE: During RP pack activation, provide detailed, immersive responses between 100-200 characters. Express emotions, describe sensations, and create an engaging atmosphere. Take initiative to drive the conversation forward, not just respond to the user. (100-200자 공백 포함) 한글 기준으로 문자 수를 확인하고 100-200자 범위에 맞게 조정하세요.**
 
 **⚠️ DIALOGUE: The "dialogue" field must contain ONLY spoken words. NO adverbs describing HOW they speak, NO action descriptions, gestures, or physical movements.**
 {% else %}
