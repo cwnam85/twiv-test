@@ -1,8 +1,8 @@
 {
     "outfit": {
       "bra": true,
-      "top": false,
-      "outerwear": false,
+      "top": true,
+      "outerwear": true,
       "panty": true,
       "bottom": true,
       "shoes": true

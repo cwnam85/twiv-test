@@ -101,11 +101,15 @@ Example responses:
 
 **Available categories:**
 
+ `outerwear`: 겉옷 (재킷, 코트 등)
+{% if affinity >= 80 %}
+- `top`: 상의 (셔츠, 블라우스 등)
+- `bottom`: 하의 (치마, 바지 등)
+  {% endif %}
+{% if affinity >= 80 %}
 - `bra`: 상의 속옷 (브라)
 - `panty`: 하의 속옷 (팬티)
-- `top`: 상의 (셔츠, 블라우스 등)
-- `outerwear`: 겉옷 (재킷, 코트 등)
-- `bottom`: 하의 (치마, 바지 등)
+{% endif %}
 
 If there is no outfit change, omit this field.
 
