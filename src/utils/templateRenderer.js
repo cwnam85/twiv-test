@@ -64,12 +64,10 @@ function generateOutfitInfo(outfitData) {
   const { outfitName, outfitData: data } = outfitData;
   const enabledItems = [];
 
-  Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items).forEach(([itemName, itemData]) => {
-      if (itemData && itemData.enabled) {
-        enabledItems.push(`${category}.${itemName}: ${itemData.name}`);
-      }
-    });
+  Object.entries(data.parts).forEach(([itemName, itemData]) => {
+    if (itemData && itemData.enabled) {
+      enabledItems.push(`${itemName}: ${itemData.name}`);
+    }
   });
 
   return `${outfitName} (${enabledItems.join(', ')})`;
@@ -84,12 +82,10 @@ function generateOutfitDetail(outfitData) {
   const { outfitData: data } = outfitData;
   const enabledItems = [];
 
-  Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items).forEach(([itemName, itemData]) => {
-      if (itemData && itemData.enabled) {
-        enabledItems.push(`${category}.${itemName}: ${itemData.name}`);
-      }
-    });
+  Object.entries(data.parts).forEach(([itemName, itemData]) => {
+    if (itemData && itemData.enabled) {
+      enabledItems.push(`${itemName}: ${itemData.name}`);
+    }
   });
 
   return `[${enabledItems.join(', ')}]`;
@@ -104,17 +100,11 @@ function generateUndressableItems(outfitData, affinity = 0) {
   const { outfitData: data } = outfitData;
   const removableItems = [];
 
-  const allowedCategories = ['upper_body', 'lower_body'];
-
-  Object.entries(data.parts).forEach(([category, items]) => {
-    if (allowedCategories.includes(category)) {
-      Object.entries(items).forEach(([itemName, itemData]) => {
-        if (itemData && itemData.enabled) {
-          if (itemData.removable_affinity !== null && affinity >= itemData.removable_affinity) {
-            removableItems.push(`${category}.${itemName}`);
-          }
-        }
-      });
+  Object.entries(data.parts).forEach(([itemName, itemData]) => {
+    if (itemData && itemData.enabled) {
+      if (itemData.removable_affinity !== null && affinity >= itemData.removable_affinity) {
+        removableItems.push(itemName);
+      }
     }
   });
 
@@ -130,12 +120,10 @@ function generateWearableItems(outfitData) {
   const { outfitData: data } = outfitData;
   const wearableItems = [];
 
-  Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items).forEach(([itemName, itemData]) => {
-      if (itemData && !itemData.enabled) {
-        wearableItems.push(`${category}.${itemName}`);
-      }
-    });
+  Object.entries(data.parts).forEach(([itemName, itemData]) => {
+    if (itemData && !itemData.enabled) {
+      wearableItems.push(itemName);
+    }
   });
 
   return `[${wearableItems.join(', ')}]`;
@@ -150,12 +138,10 @@ function generateLockedItems(outfitData) {
   const { outfitData: data } = outfitData;
   const lockedItems = [];
 
-  Object.entries(data.parts).forEach(([category, items]) => {
-    Object.entries(items).forEach(([itemName, itemData]) => {
-      if (itemData && itemData.enabled && itemData.removable_affinity === null) {
-        lockedItems.push(`${category}.${itemName}: ${itemData.name}`);
-      }
-    });
+  Object.entries(data.parts).forEach(([itemName, itemData]) => {
+    if (itemData && itemData.enabled && itemData.removable_affinity === null) {
+      lockedItems.push(`${itemName}: ${itemData.name}`);
+    }
   });
 
   return `[${lockedItems.join(', ')}]`;

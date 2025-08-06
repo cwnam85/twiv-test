@@ -3,31 +3,23 @@
   "price": 250,
   "description": "우아한 가운을 입어보세요. 특별한 속옷도 함께 착용됩니다.",
   "parts": {
-    "upper_body": {
-      "bra": {
-        "name": "bath_towel",
-        "removable_affinity": 100
-      },
-      "top": {
-        "name": "onsen_gown",
-        "removable_affinity": 80
-      },
-      "outerwear": null
+    "bra": {
+      "name": "bath_towel",
+      "removable_affinity": 100
     },
-    "lower_body": {
-      "panty": {
-        "name": "onsen_panty",
-        "removable_affinity": null
-      },
-      "bottom": null
+    "top": {
+      "name": "onsen_gown",
+      "removable_affinity": 80
     },
-    "feet": {
-      "shoes": null
+    "outerwear": null,
+    "panty": {
+      "name": "onsen_panty",
+      "removable_affinity": null
     },
-    "accessories": {
-      "hat": null,
-      "necklace": null,
-      "belt": null
-    }
+    "bottom": null,
+    "shoes": null,
+    "hat": null,
+    "necklace": null,
+    "belt": null
   }
 }

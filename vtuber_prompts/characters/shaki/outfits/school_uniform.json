@@ -3,43 +3,35 @@
   "price": 100,
   "description": "깔끔한 학교 교복을 입어보세요.",
   "parts": {
-    "upper_body": {
-      "bra": {
-        "name": "white_bra",
-        "removable_affinity": 100
-      },
-      "top": {
-        "name": "white_shirt",
-        "removable_affinity": 80
-      },
-      "outerwear": {
-        "name": "navy_blazer",
-        "removable_affinity": 80
-      }
+    "bra": {
+      "name": "white_bra",
+      "removable_affinity": 100
     },
-    "lower_body": {
-      "panty": {
-        "name": "white_panty",
-        "removable_affinity": null
-      },
-      "bottom": {
-        "name": "navy_skirt",
-        "removable_affinity": 80
-      }
+    "top": {
+      "name": "white_shirt",
+      "removable_affinity": 80
     },
-    "feet": {
-      "shoes": {
-        "name": "black_school_shoes",
-        "removable_affinity": 80
-      }
+    "outerwear": {
+      "name": "navy_blazer",
+      "removable_affinity": 80
     },
-    "accessories": {
-      "hat": null,
-      "necklace": {
-        "name": "school_tie",
-        "removable_affinity": 80
-      },
-      "belt": null
-    }
+    "panty": {
+      "name": "white_panty",
+      "removable_affinity": null
+    },
+    "bottom": {
+      "name": "navy_skirt",
+      "removable_affinity": 80
+    },
+    "shoes": {
+      "name": "black_school_shoes",
+      "removable_affinity": 80
+    },
+    "hat": null,
+    "necklace": {
+      "name": "school_tie",
+      "removable_affinity": 80
+    },
+    "belt": null
   }
 }

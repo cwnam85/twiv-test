@@ -227,55 +227,28 @@ class SectionLoader {
 
     let description = `**Current Outfit:** ${current_outfit ? current_outfit.charAt(0).toUpperCase() + current_outfit.slice(1) : 'Default'} Style\n\n`;
 
-    // Upper Body
-    if (parts.upper_body) {
-      description += '**Upper Body:**\n';
-      Object.entries(parts.upper_body).forEach(([part, details]) => {
-        if (details && details.enabled) {
-          const typeText = part === 'bra' ? '상의 속옷' : '겉옷';
-          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
-        }
-      });
-      description += '\n';
-    }
+    // 모든 의상 아이템들을 직접 처리
+    const itemTypes = {
+      bra: '상의 속옷',
+      top: '상의',
+      outerwear: '겉옷',
+      panty: '하의 속옷',
+      bottom: '하의',
+      shoes: '신발',
+      hat: '모자',
+      necklace: '목걸이',
+      belt: '벨트',
+    };
 
-    // Lower Body
-    if (parts.lower_body) {
-      description += '**Lower Body:**\n';
-      Object.entries(parts.lower_body).forEach(([part, details]) => {
-        if (details && details.enabled) {
-          const typeText = part === 'panty' ? '하의 속옷' : '겉옷';
-          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
-        }
-      });
-      description += '\n';
-    }
-
-    // Feet
-    if (parts.feet) {
-      description += '**Feet:**\n';
-      Object.entries(parts.feet).forEach(([part, details]) => {
-        if (details && details.enabled) {
-          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (액세서리, 착용 중)\n`;
-        }
-      });
-      description += '\n';
-    }
-
-    // Accessories
-    if (parts.accessories) {
-      description += '**Accessories:**\n';
-      Object.entries(parts.accessories).forEach(([part, details]) => {
-        if (details && details.enabled) {
-          const partName = details.name ? details.name.replace(/_/g, ' ') : 'unknown';
-          description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (액세서리, 착용 중)\n`;
-        }
-      });
-      description += '\n';
-    }
+    description += '**Current Items:**\n';
+    Object.entries(parts).forEach(([part, details]) => {
+      if (details && details.enabled && details.name) {
+        const typeText = itemTypes[part] || '액세서리';
+        const partName = details.name.replace(/_/g, ' ');
+        description += `- **${part.charAt(0).toUpperCase() + part.slice(1)}:** ${partName} (${typeText}, 착용 중)\n`;
+      }
+    });
+    description += '\n';
 
     // Special Notes based on outfit type
     description += '**Special Notes:**\n';

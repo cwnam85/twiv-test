@@ -27,20 +27,16 @@ const OutfitStatus: React.FC<OutfitStatusProps> = ({ outfitData, outfitStateData
             🎭 현재 복장: {outfitData.outfitName}
           </div>
           <ul style={{ marginTop: 4, fontSize: '0.9em' }}>
-            {Object.entries(outfitData.outfitData.parts).map(([category, items]) =>
-              Object.entries(items).map(([itemName, item]) => {
+            {Object.entries(outfitData.outfitData.parts)
+              .map(([itemName, item]) => {
                 if (!item || !item.name) return null;
 
-                // 해당 부위의 착용 상태 확인
-                const categoryState = characterState[category as keyof typeof characterState];
-                const isWorn =
-                  typeof categoryState === 'object' && categoryState
-                    ? (categoryState as Record<string, boolean>)[itemName]
-                    : false;
+                // 새로운 구조: 직접 아이템에 접근
+                const isWorn = (characterState as Record<string, boolean>)[itemName] || false;
 
                 return (
-                  <li key={category + '-' + itemName}>
-                    <span style={{ fontWeight: 500 }}>{category}</span>.<span>{itemName}</span>:{' '}
+                  <li key={itemName}>
+                    <span style={{ fontWeight: 500 }}>{itemName}</span>:{' '}
                     {isWorn ? (
                       <span style={{ color: '#059669' }}>✅ {item.name}</span>
                     ) : (
@@ -48,8 +44,8 @@ const OutfitStatus: React.FC<OutfitStatusProps> = ({ outfitData, outfitStateData
                     )}
                   </li>
                 );
-              }),
-            )}
+              })
+              .filter(Boolean)}
           </ul>
         </div>
       )}

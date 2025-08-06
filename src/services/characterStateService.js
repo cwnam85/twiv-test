@@ -14,43 +14,30 @@ class CharacterStateService {
         shaki: {
           current_outfit: 'casual',
           current_background: 'default',
-          upper_body: {
-            bra: true,
-            top: true,
-            outerwear: true,
-          },
-          lower_body: {
-            panty: true,
-            bottom: true,
-          },
-          feet: {
-            shoes: true,
-          },
-          accessories: {
-            necklace: true,
-            belt: true,
-          },
+          // 새로운 구조: 직접 아이템으로 접근
+          bra: true,
+          top: true,
+          outerwear: true,
+          panty: true,
+          bottom: true,
+          shoes: true,
+          hat: false,
+          necklace: true,
+          belt: true,
         },
         blacknila: {
           current_outfit: 'casual',
           current_background: 'default',
-          upper_body: {
-            bra: true,
-            top: true,
-            outerwear: true,
-          },
-          lower_body: {
-            panty: true,
-            bottom: false,
-          },
-          feet: {
-            shoes: true,
-          },
-          accessories: {
-            hat: false,
-            necklace: true,
-            belt: true,
-          },
+          // 새로운 구조: 직접 아이템으로 접근
+          bra: true,
+          top: true,
+          outerwear: true,
+          panty: true,
+          bottom: false,
+          shoes: true,
+          hat: false,
+          necklace: true,
+          belt: true,
         },
       };
       this.saveState(defaultState);
@@ -119,10 +106,16 @@ class CharacterStateService {
       state[character] = {
         current_outfit: 'casual',
         current_background: 'default',
-        upper_body: { bra: true, top: true, outerwear: true },
-        lower_body: { panty: true, bottom: true },
-        feet: { shoes: true },
-        accessories: { necklace: true, belt: true },
+        // 새로운 구조: 직접 아이템으로 접근
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
       };
     }
 
@@ -138,10 +131,16 @@ class CharacterStateService {
       state[character] = {
         current_outfit: 'casual',
         current_background: 'default',
-        upper_body: { bra: true, top: true, outerwear: true },
-        lower_body: { panty: true, bottom: true },
-        feet: { shoes: true },
-        accessories: { necklace: true, belt: true },
+        // 새로운 구조: 직접 아이템으로 접근
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
       };
     }
 
@@ -157,18 +156,30 @@ class CharacterStateService {
       state[character] = {
         current_outfit: 'casual',
         current_background: 'default',
-        upper_body: { bra: true, top: true, outerwear: true },
-        lower_body: { panty: true, bottom: true },
-        feet: { shoes: true },
-        accessories: { necklace: true, belt: true },
+        // 새로운 구조: 직접 아이템으로 접근
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
       };
     }
 
-    if (!state[character][parentCategory]) {
-      state[character][parentCategory] = {};
+    // 새로운 구조: parentCategory와 category가 같은 경우 (직접 아이템)
+    if (parentCategory === category) {
+      state[character][category] = enabled;
+    } else {
+      // 기존 구조: 중간 카테고리가 있는 경우
+      if (!state[character][parentCategory]) {
+        state[character][parentCategory] = {};
+      }
+      state[character][parentCategory][category] = enabled;
     }
 
-    state[character][parentCategory][category] = enabled;
     return this.saveState(state);
   }
 

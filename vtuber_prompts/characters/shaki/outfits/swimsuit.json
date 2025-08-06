@@ -3,28 +3,20 @@
   "price": 150,
   "description": "활기찬 수영복으로 즐거운 시간을 보내세요.",
   "parts": {
-    "upper_body": {
-      "bra": {
-        "name": "bikini_top",
-        "removable_affinity": 100
-      },
-      "top": null,
-      "outerwear": null
+    "bra": {
+      "name": "bikini_top",
+      "removable_affinity": 100
     },
-    "lower_body": {
-      "panty": {
-        "name": "bikini_bottom",
-        "removable_affinity": null
-      },
-      "bottom": null
+    "top": null,
+    "outerwear": null,
+    "panty": {
+      "name": "bikini_bottom",
+      "removable_affinity": null
     },
-    "feet": {
-      "shoes": null
-    },
-    "accessories": {
-      "hat": null,
-      "necklace": null,
-      "belt": null
-    }
+    "bottom": null,
+    "shoes": null,
+    "hat": null,
+    "necklace": null,
+    "belt": null
   }
 }

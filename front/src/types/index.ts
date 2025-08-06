@@ -5,18 +5,24 @@ export interface OutfitItem {
 }
 
 export interface OutfitParts {
-  [category: string]: {
-    [itemName: string]: OutfitItem | null;
-  };
+  [itemName: string]: OutfitItem | null;
 }
 
 // 새로운 백엔드 구조에 맞는 타입 정의
 export interface CharacterOutfitState {
   current_outfit: string;
-  upper_body: { [category: string]: boolean };
-  lower_body: { [category: string]: boolean };
-  feet: { [category: string]: boolean };
-  accessories: { [category: string]: boolean };
+  current_background: string;
+  // 새로운 구조: 직접 아이템으로 접근
+  bra: boolean;
+  top: boolean;
+  outerwear: boolean;
+  panty: boolean;
+  bottom: boolean;
+  shoes: boolean;
+  hat: boolean;
+  necklace: boolean;
+  belt: boolean;
+  [key: string]: string | boolean; // 인덱스 시그니처 추가
 }
 
 export interface OutfitStateData {

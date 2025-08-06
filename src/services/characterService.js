@@ -83,13 +83,25 @@ class CharacterService {
               parentCategory !== 'current_background' &&
               currentOutfit.parts[parentCategory]
             ) {
-              Object.keys(characterState[parentCategory]).forEach((category) => {
-                if (currentOutfit.parts[parentCategory][category]) {
-                  // 착용 상태를 enabled 속성으로 추가
-                  currentOutfit.parts[parentCategory][category].enabled =
-                    characterState[parentCategory][category];
+              // 중간 카테고리가 있는 경우 (기존 구조 호환성)
+              if (
+                typeof currentOutfit.parts[parentCategory] === 'object' &&
+                currentOutfit.parts[parentCategory] !== null &&
+                !currentOutfit.parts[parentCategory].name
+              ) {
+                Object.keys(characterState[parentCategory]).forEach((category) => {
+                  if (currentOutfit.parts[parentCategory][category]) {
+                    // 착용 상태를 enabled 속성으로 추가
+                    currentOutfit.parts[parentCategory][category].enabled =
+                      characterState[parentCategory][category];
+                  }
+                });
+              } else {
+                // 새로운 구조: 직접 아이템에 접근
+                if (currentOutfit.parts[parentCategory]) {
+                  currentOutfit.parts[parentCategory].enabled = characterState[parentCategory];
                 }
-              });
+              }
             }
           });
         }
@@ -158,21 +170,8 @@ class CharacterService {
       throw new Error('No active character or outfit data');
     }
 
-    // 카테고리 매핑: 최상위 카테고리와 하위 카테고리 매핑
-    const categoryMapping = {
-      bra: 'upper_body',
-      panty: 'lower_body',
-      top: 'upper_body',
-      outerwear: 'upper_body',
-      bottom: 'lower_body',
-      shoes: 'feet',
-      hat: 'accessories',
-      necklace: 'accessories',
-      belt: 'accessories',
-    };
-
-    const parentCategory = categoryMapping[category];
-    if (!parentCategory) {
+    // 새로운 구조: 직접 아이템에 접근
+    if (!this.initialOutfitData.parts[category]) {
       throw new Error(`Unknown category: ${category}`);
     }
 
@@ -184,10 +183,8 @@ class CharacterService {
     }
 
     // 해당 카테고리의 상태 변경
-    if (characterState[parentCategory] && characterState[parentCategory][category] !== undefined) {
-      const enabled = action === 'wear';
-      characterStateService.setOutfitPart(this.activeCharacter, parentCategory, category, enabled);
-    }
+    const enabled = action === 'wear';
+    characterStateService.setOutfitPart(this.activeCharacter, category, category, enabled);
 
     // 메모리상의 initialOutfitData 업데이트
     this._initialOutfitData = this.loadOutfitData();
@@ -219,21 +216,13 @@ class CharacterService {
 
     // 새로운 의상의 기본 착용 상태 생성
     const newOutfit = outfitData;
-    const defaultState = {
-      upper_body: {},
-      lower_body: {},
-      feet: {},
-      accessories: {},
-    };
 
-    // 각 카테고리별로 null이 아닌 아이템들을 기본적으로 착용 상태로 설정
-    Object.entries(newOutfit.parts).forEach(([category, items]) => {
-      Object.entries(items).forEach(([itemName, item]) => {
-        if (item !== null) {
-          // null이 아닌 아이템은 기본적으로 착용 상태
-          characterStateService.setOutfitPart(this.activeCharacter, category, itemName, true);
-        }
-      });
+    // 각 아이템별로 null이 아닌 아이템들을 기본적으로 착용 상태로 설정
+    Object.entries(newOutfit.parts).forEach(([itemName, item]) => {
+      if (item !== null) {
+        // null이 아닌 아이템은 기본적으로 착용 상태
+        characterStateService.setOutfitPart(this.activeCharacter, itemName, itemName, true);
+      }
     });
 
     // 현재 복장을 새로운 복장으로 변경

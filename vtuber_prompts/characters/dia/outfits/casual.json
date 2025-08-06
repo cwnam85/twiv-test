@@ -3,46 +3,38 @@
   "price": 0,
   "description": "기본 의상으로 돌아갑니다.",
   "parts": {
-    "upper_body": {
-      "bra": {
-        "name": "black_bra",
-        "removable_affinity": 100
-      },
-      "top": {
-        "name": "white_blouse",
-        "removable_affinity": 80
-      },
-      "outerwear": {
-        "name": "black_cardigan",
-        "removable_affinity": 80
-      }
+    "bra": {
+      "name": "black_bra",
+      "removable_affinity": 100
     },
-    "lower_body": {
-      "panty": {
-        "name": "black_panty",
-        "removable_affinity": null
-      },
-      "bottom": {
-        "name": "black_skirt",
-        "removable_affinity": 80
-      }
+    "top": {
+      "name": "white_blouse",
+      "removable_affinity": 80
     },
-    "feet": {
-      "shoes": {
-        "name": "black_loafers",
-        "removable_affinity": 80
-      }
+    "outerwear": {
+      "name": "black_cardigan",
+      "removable_affinity": 80
     },
-    "accessories": {
-      "hat": null,
-      "necklace": {
-        "name": "silver_choker",
-        "removable_affinity": 100
-      },
-      "belt": {
-        "name": "black_belt",
-        "removable_affinity": 80
-      }
+    "panty": {
+      "name": "black_panty",
+      "removable_affinity": null
+    },
+    "bottom": {
+      "name": "black_skirt",
+      "removable_affinity": 80
+    },
+    "shoes": {
+      "name": "black_loafers",
+      "removable_affinity": 80
+    },
+    "hat": null,
+    "necklace": {
+      "name": "silver_choker",
+      "removable_affinity": 100
+    },
+    "belt": {
+      "name": "black_belt",
+      "removable_affinity": 80
     }
   }
-} 
+}

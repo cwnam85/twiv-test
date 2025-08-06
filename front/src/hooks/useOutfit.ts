@@ -94,29 +94,8 @@ const useOutfit = () => {
     const characterState = getCurrentCharacterState();
     if (!characterState) return false;
 
-    const parentCategory = getParentCategory(category);
-    if (!parentCategory) return false;
-
-    const categoryState = characterState[parentCategory as keyof CharacterOutfitState];
-    if (!categoryState || typeof categoryState !== 'object') return false;
-
-    return (categoryState as Record<string, boolean>)[category] || false;
-  };
-
-  // 카테고리 매핑 함수
-  const getParentCategory = (category: string): string | null => {
-    const categoryMapping: { [key: string]: string } = {
-      bra: 'upper_body',
-      panty: 'lower_body',
-      top: 'upper_body',
-      outerwear: 'upper_body',
-      bottom: 'lower_body',
-      shoes: 'feet',
-      hat: 'accessories',
-      necklace: 'accessories',
-      belt: 'accessories',
-    };
-    return categoryMapping[category] || null;
+    // 새로운 구조: 직접 아이템에 접근
+    return (characterState as Record<string, boolean>)[category] || false;
   };
 
   return {

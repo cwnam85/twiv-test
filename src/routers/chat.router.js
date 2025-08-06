@@ -350,10 +350,17 @@ router.get('/outfit-state', (req, res) => {
     res.json({
       [activeCharacter]: {
         current_outfit: characterState.current_outfit,
-        upper_body: characterState.upper_body || {},
-        lower_body: characterState.lower_body || {},
-        feet: characterState.feet || {},
-        accessories: characterState.accessories || {},
+        current_background: characterState.current_background,
+        // 새로운 구조: 직접 아이템으로 접근
+        bra: characterState.bra || false,
+        top: characterState.top || false,
+        outerwear: characterState.outerwear || false,
+        panty: characterState.panty || false,
+        bottom: characterState.bottom || false,
+        shoes: characterState.shoes || false,
+        hat: characterState.hat || false,
+        necklace: characterState.necklace || false,
+        belt: characterState.belt || false,
       },
     });
   } catch (error) {
