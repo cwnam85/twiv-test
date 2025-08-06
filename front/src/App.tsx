@@ -1,7 +1,7 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
 import { useRef, useEffect, useState } from 'react';
-import OutfitStatus from './components/OutfitStatus';
+import AppearanceStatus from './components/AppearanceStatus';
 import Shop from './components/Shop';
 
 function App() {
@@ -23,13 +23,13 @@ function App() {
     point,
 
     currentCharacter,
-    outfitData,
-    outfitStateData,
+    appearance,
+    appearanceStateData,
     // Shop 관련
     shopData,
     isShopOpen,
     currentBackground,
-    currentOutfit,
+    currentAppearance,
     boosterStatus,
     activeRpPack,
     purchaseItem,
@@ -133,7 +133,7 @@ function App() {
     <div
       className={`min-h-screen flex flex-col items-center justify-center p-4 ${getBackgroundStyle()}`}
     >
-      <OutfitStatus outfitData={outfitData} outfitStateData={outfitStateData} />
+      <AppearanceStatus appearance={appearance} appearanceStateData={appearanceStateData} />
       <div className="w-full max-w-md">
         {/* 상태 표시 영역 */}
         <div className="flex flex-col gap-2 mb-4">
@@ -238,7 +238,7 @@ function App() {
           shopData={shopData}
           point={point}
           currentBackground={currentBackground}
-          currentOutfit={currentOutfit}
+          currentAppearance={currentAppearance}
           activeRpPack={activeRpPack}
           onPurchase={(item) => purchaseItem(item.id, item.type, item.price)}
           onEquip={(items) =>

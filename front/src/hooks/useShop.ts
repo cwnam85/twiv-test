@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShopData, BoosterStatus, OutfitData, OutfitStateData } from '../types';
+import { ShopData, BoosterStatus, AppearanceData, AppearanceStateData } from '../types';
 
 interface AudioSegment {
   type: 'text' | 'tag';
@@ -19,9 +19,9 @@ interface AudioData {
 interface UseShopProps {
   onPointUpdate: (newPoint: number) => void;
   onMessageAdd: (message: string) => void;
-  refreshOutfitData: () => Promise<{
-    outfitData: OutfitData | null;
-    stateData: OutfitStateData | null;
+  refreshAppearanceData: () => Promise<{
+    appearanceData: AppearanceData | null;
+    stateData: AppearanceStateData | null;
   } | null>;
   onAudioData: (audioData: AudioData | null) => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -31,20 +31,20 @@ interface UseShopProps {
 const useShop = ({
   onPointUpdate,
   onMessageAdd,
-  refreshOutfitData,
+  refreshAppearanceData,
   onAudioData,
   onLoadingChange,
   onLocationUpdate,
 }: UseShopProps) => {
   const [shopData, setShopData] = useState<ShopData>({
     backgrounds: [],
-    outfits: [],
+    appearances: [],
     boosters: [],
     rpPacks: [],
   });
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [currentBackground, setCurrentBackground] = useState<string>('');
-  const [currentOutfit, setCurrentOutfit] = useState<string>('');
+  const [currentAppearance, setCurrentAppearance] = useState<string>('');
   const [boosterStatus, setBoosterStatus] = useState<BoosterStatus | null>(null);
   const [activeRpPack, setActiveRpPack] = useState<{ id: string; activatedAt: string } | null>(
     null,
@@ -72,9 +72,9 @@ const useShop = ({
         const data = await response.json();
         console.log('Owned items response:', data);
         console.log('Setting current background to:', data.currentBackground || '');
-        console.log('Setting current outfit to:', data.currentOutfit || '');
+        console.log('Setting current outfit to:', data.currentAppearance || '');
         setCurrentBackground(data.currentBackground || '');
-        setCurrentOutfit(data.currentOutfit || '');
+        setCurrentAppearance(data.currentAppearance || '');
       }
     } catch (error) {
       console.error('Error fetching owned items:', error);
@@ -183,14 +183,14 @@ const useShop = ({
           console.log('Immediately setting background to:', data.newBackground);
           setCurrentBackground(data.newBackground);
         }
-        if (data.outfitChanged && data.newOutfit) {
-          console.log('Immediately setting outfit to:', data.newOutfit);
-          setCurrentOutfit(data.newOutfit);
+        if (data.appearanceChanged && data.newAppearance) {
+          console.log('Immediately setting outfit to:', data.newAppearance);
+          setCurrentAppearance(data.newAppearance);
         }
 
         await fetchBoosterStatus();
         await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
-        await refreshOutfitData(); // 의상 데이터 새로고침
+        await refreshAppearanceData(); // 의상 데이터 새로고침
 
         // RP팩 반응 처리
         if (data.rpPackReaction) {
@@ -239,9 +239,9 @@ const useShop = ({
           console.log('Immediately setting background to:', data.newBackground);
           setCurrentBackground(data.newBackground);
         }
-        if (data.outfitChanged && data.newOutfit) {
-          console.log('Immediately setting outfit to:', data.newOutfit);
-          setCurrentOutfit(data.newOutfit);
+        if (data.appearanceChanged && data.newAppearance) {
+          console.log('Immediately setting outfit to:', data.newAppearance);
+          setCurrentAppearance(data.newAppearance);
         }
 
         console.log('Fetching booster status...');
@@ -251,7 +251,7 @@ const useShop = ({
         await fetchOwnedItems(); // 현재 복장/배경 정보 업데이트
 
         console.log('Refreshing outfit data...');
-        await refreshOutfitData(); // 의상 데이터 새로고침
+        await refreshAppearanceData(); // 의상 데이터 새로고침
 
         // RP팩 반응 처리
         if (data.rpPackReaction) {
@@ -300,20 +300,20 @@ const useShop = ({
         for (const item of items) {
           if (item.itemType === 'background') {
             setCurrentBackground(data.currentBackground);
-          } else if (item.itemType === 'outfit') {
-            setCurrentOutfit(data.currentOutfit);
+          } else if (item.itemType === 'appearance') {
+            setCurrentAppearance(data.currentAppearance);
             // 의상 변경 시 의상 데이터 새로고침
-            await refreshOutfitData();
+            await refreshAppearanceData();
           }
         }
 
         // 반응 처리
-        if (data.outfitReaction) {
-          console.log('Reaction received from server:', data.outfitReaction);
-          onMessageAdd(data.outfitReaction.message);
-          if (data.outfitReaction.audioData) {
-            console.log('Playing audio data:', data.outfitReaction.audioData);
-            onAudioData(data.outfitReaction.audioData);
+        if (data.appearanceReaction) {
+          console.log('Reaction received from server:', data.appearanceReaction);
+          onMessageAdd(data.appearanceReaction.message);
+          if (data.appearanceReaction.audioData) {
+            console.log('Playing audio data:', data.appearanceReaction.audioData);
+            onAudioData(data.appearanceReaction.audioData);
           }
         }
 
@@ -345,7 +345,7 @@ const useShop = ({
     shopData,
     isShopOpen,
     currentBackground,
-    currentOutfit,
+    currentAppearance,
     boosterStatus,
     activeRpPack,
     purchaseItem,

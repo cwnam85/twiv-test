@@ -1,4 +1,4 @@
-import { OutfitData, Message } from '../types';
+import { AppearanceData, Message } from '../types';
 
 interface AudioSegment {
   type: 'text' | 'tag';
@@ -21,7 +21,7 @@ interface ChatAPIHandlers {
   onPointUpdate: (point: number) => void;
   onPoseUpdate: (pose: string) => void;
   onEmotionUpdate: (emotion: string) => void;
-  onOutfitRefresh: () => Promise<OutfitData | null>;
+  onAppearanceRefresh: () => Promise<AppearanceData | null>;
   onModalOpen: () => void;
   onPurchaseModalOpen: (content: string, userInput: string) => void;
   onAudioData: (audioData: AudioData | null) => void;
@@ -35,7 +35,7 @@ const useChatAPI = ({
   onPointUpdate,
   onPoseUpdate,
   onEmotionUpdate,
-  onOutfitRefresh,
+  onAppearanceRefresh,
   onModalOpen,
   onPurchaseModalOpen,
   onAudioData,
@@ -63,17 +63,17 @@ const useChatAPI = ({
       console.log('Full server response:', data);
       console.log('Response keys:', Object.keys(data));
 
-      // outfitOn/outfitOff 처리 (배열 형태 지원)
+      // appearanceOn/appearanceOff 처리 (배열 형태 지원)
       if (
-        (Array.isArray(data.outfitOn) && data.outfitOn.length > 0) ||
-        (Array.isArray(data.outfitOff) && data.outfitOff.length > 0)
+        (Array.isArray(data.appearanceOn) && data.appearanceOn.length > 0) ||
+        (Array.isArray(data.appearanceOff) && data.appearanceOff.length > 0)
       ) {
-        // 복장 변경이 발생했으면 최신 복장 데이터를 다시 받아오기
-        const newOutfitData = await onOutfitRefresh();
-        if (newOutfitData) {
-          console.log('Updated outfit data from API:', newOutfitData);
+        // 외모 변경이 발생했으면 최신 외모 데이터를 다시 받아오기
+        const newAppearanceData = await onAppearanceRefresh();
+        if (newAppearanceData) {
+          console.log('Updated appearance data from API:', newAppearanceData);
 
-          // 복장 변경 알림 메시지 추가 (선택사항)
+          // 외모 변경 알림 메시지 추가 (선택사항)
           const categoryMap: { [key: string]: string } = {
             bra: '브라',
             panty: '팬티',
@@ -86,16 +86,16 @@ const useChatAPI = ({
             belt: '벨트',
           };
 
-          if (Array.isArray(data.outfitOff)) {
-            for (const category of data.outfitOff) {
+          if (Array.isArray(data.appearanceOff)) {
+            for (const category of data.appearanceOff) {
               const categoryText = categoryMap[category] || category;
-              console.log(`복장 변경: ${categoryText}를 벗었어요`);
+              console.log(`외모 변경: ${categoryText}를 벗었어요`);
             }
           }
-          if (Array.isArray(data.outfitOn)) {
-            for (const category of data.outfitOn) {
+          if (Array.isArray(data.appearanceOn)) {
+            for (const category of data.appearanceOn) {
               const categoryText = categoryMap[category] || category;
-              console.log(`복장 변경: ${categoryText}를 입었어요`);
+              console.log(`외모 변경: ${categoryText}를 입었어요`);
             }
           }
         }

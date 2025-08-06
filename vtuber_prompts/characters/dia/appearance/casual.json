@@ -3,6 +3,10 @@
   "price": 0,
   "description": "기본 의상으로 돌아갑니다.",
   "parts": {
+    "hair": {
+      "name": "default_hair",
+      "removable_affinity": null
+    },
     "bra": {
       "name": "black_bra",
       "removable_affinity": 100

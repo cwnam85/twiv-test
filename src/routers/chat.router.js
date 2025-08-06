@@ -125,10 +125,10 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       userInput: realMessage,
       affinity: affinityService.getData().affinity || 0,
       currentBackground: characterState?.current_background || 'default',
-      currentOutfit: characterState?.current_outfit || 'default',
-      outfitData: characterService.getOutfitData(),
+      currentAppearance: characterState?.current_appearance || 'default',
+      appearanceData: characterService.getAppearanceData(),
       ownedBackgrounds: shopData.ownedBackgrounds.join(', ') || 'none',
-      ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
+      ownedAppearances: shopData.ownedAppearances.join(', ') || 'none',
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
       activeRpPack: shopService.getActiveRpPack(),
@@ -144,8 +144,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       systemPrompt,
     );
 
-    // outfitOn/outfitOff 처리
-    await responseService.processOutfitChange(response.outfitOn, response.outfitOff);
+    // appearanceOn/appearanceOff 처리
+    await responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -208,8 +208,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      outfitOn: response.outfitOn,
-      outfitOff: response.outfitOff,
+      appearanceOn: response.appearanceOn,
+      appearanceOff: response.appearanceOff,
       location: response.location, // RP팩 위치 정보 추가
       audioData: clientAudioData,
     };
@@ -327,18 +327,18 @@ router.get('/character-info', (req, res) => {
   res.json({ activeCharacter: characterService.getActiveCharacter() });
 });
 
-// 현재 복장 정보를 반환하는 엔드포인트
-router.get('/current-outfit', (req, res) => {
+// 현재 외모 정보를 반환하는 엔드포인트
+router.get('/current-appearance', (req, res) => {
   try {
-    res.json(characterService.getOutfitData());
+    res.json(characterService.getAppearanceData());
   } catch (error) {
-    console.error('Error getting current outfit:', error);
-    res.status(500).json({ error: 'Failed to get current outfit' });
+    console.error('Error getting current appearance:', error);
+    res.status(500).json({ error: 'Failed to get current appearance' });
   }
 });
 
 // 현재 캐릭터의 의상 상태를 반환하는 엔드포인트
-router.get('/outfit-state', (req, res) => {
+router.get('/appearance-state', (req, res) => {
   try {
     const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
     const characterState = characterStateService.getCharacterState(activeCharacter);
@@ -349,9 +349,10 @@ router.get('/outfit-state', (req, res) => {
 
     res.json({
       [activeCharacter]: {
-        current_outfit: characterState.current_outfit,
+        current_appearance: characterState.current_appearance,
         current_background: characterState.current_background,
         // 새로운 구조: 직접 아이템으로 접근
+        hair: characterState.hair || false,
         bra: characterState.bra || false,
         top: characterState.top || false,
         outerwear: characterState.outerwear || false,
@@ -364,29 +365,64 @@ router.get('/outfit-state', (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error getting outfit state:', error);
-    res.status(500).json({ error: 'Failed to get outfit state' });
+    console.error('Error getting appearance state:', error);
+    res.status(500).json({ error: 'Failed to get appearance state' });
+  }
+});
+
+// 현재 캐릭터의 헤어스타일 정보를 반환하는 엔드포인트
+router.get('/hair-info', async (req, res) => {
+  try {
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+    const characterState = characterStateService.getCharacterState(activeCharacter);
+
+    if (!characterState) {
+      return res.status(404).json({ error: 'Character state not found' });
+    }
+
+    // 현재 외모 데이터 로드
+    const { default: characterService } = await import('../services/characterService.js');
+    const appearanceData = characterService.getAppearanceData();
+
+    if (!appearanceData || !appearanceData.appearanceData || !appearanceData.appearanceData.parts) {
+      return res.status(404).json({ error: 'Appearance data not found' });
+    }
+
+    const hairData = appearanceData.appearanceData.parts.hair;
+    const isHairWorn = characterState.hair || false;
+
+    res.json({
+      character: activeCharacter,
+      hair: {
+        name: hairData ? hairData.name : 'default_hair',
+        isWorn: isHairWorn,
+        removable_affinity: hairData ? hairData.removable_affinity : null,
+      },
+    });
+  } catch (error) {
+    console.error('Error getting hair info:', error);
+    res.status(500).json({ error: 'Failed to get hair info' });
   }
 });
 
 // 복장 변경 API
-router.post('/change-outfit', (req, res) => {
+router.post('/change-appearance', (req, res) => {
   try {
     const { action, category } = req.body;
 
-    const updatedOutfit = characterService.changeOutfit(action, category);
+    const updatedAppearance = characterService.changeAppearance(action, category);
 
     // 시스템 프롬프트 업데이트 (새로운 복장 정보 반영)
-    characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
+    characterService.updateSystemPrompt(characterService.getAppearanceData().outfitData);
 
     res.json({
       success: true,
       message: `Successfully ${action}ed ${category}`,
-      updatedOutfit: updatedOutfit,
+      updatedAppearance: updatedAppearance,
     });
   } catch (error) {
-    console.error('Error changing outfit:', error);
-    res.status(500).json({ error: 'Failed to change outfit' });
+    console.error('Error changing appearance:', error);
+    res.status(500).json({ error: 'Failed to change appearance' });
   }
 });
 
@@ -433,10 +469,10 @@ router.post('/chat', async (req, res) => {
       userInput: realMessage,
       affinity: affinityService.getData().affinity || 0,
       currentBackground: characterState?.current_background || 'default',
-      currentOutfit: characterState?.current_outfit || 'default',
-      outfitData: characterService.getOutfitData(),
+      currentAppearance: characterState?.current_appearance || 'default',
+      appearanceData: characterService.getAppearanceData(),
       ownedBackgrounds: shopData.ownedBackgrounds.join(', ') || 'none',
-      ownedOutfits: shopData.ownedOutfits.join(', ') || 'none',
+      ownedAppearances: shopData.ownedAppearances.join(', ') || 'none',
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
       activeRpPack: shopService.getActiveRpPack(),
@@ -452,8 +488,8 @@ router.post('/chat', async (req, res) => {
       systemPrompt,
     );
 
-    // outfitOn/outfitOff 처리
-    responseService.processOutfitChange(response.outfitOn, response.outfitOff);
+    // appearanceOn/appearanceOff 처리
+    responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -515,8 +551,8 @@ router.post('/chat', async (req, res) => {
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      outfitOn: response.outfitOn,
-      outfitOff: response.outfitOff,
+      appearanceOn: response.appearanceOn,
+      appearanceOff: response.appearanceOff,
       location: response.location, // RP팩 위치 정보 추가
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });

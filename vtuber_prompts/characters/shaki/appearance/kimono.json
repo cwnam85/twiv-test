@@ -3,6 +3,10 @@
   "price": 300,
   "description": "우아한 기모노를 입어보세요. 특별한 속옷도 함께 착용됩니다.",
   "parts": {
+    "hair": {
+      "name": "kimono_hair",
+      "removable_affinity": null
+    },
     "bra": {
       "name": "rope_bra",
       "removable_affinity": 100

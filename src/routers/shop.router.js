@@ -29,9 +29,9 @@ router.get('/items', (req, res) => {
         ...item,
         isOwned: item.id === 'default' ? true : ownedData.ownedBackgrounds.includes(item.id),
       })),
-      outfits: shopItems.outfits.map((item) => ({
+      appearances: shopItems.appearances.map((item) => ({
         ...item,
-        isOwned: item.id === 'default' ? true : ownedData.ownedOutfits.includes(item.id),
+        isOwned: item.id === 'default' ? true : ownedData.ownedAppearances.includes(item.id),
       })),
       boosters: shopItems.boosters.map((item) => ({
         ...item,
@@ -159,35 +159,35 @@ router.post('/equip', async (req, res) => {
     console.log('Equip results:', equipResults);
 
     // 변경된 아이템들에 대한 서버 처리
-    let outfitChanged = false;
+    let appearanceChanged = false;
     let backgroundChanged = false;
-    let changedOutfitName = null;
+    let changedAppearanceName = null;
     let changedBackgroundName = null;
     const shopItems = shopService.getShopItems();
 
     for (const item of changedItems) {
       const { itemId, itemType } = item;
 
-      if (itemType === 'outfit') {
+      if (itemType === 'appearance') {
         try {
-          // 동적으로 의상 ID를 서버 의상 이름으로 매핑
-          const outfitName = shopService.mapOutfitIdToServerName(itemId);
+          // 동적으로 외모 ID를 서버 외모 이름으로 매핑
+          const appearanceName = shopService.mapAppearanceIdToServerName(itemId);
 
-          // 서버 복장 전체 변경
-          characterService.changeToOutfit(outfitName);
+          // 서버 외모 전체 변경
+          characterService.changeToAppearance(appearanceName);
 
           // 시스템 프롬프트 업데이트
-          characterService.updateSystemPrompt(characterService.getOutfitData().outfitData);
+          characterService.updateSystemPrompt(characterService.getAppearanceData().appearanceData);
 
-          console.log(`Server outfit changed to: ${outfitName}`);
+          console.log(`Server appearance changed to: ${appearanceName}`);
 
           // character_state.json에서 복장 정보 관리 (이미 characterService에서 처리됨)
-          console.log(`Character state updated for outfit: ${outfitName}`);
+          console.log(`Character state updated for appearance: ${appearanceName}`);
 
-          outfitChanged = true;
-          changedOutfitName = outfitName;
-        } catch (outfitError) {
-          console.error('Error updating server outfit:', outfitError);
+          appearanceChanged = true;
+          changedAppearanceName = appearanceName;
+        } catch (appearanceError) {
+          console.error('Error updating server appearance:', appearanceError);
         }
       } else if (itemType === 'background') {
         backgroundChanged = true;
@@ -197,17 +197,19 @@ router.post('/equip', async (req, res) => {
     }
 
     // 변경사항이 있으면 LLM에게 알림
-    if (outfitChanged || backgroundChanged) {
+    if (appearanceChanged || backgroundChanged) {
       try {
         let reactionMessage = '캐릭터가 유저의 요청에 의해 ';
         const changes = [];
 
-        if (outfitChanged) {
-          const outfitItem = shopItems.outfits.find(
-            (item) => item.id === changedItems.find((i) => i.itemType === 'outfit')?.itemId,
+        if (appearanceChanged) {
+          const appearanceItem = shopItems.appearances.find(
+            (item) => item.id === changedItems.find((i) => i.itemType === 'appearance')?.itemId,
           );
-          const outfitDisplayName = outfitItem ? outfitItem.name : changedOutfitName;
-          changes.push(`${outfitDisplayName}을(를) 착용`);
+          const appearanceDisplayName = appearanceItem
+            ? appearanceItem.name
+            : changedAppearanceName;
+          changes.push(`${appearanceDisplayName}을(를) 착용`);
         }
 
         if (backgroundChanged) {
@@ -224,7 +226,7 @@ router.post('/equip', async (req, res) => {
           changes.join('하고 ') + '했습니다. 이에 대한 자연스러운 반응을 해주세요.';
 
         // 동기적으로 챗 라우터 함수 호출 (응답을 기다림)
-        console.log('Starting outfit/background reaction generation...');
+        console.log('Starting appearance/background reaction generation...');
         const reactionData = await processChatMessage(reactionMessage, reactionMessage, true); // skipPointCheck = true
 
         console.log('Reaction generated via chat router function:', reactionData.message);
@@ -235,8 +237,8 @@ router.post('/equip', async (req, res) => {
           success: true,
           message: '착용이 완료되었습니다.',
           currentBackground: equipResults[equipResults.length - 1].currentBackground,
-          currentOutfit: equipResults[equipResults.length - 1].currentOutfit,
-          outfitReaction: {
+          currentAppearance: equipResults[equipResults.length - 1].currentAppearance,
+          appearanceReaction: {
             message: reactionData.message,
             audioData: reactionData.audioData,
           },
@@ -244,7 +246,7 @@ router.post('/equip', async (req, res) => {
 
         return res.json(responseData);
       } catch (chatError) {
-        console.error('Error sending outfit/background change to chat router:', chatError);
+        console.error('Error sending appearance/background change to chat router:', chatError);
       }
     }
 
@@ -290,10 +292,12 @@ router.post('/activate-rp-pack', async (req, res) => {
         const backgroundName = backgroundItem ? backgroundItem.name : activateResult.newBackground;
         changes.push(`${backgroundName}`);
       }
-      if (activateResult.outfitChanged) {
-        const outfitItem = shopItems.outfits.find((item) => item.id === activateResult.newOutfit);
-        const outfitName = outfitItem ? outfitItem.name : activateResult.newOutfit;
-        changes.push(`wearing ${outfitName}`);
+      if (activateResult.appearanceChanged) {
+        const appearanceItem = shopItems.appearances.find(
+          (item) => item.id === activateResult.newOutfit,
+        );
+        const appearanceName = appearanceItem ? appearanceItem.name : activateResult.newOutfit;
+        changes.push(`wearing ${appearanceName}`);
       }
 
       if (changes.length > 0) {
@@ -322,7 +326,7 @@ router.post('/activate-rp-pack', async (req, res) => {
       activeRpPack: activateResult.activeRpPack,
       backgroundChanged: activateResult.backgroundChanged,
       newBackground: activateResult.newBackground,
-      outfitChanged: activateResult.outfitChanged,
+      appearanceChanged: activateResult.appearanceChanged,
       newOutfit: activateResult.newOutfit,
       rpPackReaction: rpPackReaction,
       location: rpPackReaction?.location || null, // 위치 정보 추가
@@ -358,7 +362,7 @@ router.post('/deactivate-rp-pack', async (req, res) => {
           : deactivateResult.previousBackground;
         changes.push(`${backgroundName}에서 돌아옴`);
       }
-      if (deactivateResult.outfitChanged) {
+      if (deactivateResult.appearanceChanged) {
         changes.push('일상복으로 갈아입음');
       }
 
@@ -388,7 +392,7 @@ router.post('/deactivate-rp-pack', async (req, res) => {
       activeRpPack: deactivateResult.activeRpPack,
       backgroundChanged: deactivateResult.backgroundChanged,
       previousBackground: deactivateResult.previousBackground,
-      outfitChanged: deactivateResult.outfitChanged,
+      appearanceChanged: deactivateResult.appearanceChanged,
       previousOutfit: deactivateResult.previousOutfit,
       rpPackReaction: rpPackReaction,
       location: rpPackReaction?.location || null, // 위치 정보 추가

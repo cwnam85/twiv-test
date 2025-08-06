@@ -1,19 +1,19 @@
 user's input: {{ userInput }}
 current affinity: {{ affinity }}
 current background: {{ currentBackground }}
-current outfit: {{ currentOutfit }}
-current outfit detail : {{ outfitDetail }}
+current appearance: {{ currentAppearance }}
+current appearance detail : {{ appearanceDetail }}
 undressable items : {{ undressableItems }}
 wearable items : {{ wearableItems }}
 locked items (never removable) : {{ lockedItems }}
 owned backgrounds: {{ ownedBackgrounds }}
-owned outfits: {{ ownedOutfits }}
+owned outfits: {{ ownedAppearances }}
 
 **User's owned items context:**
 
 - User can change character to any of these backgrounds: {{ ownedBackgrounds }}
-- User can change character to any of these outfits: {{ ownedOutfits }}
-- Character is currently wearing: {{ currentOutfit }} in {{ currentBackground }}
+- User can change character to any of these outfits: {{ ownedAppearances }}
+- Character is currently wearing: {{ currentAppearance }} in {{ currentBackground }}
 
   {% if activeRpPack and activeRpPack.id == 'onsen_rp_pack' %}
 
@@ -64,23 +64,23 @@ Your response MUST be in the following JSON format:
 
 Before processing outfit change commands, check if user input contains:
 
-1. **Full Outfit Set Change** (handled by shop system): Any outfit name from {{ ownedOutfits }} that user wants character to wear
+1. **Full Outfit Set Change** (handled by shop system): Any outfit name from {{ ownedAppearances }} that user wants character to wear
 2. **Individual Outfit Part Change** (handled by LLM): Individual clothing parts (bra, panty, top, outerwear, bottom) that user wants character to wear/remove
 
 **Classification Rules:**
 
-- If user mentions an outfit from {{ ownedOutfits }} for character to wear → Full outfit set change (DO NOT use outfitOn/outfitOff)
-- If user mentions individual clothing parts for character to wear/remove → Individual part change (use outfitOn/outfitOff)
+- If user mentions an appearance from {{ ownedAppearances }} for character to wear → Full appearance set change (DO NOT use appearanceOn/appearanceOff)
+- If user mentions individual clothing parts for character to wear/remove → Individual part change (use appearanceOn/appearanceOff)
 
 **Examples:**
 
-- "기모노 입어줘" (If kimono is in {{ ownedOutfits }}) → NO outfitOn/outfitOff, dialogue only
+- "기모노 입어줘" (If kimono is in {{ ownedAppearances }}) → NO outfitOn/outfitOff, dialogue only
 - "재킷 벗어줘" (jacket is individual part) → "outfitOff": ["outerwear"]
 - "알몸이 되어줘" (naked is individual parts) → "outfitOff": ["outerwear", "top", "bottom"]
 
-**⚠️ IMPORTANT: Always check {{ ownedOutfits }} before deciding whether to use outfitOn/outfitOff fields.**
+**⚠️ IMPORTANT: Always check {{ ownedAppearances }} before deciding whether to use outfitOn/outfitOff fields.**
 
-**⚠️ RESPONSE GUIDANCE: When user requests a full outfit set change (outfit from {{ ownedOutfits }}), refer to "**When user owns the requested outfit:**" section <reference> for appropriate response patterns.**
+**⚠️ RESPONSE GUIDANCE: When user requests a full outfit set change (outfit from {{ ownedAppearances }}), refer to "**When user owns the requested outfit:**" section <reference> for appropriate response patterns.**
 
 ⚠️ Outfit Change Command Processing
 
@@ -101,15 +101,16 @@ Example responses:
 
 **Available categories:**
 
- `outerwear`: 겉옷 (재킷, 코트 등)
+`outerwear`: 겉옷 (재킷, 코트 등)
 {% if affinity >= 80 %}
+
 - `top`: 상의 (셔츠, 블라우스 등)
 - `bottom`: 하의 (치마, 바지 등)
   {% endif %}
-{% if affinity >= 80 %}
+  {% if affinity >= 80 %}
 - `bra`: 상의 속옷 (브라)
 - `panty`: 하의 속옷 (팬티)
-{% endif %}
+  {% endif %}
 
 If there is no outfit change, omit this field.
 

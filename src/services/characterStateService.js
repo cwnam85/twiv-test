@@ -12,9 +12,10 @@ class CharacterStateService {
     if (!fs.existsSync(this.statePath)) {
       const defaultState = {
         shaki: {
-          current_outfit: 'casual',
+          current_appearance: 'casual',
           current_background: 'default',
           // 새로운 구조: 직접 아이템으로 접근
+          hair: true,
           bra: true,
           top: true,
           outerwear: true,
@@ -26,9 +27,10 @@ class CharacterStateService {
           belt: true,
         },
         blacknila: {
-          current_outfit: 'casual',
+          current_appearance: 'casual',
           current_background: 'default',
           // 새로운 구조: 직접 아이템으로 접근
+          hair: true,
           bra: true,
           top: true,
           outerwear: true,
@@ -63,9 +65,9 @@ class CharacterStateService {
   }
 
   // 특정 캐릭터의 현재 복장
-  getCurrentOutfit(character) {
+  getCurrentAppearance(character) {
     const characterState = this.getCharacterState(character);
-    return characterState ? characterState.current_outfit : 'casual';
+    return characterState ? characterState.current_appearance : 'casual';
   }
 
   // 특정 캐릭터의 현재 배경
@@ -75,7 +77,7 @@ class CharacterStateService {
   }
 
   // 특정 캐릭터의 복장 파트 상태
-  getOutfitParts(character) {
+  getAppearanceParts(character) {
     const characterState = this.getCharacterState(character);
     if (!characterState) return null;
 
@@ -99,14 +101,15 @@ class CharacterStateService {
   }
 
   // 특정 캐릭터의 복장 변경
-  setCurrentOutfit(character, outfitName) {
+  setCurrentAppearance(character, appearanceName) {
     const state = this.getState();
 
     if (!state[character]) {
       state[character] = {
-        current_outfit: 'casual',
+        current_appearance: 'casual',
         current_background: 'default',
         // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
         bra: true,
         top: true,
         outerwear: true,
@@ -119,7 +122,7 @@ class CharacterStateService {
       };
     }
 
-    state[character].current_outfit = outfitName;
+    state[character].current_appearance = appearanceName;
     return this.saveState(state);
   }
 
@@ -129,9 +132,10 @@ class CharacterStateService {
 
     if (!state[character]) {
       state[character] = {
-        current_outfit: 'casual',
+        current_appearance: 'casual',
         current_background: 'default',
         // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
         bra: true,
         top: true,
         outerwear: true,
@@ -149,14 +153,15 @@ class CharacterStateService {
   }
 
   // 특정 캐릭터의 복장 파트 상태 변경
-  setOutfitPart(character, parentCategory, category, enabled) {
+  setAppearancePart(character, parentCategory, category, enabled) {
     const state = this.getState();
 
     if (!state[character]) {
       state[character] = {
-        current_outfit: 'casual',
+        current_appearance: 'casual',
         current_background: 'default',
         // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
         bra: true,
         top: true,
         outerwear: true,
@@ -190,7 +195,7 @@ class CharacterStateService {
 
     Object.keys(state).forEach((character) => {
       result[character] = {
-        currentOutfit: state[character].current_outfit,
+        currentAppearance: state[character].current_appearance,
         currentBackground: state[character].current_background,
       };
     });
@@ -204,7 +209,7 @@ class CharacterStateService {
     const defaultCharacter = Object.keys(state)[0] || 'shaki';
 
     return {
-      currentOutfit: state[defaultCharacter]?.current_outfit || 'casual',
+      currentAppearance: state[defaultCharacter]?.current_appearance || 'casual',
       currentBackground: state[defaultCharacter]?.current_background || 'default',
     };
   }

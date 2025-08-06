@@ -1,18 +1,19 @@
-export interface OutfitItem {
+export interface AppearanceItem {
   name: string;
   enabled: boolean;
   removable_affinity: number | null;
 }
 
-export interface OutfitParts {
-  [itemName: string]: OutfitItem | null;
+export interface AppearanceParts {
+  [itemName: string]: AppearanceItem | null;
 }
 
 // 새로운 백엔드 구조에 맞는 타입 정의
-export interface CharacterOutfitState {
-  current_outfit: string;
+export interface CharacterAppearanceState {
+  current_appearance: string;
   current_background: string;
   // 새로운 구조: 직접 아이템으로 접근
+  hair: boolean;
   bra: boolean;
   top: boolean;
   outerwear: boolean;
@@ -25,16 +26,16 @@ export interface CharacterOutfitState {
   [key: string]: string | boolean; // 인덱스 시그니처 추가
 }
 
-export interface OutfitStateData {
-  [character: string]: CharacterOutfitState;
+export interface AppearanceStateData {
+  [character: string]: CharacterAppearanceState;
 }
 
-// 기존 호환성을 위한 OutfitData 타입 (백엔드에서 병합된 데이터 반환)
-export interface OutfitData {
-  outfitName: string;
-  outfitData: {
-    current_outfit: string;
-    parts: OutfitParts;
+// 기존 호환성을 위한 AppearanceData 타입 (백엔드에서 병합된 데이터 반환)
+export interface AppearanceData {
+  appearanceName: string;
+  appearanceData: {
+    current_appearance: string;
+    parts: AppearanceParts;
   };
 }
 
@@ -46,7 +47,7 @@ export interface Message {
 export interface ShopItem {
   id: string;
   name: string;
-  type: 'background' | 'outfit' | 'booster' | 'rp_pack';
+  type: 'background' | 'appearance' | 'booster' | 'rp_pack';
   price: number;
   description: string;
   image?: string;
@@ -56,12 +57,12 @@ export interface ShopItem {
 export interface RpPackItem extends ShopItem {
   type: 'rp_pack';
   globalnoteFile?: string;
-  autoPurchaseOutfits?: string[];
+  autoPurchaseAppearances?: string[];
 }
 
 export interface ShopData {
   backgrounds: ShopItem[];
-  outfits: ShopItem[];
+  appearances: ShopItem[];
   boosters: ShopItem[];
   rpPacks: RpPackItem[];
 }

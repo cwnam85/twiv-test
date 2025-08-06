@@ -155,7 +155,7 @@ class SectionLoader {
 
   // 전체 프롬프트 조합 (nunjucks 템플릿 사용)
   buildPrompt(context = {}) {
-    const { isNSFW = false, currentOutfit = null, affinity = 1, user = 'user' } = context;
+    const { isNSFW = false, currentAppearance = null, affinity = 1, user = 'user' } = context;
 
     // RP팩 활성화 상태 확인
     const activeRpPack = this.getActiveRpPack();
@@ -184,11 +184,13 @@ class SectionLoader {
     // 템플릿 컨텍스트 구성
     const templateContext = {
       isNSFW,
-      currentOutfit,
+      currentAppearance,
       affinity,
       user,
       character: this.character,
-      outfitDescription: currentOutfit ? this.generateOutfitDescription(currentOutfit) : null,
+      appearanceDescription: currentAppearance
+        ? this.generateAppearanceDescription(currentAppearance)
+        : null,
       activeRpPack,
       rpPackDescription,
       rpPackGlobalNote,
@@ -215,20 +217,21 @@ class SectionLoader {
   }
 
   // 복장 설명 생성 메서드
-  generateOutfitDescription(outfitData) {
-    // console.log('generateOutfitDescription input:', JSON.stringify(outfitData, null, 2));
+  generateAppearanceDescription(appearanceData) {
+    // console.log('generateAppearanceDescription input:', JSON.stringify(appearanceData, null, 2));
 
-    if (!outfitData || !outfitData.parts) {
-      console.warn('Invalid outfit data structure:', outfitData);
-      return '**Current Outfit:** Default Style\n\n**Note:** Outfit information not available';
+    if (!appearanceData || !appearanceData.parts) {
+      console.warn('Invalid outfit data structure:', appearanceData);
+      return '**Current Appearance:** Default Style\n\n**Note:** Appearance information not available';
     }
 
-    const { current_outfit, parts } = outfitData;
+    const { current_appearance, parts } = appearanceData;
 
-    let description = `**Current Outfit:** ${current_outfit ? current_outfit.charAt(0).toUpperCase() + current_outfit.slice(1) : 'Default'} Style\n\n`;
+    let description = `**Current Appearance:** ${current_appearance ? current_appearance.charAt(0).toUpperCase() + current_appearance.slice(1) : 'Default'} Style\n\n`;
 
     // 모든 의상 아이템들을 직접 처리
     const itemTypes = {
+      hair: '헤어스타일',
       bra: '상의 속옷',
       top: '상의',
       outerwear: '겉옷',
@@ -250,22 +253,22 @@ class SectionLoader {
     });
     description += '\n';
 
-    // Special Notes based on outfit type
+    // Special Notes based on appearance type
     description += '**Special Notes:**\n';
-    if (current_outfit === 'casual') {
+    if (current_appearance === 'casual') {
       description += '- The outfit maintains a balance between casual comfort and stylish appeal\n';
       description += '- Items can be easily adjusted or removed based on the situation\n';
       description += '- The combination creates a playful yet sophisticated look\n';
-    } else if (current_outfit === 'school_uniform') {
+    } else if (current_appearance === 'school_uniform') {
       description += '- The school uniform gives a more formal and innocent appearance\n';
       description += '- The outfit follows traditional school dress code standards\n';
       description += '- Creates a contrast between proper attire and playful personality\n';
-    } else if (current_outfit === 'swimsuit') {
+    } else if (current_appearance === 'swimsuit') {
       description += '- The swimsuit showcases her confident and alluring side\n';
       description += '- Perfect for beach or pool-related conversations\n';
       description += '- Emphasizes her comfort with showing skin\n';
     } else {
-      description += '- The outfit is customized for the current situation\n';
+      description += '- The appearance is customized for the current situation\n';
       description += '- Items can be adjusted based on user preferences\n';
       description += '- Maintains character personality through clothing choices\n';
     }

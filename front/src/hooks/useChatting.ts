@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useCharacter from './useCharacter';
 import useAffinity from './useAffinity';
-import useOutfit from './useOutfit';
+import useAppearance from './useAppearance';
 import useMessages from './useMessages';
 import useModal from './useModal';
 import useChatAPI from './useChatAPI';
@@ -26,11 +26,11 @@ const useChatting = () => {
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
 
   const {
-    outfitData,
-    outfitStateData,
-    currentCharacter: outfitCharacter,
-    refreshOutfitData,
-  } = useOutfit();
+    appearance,
+    appearanceStateData,
+    currentCharacter: appearanceCharacter,
+    refreshAppearanceData,
+  } = useAppearance();
 
   const { messages, addUserMessage, addBotMessageFromMessage } = useMessages(currentCharacter);
 
@@ -52,7 +52,7 @@ const useChatting = () => {
     shopData,
     isShopOpen,
     currentBackground,
-    currentOutfit,
+    currentAppearance,
     boosterStatus,
     activeRpPack,
     purchaseItem,
@@ -66,9 +66,9 @@ const useChatting = () => {
   } = useShop({
     onPointUpdate: updatePoint,
     onMessageAdd: (message: string) => addBotMessageFromMessage({ text: message, isUser: false }),
-    refreshOutfitData: async () => {
-      const result = await refreshOutfitData();
-      return result?.outfitData || null;
+    refreshAppearanceData: async () => {
+      const result = await refreshAppearanceData();
+      return result?.appearanceData || null;
     },
     onAudioData: playAudioData,
     onLoadingChange: setIsLoading,
@@ -82,9 +82,9 @@ const useChatting = () => {
     onPointUpdate: updatePoint,
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
-    onOutfitRefresh: async () => {
-      const result = await refreshOutfitData();
-      return result?.outfitData || null;
+    onAppearanceRefresh: async () => {
+      const result = await refreshAppearanceData();
+      return result?.appearanceData || null;
     },
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
@@ -150,14 +150,14 @@ const useChatting = () => {
     pose,
     emotion,
     currentCharacter,
-    outfitData,
-    outfitStateData,
-    outfitCharacter,
+    appearance,
+    appearanceStateData,
+    appearanceCharacter,
     // Shop 관련
     shopData,
     isShopOpen,
     currentBackground,
-    currentOutfit,
+    currentAppearance,
     boosterStatus,
     activeRpPack,
     purchaseItem,

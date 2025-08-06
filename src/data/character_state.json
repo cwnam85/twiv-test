@@ -1,7 +1,8 @@
 {
   "shaki": {
-    "current_outfit": "casual",
+    "current_appearance": "gown",
     "current_background": "default",
+    "hair": true,
     "bra": true,
     "top": true,
     "outerwear": true,
@@ -13,8 +14,9 @@
     "belt": true
   },
   "blacknila": {
-    "current_outfit": "casual",
+    "current_appearance": "casual",
     "current_background": "onsen",
+    "hair": true,
     "bra": true,
     "top": true,
     "outerwear": true,
@@ -26,8 +28,9 @@
     "belt": true
   },
   "dia": {
-    "current_outfit": "casual",
+    "current_appearance": "casual",
     "current_background": "default",
+    "hair": true,
     "bra": true,
     "top": true,
     "outerwear": true,

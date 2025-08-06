@@ -3,6 +3,10 @@
   "price": 100,
   "description": "깔끔한 학교 교복을 입어보세요.",
   "parts": {
+    "hair": {
+      "name": "school_hair",
+      "removable_affinity": null
+    },
     "bra": {
       "name": "white_bra",
       "removable_affinity": 100

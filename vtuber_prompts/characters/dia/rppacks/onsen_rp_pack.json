@@ -6,6 +6,6 @@
   "description": "onsendate/description.md",
   "globalnote": "onsendate/globalnote.md",
   "locationguide": "onsendate/locationguide.md",
-  "autoPurchaseOutfits": ["kimono", "gown"],
+  "autoPurchaseAppearances": ["kimono", "gown"],
   "autoPurchaseBackgrounds": ["onsen"]
-} 
+}

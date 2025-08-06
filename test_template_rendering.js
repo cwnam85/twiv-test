@@ -12,7 +12,7 @@ const characterStatusData = JSON.parse(fs.readFileSync('characterStatus.json', '
 
 // Load kimono.json as outfit data
 const outfitData = JSON.parse(
-  fs.readFileSync('vtuber_prompts/characters/shaki/outfits/kimono.json', 'utf8'),
+  fs.readFileSync('vtuber_prompts/characters/shaki/appearance/kimono.json', 'utf8'),
 );
 
 console.log(outfitData.parts.upper_body.bra.name);

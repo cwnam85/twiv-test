@@ -55,13 +55,13 @@ function generateBackgroundInfo(backgroundId) {
   return backgroundNames[backgroundId] || backgroundId;
 }
 
-// 복장 정보 생성
-function generateOutfitInfo(outfitData) {
-  if (!outfitData || !outfitData.outfitName || !outfitData.outfitData) {
+// 외모 정보 생성
+function generateAppearanceInfo(appearanceData) {
+  if (!appearanceData || !appearanceData.appearanceName || !appearanceData.appearanceData) {
     return 'default';
   }
 
-  const { outfitName, outfitData: data } = outfitData;
+  const { appearanceName, appearanceData: data } = appearanceData;
   const enabledItems = [];
 
   Object.entries(data.parts).forEach(([itemName, itemData]) => {
@@ -70,16 +70,16 @@ function generateOutfitInfo(outfitData) {
     }
   });
 
-  return `${outfitName} (${enabledItems.join(', ')})`;
+  return `${appearanceName} (${enabledItems.join(', ')})`;
 }
 
-// 복장 상세 정보 생성
-function generateOutfitDetail(outfitData) {
-  if (!outfitData || !outfitData.outfitData) {
+// 외모 상세 정보 생성
+function generateAppearanceDetail(appearanceData) {
+  if (!appearanceData || !appearanceData.appearanceData) {
     return '[]';
   }
 
-  const { outfitData: data } = outfitData;
+  const { appearanceData: data } = appearanceData;
   const enabledItems = [];
 
   Object.entries(data.parts).forEach(([itemName, itemData]) => {
@@ -92,12 +92,12 @@ function generateOutfitDetail(outfitData) {
 }
 
 // 벗을 수 있는 아이템들 생성
-function generateUndressableItems(outfitData, affinity = 0) {
-  if (!outfitData || !outfitData.outfitData) {
+function generateUndressableItems(appearanceData, affinity = 0) {
+  if (!appearanceData || !appearanceData.appearanceData) {
     return '[]';
   }
 
-  const { outfitData: data } = outfitData;
+  const { appearanceData: data } = appearanceData;
   const removableItems = [];
 
   Object.entries(data.parts).forEach(([itemName, itemData]) => {
@@ -112,12 +112,12 @@ function generateUndressableItems(outfitData, affinity = 0) {
 }
 
 // 착용 가능한 아이템들 생성
-function generateWearableItems(outfitData) {
-  if (!outfitData || !outfitData.outfitData) {
+function generateWearableItems(appearanceData) {
+  if (!appearanceData || !appearanceData.appearanceData) {
     return '[]';
   }
 
-  const { outfitData: data } = outfitData;
+  const { appearanceData: data } = appearanceData;
   const wearableItems = [];
 
   Object.entries(data.parts).forEach(([itemName, itemData]) => {
@@ -130,12 +130,12 @@ function generateWearableItems(outfitData) {
 }
 
 // 잠긴 아이템들 생성
-function generateLockedItems(outfitData) {
-  if (!outfitData || !outfitData.outfitData) {
+function generateLockedItems(appearanceData) {
+  if (!appearanceData || !appearanceData.appearanceData) {
     return '[]';
   }
 
-  const { outfitData: data } = outfitData;
+  const { appearanceData: data } = appearanceData;
   const lockedItems = [];
 
   Object.entries(data.parts).forEach(([itemName, itemData]) => {
@@ -159,13 +159,13 @@ export function generateChatPrompt(context) {
     userInput: context.userInput || '',
     affinity: context.affinity || 0,
     currentBackground: generateBackgroundInfo(context.currentBackground),
-    currentOutfit: generateOutfitInfo(context.outfitData),
-    outfitDetail: generateOutfitDetail(context.outfitData),
-    undressableItems: generateUndressableItems(context.outfitData, context.affinity),
-    wearableItems: generateWearableItems(context.outfitData),
-    lockedItems: generateLockedItems(context.outfitData),
+    currentAppearance: generateAppearanceInfo(context.appearanceData),
+    appearanceDetail: generateAppearanceDetail(context.appearanceData),
+    undressableItems: generateUndressableItems(context.appearanceData, context.affinity),
+    wearableItems: generateWearableItems(context.appearanceData),
+    lockedItems: generateLockedItems(context.appearanceData),
     ownedBackgrounds: context.ownedBackgrounds || 'none',
-    ownedOutfits: context.ownedOutfits || 'none',
+    ownedAppearances: context.ownedAppearances || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
     character: context.character || 'shaki',
     activeRpPack: context.activeRpPack || null,
@@ -187,13 +187,13 @@ export function generateThankYouPrompt(context) {
     userInput: context.userInput || '',
     affinity: context.affinity || 0,
     currentBackground: generateBackgroundInfo(context.currentBackground),
-    currentOutfit: generateOutfitInfo(context.outfitData),
-    outfitDetail: generateOutfitDetail(context.outfitData),
-    undressableItems: generateUndressableItems(context.outfitData, context.affinity),
-    wearableItems: generateWearableItems(context.outfitData),
-    lockedItems: generateLockedItems(context.outfitData),
+    currentAppearance: generateAppearanceInfo(context.appearanceData),
+    appearanceDetail: generateAppearanceDetail(context.appearanceData),
+    undressableItems: generateUndressableItems(context.appearanceData, context.affinity),
+    wearableItems: generateWearableItems(context.appearanceData),
+    lockedItems: generateLockedItems(context.appearanceData),
     ownedBackgrounds: context.ownedBackgrounds || 'none',
-    ownedOutfits: context.ownedOutfits || 'none',
+    ownedAppearances: context.ownedAppearances || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
     character: context.character || 'shaki',
     activeRpPack: context.activeRpPack || null,

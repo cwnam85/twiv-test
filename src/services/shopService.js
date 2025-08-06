@@ -18,10 +18,10 @@ class ShopService {
       if (!fs.existsSync(this.shopDataPath)) {
         const defaultShopData = {
           ownedBackgrounds: [],
-          ownedOutfits: [],
+          ownedAppearances: [],
           ownedBoosters: [],
           currentBackground: 'default',
-          currentOutfit: 'default',
+          currentAppearance: 'default',
           activeBooster: null,
           purchaseHistory: [],
         };
@@ -69,10 +69,10 @@ class ShopService {
       console.error('Error reading shop data:', error);
       return {
         ownedBackgrounds: [],
-        ownedOutfits: [],
+        ownedAppearances: [],
         ownedBoosters: [],
         currentBackground: 'default',
-        currentOutfit: 'default',
+        currentAppearance: 'default',
         activeBooster: null,
         purchaseHistory: [],
       };
@@ -97,11 +97,11 @@ class ShopService {
 
     return {
       ownedBackgrounds: shopData.ownedBackgrounds || [],
-      ownedOutfits: shopData.ownedOutfits || [],
+      ownedAppearances: shopData.ownedAppearances || [],
       ownedBoosters: shopData.ownedBoosters || [],
       ownedRpPacks: shopData.ownedRpPacks || [],
       currentBackground: defaultState.currentBackground,
-      currentOutfit: defaultState.currentOutfit,
+      currentAppearance: defaultState.currentAppearance,
       activeBooster: shopData.activeBooster || null,
       activeRpPack: shopData.activeRpPack || null,
     };
@@ -115,8 +115,8 @@ class ShopService {
     let isAlreadyOwned = false;
     if (itemType === 'background') {
       isAlreadyOwned = (shopData.ownedBackgrounds || []).includes(itemId);
-    } else if (itemType === 'outfit') {
-      isAlreadyOwned = (shopData.ownedOutfits || []).includes(itemId);
+    } else if (itemType === 'appearance') {
+      isAlreadyOwned = (shopData.ownedAppearances || []).includes(itemId);
     } else if (itemType === 'booster') {
       isAlreadyOwned = (shopData.ownedBoosters || []).includes(itemId);
     } else if (itemType === 'rp_pack') {
@@ -136,9 +136,9 @@ class ShopService {
     if (itemType === 'background') {
       if (!shopData.ownedBackgrounds) shopData.ownedBackgrounds = [];
       shopData.ownedBackgrounds.push(itemId);
-    } else if (itemType === 'outfit') {
-      if (!shopData.ownedOutfits) shopData.ownedOutfits = [];
-      shopData.ownedOutfits.push(itemId);
+    } else if (itemType === 'appearance') {
+      if (!shopData.ownedAppearances) shopData.ownedAppearances = [];
+      shopData.ownedAppearances.push(itemId);
     } else if (itemType === 'booster') {
       if (!shopData.ownedBoosters) shopData.ownedBoosters = [];
       shopData.ownedBoosters.push(itemId);
@@ -151,8 +151,8 @@ class ShopService {
       const rpPack = shopItems.rpPacks.find((pack) => pack.id === itemId);
       if (rpPack && rpPack.autoPurchaseOutfits) {
         for (const outfitId of rpPack.autoPurchaseOutfits) {
-          if (!shopData.ownedOutfits.includes(outfitId)) {
-            shopData.ownedOutfits.push(outfitId);
+          if (!shopData.ownedAppearances.includes(outfitId)) {
+            shopData.ownedAppearances.push(outfitId);
           }
         }
       }
@@ -175,7 +175,7 @@ class ShopService {
       success: true,
       newPoint: currentPoints - price,
       ownedBackgrounds: shopData.ownedBackgrounds || [],
-      ownedOutfits: shopData.ownedOutfits || [],
+      ownedAppearances: shopData.ownedAppearances || [],
       ownedBoosters: shopData.ownedBoosters || [],
       ownedRpPacks: shopData.ownedRpPacks || [],
     };
@@ -254,7 +254,7 @@ class ShopService {
       itemId === 'default' ||
       (itemType === 'background'
         ? shopData.ownedBackgrounds.includes(itemId)
-        : shopData.ownedOutfits.includes(itemId));
+        : shopData.ownedAppearances.includes(itemId));
 
     if (!isOwned) {
       throw new Error('구매하지 않은 상품입니다.');
@@ -265,8 +265,8 @@ class ShopService {
 
     if (itemType === 'background') {
       characterStateService.setCurrentBackground(activeCharacter, itemId);
-    } else if (itemType === 'outfit') {
-      characterStateService.setCurrentOutfit(activeCharacter, itemId);
+    } else if (itemType === 'appearance') {
+      characterStateService.setCurrentAppearance(activeCharacter, itemId);
     }
 
     // 데이터 저장
@@ -278,7 +278,7 @@ class ShopService {
     return {
       success: true,
       currentBackground: currentState?.current_background || 'default',
-      currentOutfit: currentState?.current_outfit || 'default',
+      currentAppearance: currentState?.current_appearance || 'default',
     };
   }
 
@@ -286,7 +286,7 @@ class ShopService {
   getShopItems() {
     return {
       backgrounds: this.getBackgroundsFromJson(),
-      outfits: this.getOutfitsFromJson(),
+      appearances: this.getAppearancesFromJson(),
       boosters: [
         {
           id: 'affinity_booster',
@@ -399,44 +399,44 @@ class ShopService {
     }
   }
 
-  // outfits 폴더에서 의상 정보를 읽어와서 상점 아이템 형태로 변환
-  getOutfitsFromJson() {
+  // appearance 폴더에서 의상 정보를 읽어와서 상점 아이템 형태로 변환
+  getAppearancesFromJson() {
     try {
       // 현재 활성 캐릭터 확인
       const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
-      // 캐릭터의 outfits 폴더 경로
-      const outfitsDir = path.join(
+      // 캐릭터의 appearance 폴더 경로
+      const appearancesDir = path.join(
         process.cwd(),
         'vtuber_prompts',
         'characters',
         activeCharacter,
-        'outfits',
+        'appearance',
       );
 
-      if (!fs.existsSync(outfitsDir)) {
-        console.warn(`Outfits directory not found for character: ${activeCharacter}`);
+      if (!fs.existsSync(appearancesDir)) {
+        console.warn(`Appearance directory not found for character: ${activeCharacter}`);
         return [
           {
             id: 'default',
             name: '기본 의상',
-            type: 'outfit',
+            type: 'appearance',
             price: 0,
             description: '기본 의상으로 돌아갑니다.',
           },
         ];
       }
 
-      // outfits 폴더의 모든 JSON 파일 읽기
-      const outfitFiles = fs.readdirSync(outfitsDir).filter((file) => file.endsWith('.json'));
+      // appearance 폴더의 모든 JSON 파일 읽기
+      const outfitFiles = fs.readdirSync(appearancesDir).filter((file) => file.endsWith('.json'));
 
       if (outfitFiles.length === 0) {
-        console.warn(`No outfit files found in directory: ${outfitsDir}`);
+        console.warn(`No outfit files found in directory: ${appearancesDir}`);
         return [
           {
             id: 'default',
             name: '기본 의상',
-            type: 'outfit',
+            type: 'appearance',
             price: 0,
             description: '기본 의상으로 돌아갑니다.',
           },
@@ -444,16 +444,16 @@ class ShopService {
       }
 
       // 각 의상 파일을 읽어서 상점 아이템 형태로 변환
-      const outfits = outfitFiles.map((filename) => {
+      const appearances = outfitFiles.map((filename) => {
         const outfitId = filename.replace('.json', '');
-        const outfitPath = path.join(outfitsDir, filename);
+        const outfitPath = path.join(appearancesDir, filename);
 
         try {
           const outfitData = JSON.parse(fs.readFileSync(outfitPath, 'utf8'));
           return {
             id: outfitId,
             name: outfitData.name || outfitId,
-            type: 'outfit',
+            type: 'appearance',
             price: outfitData.price || 0,
             description:
               outfitData.description || `${outfitData.name || outfitId}을(를) 입어보세요.`,
@@ -463,21 +463,21 @@ class ShopService {
           return {
             id: outfitId,
             name: outfitId,
-            type: 'outfit',
+            type: 'appearance',
             price: 0,
             description: `${outfitId}을(를) 입어보세요.`,
           };
         }
       });
 
-      return outfits;
+      return appearances;
     } catch (error) {
-      console.error('Error reading outfits from directory:', error);
+      console.error('Error reading appearances from directory:', error);
       return [
         {
           id: 'default',
           name: '기본 의상',
-          type: 'outfit',
+          type: 'appearance',
           price: 0,
           description: '기본 의상으로 돌아갑니다.',
         },
@@ -486,18 +486,18 @@ class ShopService {
   }
 
   // 의상 ID를 서버 의상 이름으로 매핑
-  mapOutfitIdToServerName(itemId) {
+  mapAppearanceIdToServerName(itemId) {
     try {
       // 현재 활성 캐릭터 확인
       const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
-      // 캐릭터의 outfits 폴더 경로
-      const outfitsDir = path.join(
+      // 캐릭터의 appearance 폴더 경로
+      const appearancesDir = path.join(
         process.cwd(),
         'vtuber_prompts',
         'characters',
         activeCharacter,
-        'outfits',
+        'appearance',
       );
 
       // 기본 의상인 경우
@@ -506,7 +506,7 @@ class ShopService {
       }
 
       // 해당 의상 파일이 존재하는지 확인
-      const outfitPath = path.join(outfitsDir, `${itemId}.json`);
+      const outfitPath = path.join(appearancesDir, `${itemId}.json`);
       if (fs.existsSync(outfitPath)) {
         return itemId; // 의상 ID가 그대로 서버 의상 이름이 됨
       }
@@ -550,7 +550,7 @@ class ShopService {
 
     // RP팩에 해당하는 배경과 의상이 있으면 변경
     const newBackground = rpPackBackgrounds[rpPackId];
-    const newOutfit = rpPackOutfits[rpPackId];
+    const newAppearance = rpPackOutfits[rpPackId];
 
     const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
@@ -563,25 +563,25 @@ class ShopService {
       console.log(`Background changed to ${newBackground} for RP pack ${rpPackId}`);
     }
 
-    if (newOutfit) {
+    if (newAppearance) {
       // 기모노를 소유하고 있지 않으면 추가
-      if (!shopData.ownedOutfits.includes(newOutfit)) {
-        shopData.ownedOutfits.push(newOutfit);
+      if (!shopData.ownedAppearances.includes(newAppearance)) {
+        shopData.ownedAppearances.push(newAppearance);
       }
-      characterStateService.setCurrentOutfit(activeCharacter, newOutfit);
+      characterStateService.setCurrentAppearance(activeCharacter, newAppearance);
 
       // RP 팩 의상 변경 시 착용 상태 초기화
       try {
         const characterService = require('./characterService.js').default;
-        characterService.changeToOutfit(newOutfit);
+        characterService.changeToOutfit(newAppearance);
         console.log(
-          `Outfit changed to ${newOutfit} for RP pack ${rpPackId} with proper initialization`,
+          `Outfit changed to ${newAppearance} for RP pack ${rpPackId} with proper initialization`,
         );
       } catch (error) {
         console.error('Error initializing outfit state for RP pack:', error);
         // fallback: 기본 의상 변경만 수행
-        characterStateService.setCurrentOutfit(activeCharacter, newOutfit);
-        console.log(`Outfit changed to ${newOutfit} for RP pack ${rpPackId} (fallback)`);
+        characterStateService.setCurrentAppearance(activeCharacter, newAppearance);
+        console.log(`Outfit changed to ${newAppearance} for RP pack ${rpPackId} (fallback)`);
       }
     }
 
@@ -595,8 +595,8 @@ class ShopService {
       activeRpPack: shopData.activeRpPack,
       backgroundChanged: !!newBackground,
       newBackground: newBackground,
-      outfitChanged: !!newOutfit,
-      newOutfit: newOutfit,
+      appearanceChanged: !!newAppearance,
+      newAppearance: newAppearance,
     };
   }
 
@@ -624,7 +624,7 @@ class ShopService {
     } catch (error) {
       console.error('Error initializing outfit state for RP pack deactivation:', error);
       // fallback: 기본 의상 변경만 수행
-      characterStateService.setCurrentOutfit(activeCharacter, 'casual');
+      characterStateService.setCurrentAppearance(activeCharacter, 'casual');
       console.log(
         'Background and outfit changed back to default after RP pack deactivation (fallback)',
       );
@@ -640,8 +640,8 @@ class ShopService {
       activeRpPack: null,
       backgroundChanged: true,
       newBackground: 'default',
-      outfitChanged: true,
-      newOutfit: 'casual',
+      appearanceChanged: true,
+      newAppearance: 'casual',
     };
   }
 

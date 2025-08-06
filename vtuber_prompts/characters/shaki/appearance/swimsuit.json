@@ -3,6 +3,10 @@
   "price": 150,
   "description": "활기찬 수영복으로 즐거운 시간을 보내세요.",
   "parts": {
+    "hair": {
+      "name": "swimsuit_hair",
+      "removable_affinity": null
+    },
     "bra": {
       "name": "bikini_top",
       "removable_affinity": 100

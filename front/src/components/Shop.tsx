@@ -5,7 +5,7 @@ interface ShopProps {
   shopData: ShopData;
   point: number;
   currentBackground: string;
-  currentOutfit: string;
+  currentAppearance: string;
   activeRpPack?: { id: string; activatedAt: string } | null;
   onPurchase: (item: ShopItem) => void;
   onEquip: (items: ShopItem[]) => void;
@@ -19,7 +19,7 @@ const Shop = ({
   shopData,
   point,
   currentBackground,
-  currentOutfit,
+  currentAppearance,
   activeRpPack,
   onPurchase,
   onEquip,
@@ -28,9 +28,9 @@ const Shop = ({
   onDeactivateRpPack,
   onClose,
 }: ShopProps) => {
-  const [activeTab, setActiveTab] = useState<'backgrounds' | 'outfits' | 'boosters' | 'rpPacks'>(
-    'backgrounds',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'backgrounds' | 'appearances' | 'boosters' | 'rpPacks'
+  >('backgrounds');
   const [cart, setCart] = useState<ShopItem[]>([]);
 
   // 장바구니에 아이템 추가
@@ -68,7 +68,7 @@ const Shop = ({
   const renderShopItem = (item: ShopItem) => {
     const isEquipped =
       (item.type === 'background' && currentBackground === item.id) ||
-      (item.type === 'outfit' && currentOutfit === item.id);
+      (item.type === 'appearance' && currentAppearance === item.id);
 
     const isActiveRpPack = item.type === 'rp_pack' && activeRpPack?.id === item.id;
 
@@ -160,10 +160,10 @@ const Shop = ({
             {shopData.backgrounds.map(renderShopItem)}
           </div>
         );
-      case 'outfits':
+      case 'appearances':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {shopData.outfits.map(renderShopItem)}
+            {shopData.appearances.map(renderShopItem)}
           </div>
         );
       case 'boosters':
@@ -209,9 +209,9 @@ const Shop = ({
             배경
           </button>
           <button
-            onClick={() => setActiveTab('outfits')}
+            onClick={() => setActiveTab('appearances')}
             className={`px-4 py-2 font-medium ${
-              activeTab === 'outfits'
+              activeTab === 'appearances'
                 ? 'text-blue-600 border-b-2 border-blue-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}

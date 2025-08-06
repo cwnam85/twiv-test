@@ -36,19 +36,19 @@ class ConversationService {
     const currentBackground = characterState?.current_background
       ? this.getBackgroundName(characterState.current_background)
       : 'Default Background';
-    const currentOutfit = characterState?.current_outfit
-      ? this.getOutfitName(characterState.current_outfit)
-      : 'Default Outfit';
+    const currentAppearance = characterState?.current_appearance
+      ? this.getAppearanceName(characterState.current_appearance)
+      : 'Default Appearance';
 
     // 보유한 아이템들 정보 가져오기
     const ownedBackgrounds =
       shopData && shopData.ownedBackgrounds
         ? shopData.ownedBackgrounds.map((item) => this.getBackgroundName(item))
         : ['Default Background'];
-    const ownedOutfits =
-      shopData && shopData.ownedOutfits
-        ? shopData.ownedOutfits.map((item) => this.getOutfitName(item))
-        : ['Default Outfit'];
+    const ownedAppearances =
+      shopData && shopData.ownedAppearances
+        ? shopData.ownedAppearances.map((item) => this.getAppearanceName(item))
+        : ['Default Appearance'];
 
     // 현재 affinity 값 가져오기
     const { affinity } = affinityService.getData();
@@ -56,10 +56,10 @@ class ConversationService {
     // 템플릿 컨텍스트
     const templateContext = {
       currentBackground: currentBackground,
-      currentOutfit: currentOutfit,
+      currentAppearance: currentAppearance,
       affinity: affinity,
       ownedBackgrounds: ownedBackgrounds.join(', '),
-      ownedOutfits: ownedOutfits.join(', '),
+      ownedAppearances: ownedAppearances.join(', '),
     };
 
     // 히스토리의 각 메시지를 렌더링
@@ -219,15 +219,15 @@ class ConversationService {
     return backgroundNames[backgroundId] || backgroundId;
   }
 
-  // 복장 이름 가져오기
-  getOutfitName(outfitId) {
-    const outfitNames = {
-      default: 'Default Outfit',
+  // 외모 이름 가져오기
+  getAppearanceName(appearanceId) {
+    const appearanceNames = {
+      default: 'Default Appearance',
       casual: 'Casual',
       school_uniform: 'School Uniform',
       swimsuit: 'Swimsuit',
     };
-    return outfitNames[outfitId] || outfitId;
+    return appearanceNames[appearanceId] || appearanceId;
   }
 }
 
