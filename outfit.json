@@ -1,0 +1,69 @@
+{
+  "id": 1,
+  "name": "비키니",
+  "description": "실크 소재의 화이트 비키니",
+  "parts": {
+    "hair": {
+      "shaki": "shaki_hair",
+      "blacknila": "blacknila_hair",
+      "dia": "dia_hair",
+	  "removable": {
+        "allow": null,
+        "affinity": null
+      }
+    },
+    "bra": {
+      "name": "black bra",
+      "removable": {
+        "allow": "characterForAdult",
+        "affinity": 80
+      }
+    },
+    "top": {
+      "name": "top_name",
+      "removable": {
+        "allow": "characterForAdult",
+        "affinity": 80
+      }
+    },
+    "outerwear": {
+      "name": "jacket_name",
+      "removable": {
+        "allow": "characterForAdult",
+        "affinity": 80
+      }
+    },
+    "panties": {
+      "name": "black silk panties",
+      "removable": {
+        "allow": "locked",
+        "affinity": null
+      }
+    },
+    "bottom": {
+      "name": "bottom_name",
+      "removable": {
+        "allow": "characterForAdult",
+        "affinity": 80
+      }
+    },
+    "shoes": {
+      "name": "black_sandals",
+      "removable": {
+        "allow": "characterForAdult",
+        "affinity": 80
+      }
+    },
+    "accessories": {
+      "hat": {
+        "name": "hat_name"
+      },
+      "necklace": {
+        "name": "silver_chain_necklace"
+      },
+      "belt": {
+        "name": "belt_name"
+      }
+    }
+  }
+}

@@ -6,7 +6,8 @@
     "swimsuit",
     "casual",
     "kimono",
-    "gown"
+    "gown",
+    "school_uniform"
   ],
   "ownedBoosters": [],
   "activeBooster": null,
@@ -28,6 +29,12 @@
       "itemType": "rp_pack",
       "price": 500,
       "purchasedAt": "2025-07-28T05:19:30.188Z"
+    },
+    {
+      "itemId": "school_uniform",
+      "itemType": "appearance",
+      "price": 100,
+      "purchasedAt": "2025-08-06T10:18:54.197Z"
     }
   ],
   "ownedRpPacks": [
