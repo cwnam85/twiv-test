@@ -8,6 +8,7 @@ import {
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
 import characterStateService from './characterStateService.js';
+import backgroundService from './backgroundService.js';
 import fs from 'fs';
 import path from 'path';
 import nunjucks from 'nunjucks';
@@ -34,7 +35,7 @@ class ConversationService {
     const characterState = characterStateService.getCharacterState(activeCharacter);
 
     const currentBackground = characterState?.current_background
-      ? this.getBackgroundName(characterState.current_background)
+      ? backgroundService.getBackgroundName(activeCharacter, characterState.current_background)
       : 'Default Background';
     const currentAppearance = characterState?.current_appearance
       ? this.getAppearanceName(characterState.current_appearance)
@@ -43,7 +44,9 @@ class ConversationService {
     // 보유한 아이템들 정보 가져오기
     const ownedBackgrounds =
       shopData && shopData.ownedBackgrounds
-        ? shopData.ownedBackgrounds.map((item) => this.getBackgroundName(item))
+        ? shopData.ownedBackgrounds.map((item) =>
+            backgroundService.getBackgroundName(activeCharacter, item),
+          )
         : ['Default Background'];
     const ownedAppearances =
       shopData && shopData.ownedAppearances
@@ -209,14 +212,10 @@ class ConversationService {
     return null;
   }
 
-  // 배경 이름 가져오기
+  // 배경 이름 가져오기 (deprecated - backgroundService 사용 권장)
   getBackgroundName(backgroundId) {
-    const backgroundNames = {
-      default: 'Default Background',
-      school: 'School',
-      beach: 'Beach',
-    };
-    return backgroundNames[backgroundId] || backgroundId;
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+    return backgroundService.getBackgroundName(activeCharacter, backgroundId);
   }
 
   // 외모 이름 가져오기
@@ -228,6 +227,32 @@ class ConversationService {
       swimsuit: 'Swimsuit',
     };
     return appearanceNames[appearanceId] || appearanceId;
+  }
+
+  // 마지막 메시지 가져오기 (최적화)
+  getLastMessage() {
+    if (this.conversationHistory.length === 0) {
+      return 'none';
+    }
+
+    // 맨 마지막 메시지부터 역순으로 검색하되, assistant 메시지만 찾으면 바로 반환
+    for (let i = this.conversationHistory.length - 1; i >= 0; i--) {
+      const message = this.conversationHistory[i];
+
+      // assistant 역할의 메시지 중 실제 대화 내용인 것만 찾기
+      if (message.role === 'assistant' && message.content && Array.isArray(message.content)) {
+        for (const content of message.content) {
+          if (content.type === 'text' && content.text) {
+            // 시스템 메시지가 아닌 실제 대화 내용인지 확인
+            if (!content.text.includes('시스템:') && !content.text.includes('현재 포인트가')) {
+              return content.text;
+            }
+          }
+        }
+      }
+    }
+
+    return 'none';
   }
 }
 

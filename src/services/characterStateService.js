@@ -14,6 +14,7 @@ class CharacterStateService {
         shaki: {
           current_appearance: 'casual',
           current_background: 'default',
+          last_pose: 'stand',
           // 새로운 구조: 직접 아이템으로 접근
           hair: true,
           bra: true,
@@ -29,6 +30,7 @@ class CharacterStateService {
         blacknila: {
           current_appearance: 'casual',
           current_background: 'default',
+          last_pose: 'stand',
           // 새로운 구조: 직접 아이템으로 접근
           hair: true,
           bra: true,
@@ -76,6 +78,12 @@ class CharacterStateService {
     return characterState ? characterState.current_background : 'default';
   }
 
+  // 특정 캐릭터의 마지막 포즈
+  getLastPose(character) {
+    const characterState = this.getCharacterState(character);
+    return characterState ? characterState.last_pose : 'stand';
+  }
+
   // 특정 캐릭터의 복장 파트 상태
   getAppearanceParts(character) {
     const characterState = this.getCharacterState(character);
@@ -108,6 +116,7 @@ class CharacterStateService {
       state[character] = {
         current_appearance: 'casual',
         current_background: 'default',
+        last_pose: 'stand',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
@@ -134,6 +143,7 @@ class CharacterStateService {
       state[character] = {
         current_appearance: 'casual',
         current_background: 'default',
+        last_pose: 'stand',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
@@ -152,6 +162,33 @@ class CharacterStateService {
     return this.saveState(state);
   }
 
+  // 특정 캐릭터의 마지막 포즈 변경
+  setLastPose(character, pose) {
+    const state = this.getState();
+
+    if (!state[character]) {
+      state[character] = {
+        current_appearance: 'casual',
+        current_background: 'default',
+        last_pose: 'stand',
+        // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
+      };
+    }
+
+    state[character].last_pose = pose;
+    return this.saveState(state);
+  }
+
   // 특정 캐릭터의 복장 파트 상태 변경
   setAppearancePart(character, parentCategory, category, enabled) {
     const state = this.getState();
@@ -160,6 +197,7 @@ class CharacterStateService {
       state[character] = {
         current_appearance: 'casual',
         current_background: 'default',
+        last_pose: 'stand',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,

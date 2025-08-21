@@ -15,7 +15,7 @@ const outfitData = JSON.parse(
   fs.readFileSync('vtuber_prompts/characters/shaki/appearance/kimono.json', 'utf8'),
 );
 
-console.log(outfitData.parts.upper_body.bra.name);
+console.log(outfitData.parts.bra.name);
 
 // SFW Template (비성인용) - 동적 spot 사용
 const sfwTemplate = `
@@ -179,7 +179,29 @@ const testCases = [
   },
 ];
 
-console.log('=== Template Rendering Test (Dynamic Spot with Kimono Outfit) ===\n');
+// Load proto.md template for testing
+const protoTemplate = fs.readFileSync('proto.md', 'utf8');
+
+console.log('=== Proto.md Template Test ===\n');
+
+// Test proto.md with outfit.json data
+const protoContext = {
+  affinity: 100,
+  poses: poseListData.poseList,
+  outfit: JSON.parse(fs.readFileSync('outfit.json', 'utf8')),
+};
+
+try {
+  const protoRendered = nunjucks.renderString(protoTemplate, protoContext);
+  console.log('Proto.md Rendered Output:');
+  console.log('========================');
+  console.log(protoRendered);
+} catch (error) {
+  console.error('Proto.md Template Error:', error.message);
+  console.error('Stack:', error.stack);
+}
+
+console.log('\n=== Template Rendering Test (Dynamic Spot with Kimono Outfit) ===\n');
 console.log(`Character Spot: ${characterStatusData.spot}\n`);
 console.log(
   `Location: ${locationData.name} - ${locationData.spots[characterStatusData.spot].description}\n`,

@@ -1,7 +1,8 @@
 {
   "shaki": {
-    "current_appearance": "casual",
-    "current_background": "default",
+    "current_appearance": "kimono",
+    "current_background": "onsen",
+    "last_pose": "spreadlegs",
     "hair": true,
     "bra": true,
     "top": true,
@@ -16,6 +17,7 @@
   "blacknila": {
     "current_appearance": "casual",
     "current_background": "onsen",
+    "last_pose": "stand",
     "hair": true,
     "bra": true,
     "top": true,
@@ -30,6 +32,7 @@
   "dia": {
     "current_appearance": "casual",
     "current_background": "default",
+    "last_pose": "stand",
     "hair": true,
     "bra": true,
     "top": true,

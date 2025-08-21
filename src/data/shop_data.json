@@ -35,10 +35,43 @@
       "itemType": "appearance",
       "price": 100,
       "purchasedAt": "2025-08-06T10:18:54.197Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-13T06:19:50.713Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-13T06:19:56.285Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-13T06:33:37.165Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-13T06:34:19.233Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-13T06:40:04.820Z"
     }
   ],
   "ownedRpPacks": [
     "onsen_rp_pack"
   ],
-  "activeRpPack": null
+  "activeRpPack": {
+    "id": "onsen_rp_pack",
+    "activatedAt": "2025-08-15T01:13:40.276Z"
+  }
 }

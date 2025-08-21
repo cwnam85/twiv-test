@@ -1,68 +1,47 @@
 {
-  "id": 1,
-  "name": "비키니",
-  "description": "실크 소재의 화이트 비키니",
+  "id": 12,
+  "name": "검은 의사 가운",
+  "description": "선생님의 검은 의상 가운",
   "parts": {
-    "hair": {
-      "shaki": "shaki_hair",
-      "blacknila": "blacknila_hair",
-      "dia": "dia_hair",
-	  "removable": {
-        "allow": null,
-        "affinity": null
-      }
-    },
     "bra": {
-      "name": "black bra",
+      "name": "black_bra",
       "removable": {
         "allow": "characterForAdult",
-        "affinity": 80
+        "affinity": 100
       }
     },
     "top": {
-      "name": "top_name",
+      "name": "white_formal_shirt",
       "removable": {
         "allow": "characterForAdult",
         "affinity": 80
       }
     },
     "outerwear": {
-      "name": "jacket_name",
+      "name": "black_medical_coat",
       "removable": {
         "allow": "characterForAdult",
         "affinity": 80
       }
     },
     "panties": {
-      "name": "black silk panties",
+      "name": "black_panties",
       "removable": {
         "allow": "locked",
         "affinity": null
       }
     },
     "bottom": {
-      "name": "bottom_name",
+      "name": "gray_mini_skirt_with_black_stockings",
       "removable": {
         "allow": "characterForAdult",
         "affinity": 80
       }
     },
-    "shoes": {
-      "name": "black_sandals",
-      "removable": {
-        "allow": "characterForAdult",
-        "affinity": 80
-      }
-    },
+    "shoes": null,
     "accessories": {
-      "hat": {
-        "name": "hat_name"
-      },
       "necklace": {
-        "name": "silver_chain_necklace"
-      },
-      "belt": {
-        "name": "belt_name"
+        "name": "stethoscope_necklace"
       }
     }
   }

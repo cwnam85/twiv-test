@@ -40,8 +40,7 @@ class SectionLoader {
   // shopService 인스턴스 가져오기
   getShopService() {
     try {
-      // 동적 import로 shopService 가져오기
-      const shopService = require('../src/services/shopService.js').default;
+      // 이미 import된 shopService 사용
       return shopService;
     } catch (error) {
       console.error('Error getting shop service:', error);

@@ -151,6 +151,17 @@ const useShop = ({
 
       if (response.ok) {
         const data = await response.json();
+
+        // 부스터 반응 처리
+        if (data.boosterReaction) {
+          console.log('Booster reaction received from server:', data.boosterReaction);
+          onMessageAdd(data.boosterReaction.message);
+          if (data.boosterReaction.audioData) {
+            console.log('Playing booster audio data:', data.boosterReaction.audioData);
+            onAudioData(data.boosterReaction.audioData);
+          }
+        }
+
         await fetchShopData();
         await fetchBoosterStatus();
         return data;

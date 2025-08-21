@@ -81,7 +81,7 @@ router.post('/purchase', (req, res) => {
 });
 
 // 부스터 사용
-router.post('/use-booster', (req, res) => {
+router.post('/use-booster', async (req, res) => {
   try {
     const { boosterId } = req.body;
 
@@ -95,12 +95,36 @@ router.post('/use-booster', (req, res) => {
     // 호감도 서비스에서 부스터 활성화
     const affinityResult = affinityService.activateBooster();
 
+    // 부스터 활성화에 대한 LLM 반응 생성
+    let boosterReaction = null;
+    try {
+      const shopItems = shopService.getShopItems();
+      const boosterItem = shopItems.boosters.find((item) => item.id === boosterId);
+      const boosterName = boosterItem ? boosterItem.name : '부스터';
+
+      const reactionMessage = `shaki has consumed an Affinity Booster that enhances emotional connection. Please express how shaki feels more receptive and emotionally responsive to the user's interactions. Show that shaki is experiencing heightened sensitivity to the user's presence and actions.`;
+
+      console.log('Starting booster activation reaction generation...');
+      const reactionData = await processChatMessage(reactionMessage, reactionMessage, true); // skipPointCheck = true
+
+      boosterReaction = {
+        message: reactionData.message,
+        audioData: reactionData.audioData,
+      };
+
+      console.log('Booster activation reaction generated:', reactionData.message);
+      console.log('Audio data generated:', reactionData.audioData ? 'success' : 'failed');
+    } catch (chatError) {
+      console.error('Error generating booster activation reaction:', chatError);
+    }
+
     res.json({
       success: true,
       message: '부스터가 활성화되었습니다. 호감도가 100으로 설정되고 10분간 유지됩니다.',
       activeBooster: useResult.activeBooster,
       affinity: affinityResult.affinity,
       ownedBoosters: useResult.ownedBoosters,
+      boosterReaction: boosterReaction,
     });
   } catch (error) {
     console.error('Error using booster:', error);

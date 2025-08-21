@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import nunjucks from 'nunjucks';
+import characterStateService from '../services/characterStateService.js';
+import backgroundService from '../services/backgroundService.js';
 
 // 템플릿 파일 읽기
 function readTemplate(templateName) {
@@ -46,13 +48,8 @@ function generateBackgroundInfo(backgroundId) {
     return 'Default Background';
   }
 
-  const backgroundNames = {
-    default: 'Default Background',
-    school: 'School',
-    beach: 'Beach',
-  };
-
-  return backgroundNames[backgroundId] || backgroundId;
+  const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+  return backgroundService.getBackgroundName(activeCharacter, backgroundId);
 }
 
 // 외모 정보 생성
@@ -155,10 +152,20 @@ export function generateChatPrompt(context) {
     return null;
   }
 
+  // 활성 캐릭터 정보 가져오기
+  const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+  const characterLastPose = characterStateService.getLastPose(activeCharacter);
+
+  // 현재 배경의 spots 정보 가져오기
+  const location = backgroundService.getBackgroundSpots(activeCharacter, context.currentBackground);
+
   const templateContext = {
     userInput: context.userInput || '',
+    lastMessage: context.lastMessage || 'none',
     affinity: context.affinity || 0,
     currentBackground: generateBackgroundInfo(context.currentBackground),
+    currentBackgroundId: context.currentBackground || 'default',
+    location: location,
     currentAppearance: generateAppearanceInfo(context.appearanceData),
     appearanceDetail: generateAppearanceDetail(context.appearanceData),
     undressableItems: generateUndressableItems(context.appearanceData, context.affinity),
@@ -168,6 +175,8 @@ export function generateChatPrompt(context) {
     ownedAppearances: context.ownedAppearances || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
     character: context.character || 'shaki',
+    characterName: activeCharacter,
+    characterLastPose: characterLastPose,
     activeRpPack: context.activeRpPack || null,
   };
 

@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import characterStateService from './characterStateService.js';
+import backgroundService from './backgroundService.js';
+import characterService from './characterService.js';
 
 // RP 팩 JSON 파일 경로
 const RP_PACKS_BASE_PATH = path.join(process.cwd(), 'vtuber_prompts', 'characters');
@@ -316,73 +318,28 @@ class ShopService {
       // 현재 활성 캐릭터 확인
       const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
 
-      // 캐릭터의 backgrounds 폴더 경로
-      const backgroundsDir = path.join(
-        process.cwd(),
-        'vtuber_prompts',
-        'characters',
-        activeCharacter,
-        'backgrounds',
-      );
+      // backgroundService를 사용하여 사용 가능한 배경 목록 가져오기
+      const availableBackgrounds = backgroundService.getAvailableBackgrounds(activeCharacter);
 
-      if (!fs.existsSync(backgroundsDir)) {
-        console.warn(`Backgrounds directory not found for character: ${activeCharacter}`);
-        return [
-          {
-            id: 'default',
-            name: '기본 배경',
-            type: 'background',
-            price: 0,
-            description: '기본 배경으로 돌아갑니다.',
-          },
-        ];
-      }
-
-      // backgrounds 폴더의 모든 JSON 파일 읽기
-      const backgroundFiles = fs
-        .readdirSync(backgroundsDir)
-        .filter((file) => file.endsWith('.json'));
-
-      if (backgroundFiles.length === 0) {
-        console.warn(`No background files found in directory: ${backgroundsDir}`);
-        return [
-          {
-            id: 'default',
-            name: '기본 배경',
-            type: 'background',
-            price: 0,
-            description: '기본 배경으로 돌아갑니다.',
-          },
-        ];
-      }
-
-      // 각 배경 파일을 읽어서 상점 아이템 형태로 변환
-      const backgrounds = backgroundFiles.map((filename) => {
-        const backgroundId = filename.replace('.json', '');
-        const backgroundPath = path.join(backgroundsDir, filename);
-
-        try {
-          const backgroundData = JSON.parse(fs.readFileSync(backgroundPath, 'utf8'));
-          return {
-            id: backgroundId,
-            name: backgroundData.name || backgroundId,
-            type: 'background',
-            price: backgroundData.price || 0,
-            description:
-              backgroundData.description ||
-              `${backgroundData.name || backgroundId} 배경을 사용해보세요.`,
-          };
-        } catch (error) {
-          console.error(`Error reading background file ${filename}:`, error);
-          return {
-            id: backgroundId,
-            name: backgroundId,
-            type: 'background',
-            price: 0,
-            description: `${backgroundId} 배경을 사용해보세요.`,
-          };
-        }
-      });
+      // 기본 배경 추가
+      const backgrounds = [
+        {
+          id: 'default',
+          name: '기본 배경',
+          type: 'background',
+          price: 0,
+          description: '기본 배경으로 돌아갑니다.',
+        },
+        ...availableBackgrounds.map((bg) => ({
+          id: bg.id,
+          name: bg.name,
+          type: 'background',
+          price: bg.price || 100, // 기본 가격 100
+          description: bg.description,
+          hasSpots: bg.hasSpots,
+          spotsCount: bg.spotsCount,
+        })),
+      ];
 
       return backgrounds;
     } catch (error) {
@@ -572,7 +529,6 @@ class ShopService {
 
       // RP 팩 의상 변경 시 착용 상태 초기화
       try {
-        const characterService = require('./characterService.js').default;
         characterService.changeToOutfit(newAppearance);
         console.log(
           `Outfit changed to ${newAppearance} for RP pack ${rpPackId} with proper initialization`,

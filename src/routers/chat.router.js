@@ -123,6 +123,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
 
     const promptContext = {
       userInput: realMessage,
+      lastMessage: conversationService.getLastMessage(),
       affinity: affinityService.getData().affinity || 0,
       currentBackground: characterState?.current_background || 'default',
       currentAppearance: characterState?.current_appearance || 'default',
@@ -136,6 +137,10 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
 
     const contextMessage = generateChatPrompt(promptContext);
 
+    // API 요청 시간 측정 시작
+    const startTime = performance.now();
+    console.log(`🚀 ${currentModel.toUpperCase()} API 요청 시작...`);
+
     // LLM 응답 처리 (컨텍스트가 포함된 메시지 사용)
     const response = await processLLMResponseWithRetry(
       requestHistory,
@@ -143,6 +148,11 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       currentModel,
       systemPrompt,
     );
+
+    // API 요청 시간 측정 완료
+    const endTime = performance.now();
+    const responseTime = (endTime - startTime) / 1000; // 초 단위로 변환
+    console.log(`✅ ${currentModel.toUpperCase()} API 응답 완료: ${responseTime.toFixed(2)}초`);
 
     // appearanceOn/appearanceOff 처리
     await responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
@@ -198,6 +208,12 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);
+
+    // 캐릭터 상태에 마지막 포즈 저장
+    if (response.pose) {
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+      characterStateService.setLastPose(activeCharacter, response.pose);
+    }
 
     return {
       message: response.dialogue,
@@ -262,11 +278,22 @@ router.post('/purchase', async (req, res) => {
     const systemPrompt = characterService.getSystemPrompt();
     const activeRpPack = shopService.getActiveRpPack();
 
+    // 구매 완료 API 요청 시간 측정 시작
+    const purchaseStartTime = performance.now();
+    console.log(`🛒 구매 완료 ${currentModel.toUpperCase()} API 요청 시작...`);
+
     const purchaseResponse = await processLLMResponseWithRetry(
       requestHistory,
       userMessage,
       currentModel,
       systemPrompt,
+    );
+
+    // 구매 완료 API 요청 시간 측정 완료
+    const purchaseEndTime = performance.now();
+    const purchaseResponseTime = (purchaseEndTime - purchaseStartTime) / 1000;
+    console.log(
+      `✅ 구매 완료 ${currentModel.toUpperCase()} API 응답 완료: ${purchaseResponseTime.toFixed(2)}초`,
     );
 
     // 대화 기록에 추가
@@ -304,6 +331,12 @@ router.post('/purchase', async (req, res) => {
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(purchaseResponse.pose);
+
+    // 캐릭터 상태에 마지막 포즈 저장
+    if (purchaseResponse.pose) {
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+      characterStateService.setLastPose(activeCharacter, purchaseResponse.pose);
+    }
   } catch (error) {
     console.error('구매 완료 처리 중 오류가 발생했습니다.', error);
     res.status(500).json({ error: '구매 완료 처리 중 오류가 발생했습니다.' });
@@ -467,6 +500,7 @@ router.post('/chat', async (req, res) => {
 
     const promptContext = {
       userInput: realMessage,
+      lastMessage: conversationService.getLastMessage(),
       affinity: affinityService.getData().affinity || 0,
       currentBackground: characterState?.current_background || 'default',
       currentAppearance: characterState?.current_appearance || 'default',
@@ -480,6 +514,10 @@ router.post('/chat', async (req, res) => {
 
     const contextMessage = generateChatPrompt(promptContext);
 
+    // API 요청 시간 측정 시작
+    const startTime = performance.now();
+    console.log(`🚀 ${currentModel.toUpperCase()} API 요청 시작...`);
+
     // LLM 응답 처리 (컨텍스트가 포함된 메시지 사용)
     const response = await processLLMResponseWithRetry(
       requestHistory,
@@ -487,6 +525,11 @@ router.post('/chat', async (req, res) => {
       currentModel,
       systemPrompt,
     );
+
+    // API 요청 시간 측정 완료
+    const endTime = performance.now();
+    const responseTime = (endTime - startTime) / 1000; // 초 단위로 변환
+    console.log(`✅ ${currentModel.toUpperCase()} API 응답 완료: ${responseTime.toFixed(2)}초`);
 
     // appearanceOn/appearanceOff 처리
     responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
@@ -559,6 +602,12 @@ router.post('/chat', async (req, res) => {
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);
+
+    // 캐릭터 상태에 마지막 포즈 저장
+    if (response.pose) {
+      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+      characterStateService.setLastPose(activeCharacter, response.pose);
+    }
   } catch (error) {
     console.error(`Error calling ${conversationService.getCurrentModel()} API:`, error);
     if (!res.headersSent) {

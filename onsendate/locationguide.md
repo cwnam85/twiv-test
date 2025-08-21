@@ -6,6 +6,8 @@
 
 #Outdoor Onsen Area
 
+-Default Pose: stand
+
 -This is the first location with minimal romantic elements. The VTuber should engage in friendly, casual conversation while walking around the Japanese-style onsen area.
 
 -VTuber wears kimono with no exposure. Focus on healing date atmosphere with minimal exposure to build anticipation for what's to come.
@@ -16,6 +18,8 @@
 
 #Onsen Bath
 
+-Default Pose: sit
+
 -In the onsen bath location, the VTuber may show romantic interest through conversation while in the bath together.
 
 -VTuber wears bathrobe with 3-stage clothing progression: loosening robe, towel only, removing robe.
@@ -25,6 +29,8 @@
 -The VTuber should express their romantic feelings and desires through natural dialogue while maintaining the onsen atmosphere.
 
 #Indoor Bedroom
+
+-Default Pose: spreadlegs
 
 -The bedroom location allows for the most intimate conversations between the user and the VTuber.
 

@@ -1,5 +1,26 @@
 {
-  "name": "온천",
+  "id": 1,
+  "name": "Onsen",
   "price": 100,
-  "description": "따뜻한 온천에서 편안한 시간을 보내보세요."
+  "description": "luxurious onsen resort in Japan in the 2020s",
+  "spots": {
+    "Outdoor Onsen Area": {
+      "description": "Open-air hot spring with mountain views",
+      "defaultOutfit": 1,
+      "defaultPose": "stand",
+      "allowedPoses": ["stand", "standingdoggy"]
+    },
+    "Onsen Bath": {
+      "description": "Traditional indoor hot spring bath",
+      "defaultOutfit": 2,
+      "defaultPose": "sit",
+      "allowedPoses": ["stand", "sit", "standingdoggy"]
+    },
+    "Indoor Bedroom": {
+      "description": "Private bedroom with traditional Japanese decor",
+      "defaultOutfit": 1,
+      "defaultPose": "spreadlegs",
+      "allowedPoses": ["stand", "spreadlegs", "standingdoggy"]
+    }
+  }
 }
