@@ -327,7 +327,7 @@ router.post('/activate-rp-pack', async (req, res) => {
       if (changes.length > 0) {
         reactionMessage +=
           changes.join(' and ') +
-          '. Please provide a natural reaction to this special situation. In your response, do not include outfitOn or outfitOff fields in the output.';
+          '. Please provide a natural reaction to this special situation. In your response, do not include outfitToWear or outfitToRemove fields in the output.';
 
         console.log('Starting RP pack activation reaction generation...');
         const reactionData = await processChatMessage(reactionMessage, reactionMessage, true);
@@ -393,7 +393,7 @@ router.post('/deactivate-rp-pack', async (req, res) => {
       if (changes.length > 0) {
         reactionMessage +=
           changes.join(' and ') +
-          '. Please provide a natural reaction to this situation. In your response, do not include outfitOn or outfitOff fields in the output.';
+          '. Please provide a natural reaction to this situation. In your response, do not include outfitToWear or outfitToRemove fields in the output.';
 
         console.log('Starting RP pack deactivation reaction generation...');
         const reactionData = await processChatMessage(reactionMessage, reactionMessage, true);

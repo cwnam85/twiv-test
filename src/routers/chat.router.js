@@ -97,7 +97,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
 
     // 포인트가 0일 때 TTS로 메시지 재생
-    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], []);
+    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], [], null);
 
     return {
       message: randomMessage.message,
@@ -114,7 +114,11 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     const currentModel = conversationService.getCurrentModel();
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
-    const systemPrompt = characterService.getSystemPrompt();
+    const systemPromptContext = {
+      userLastResponses: conversationService.getUserLastResponses(),
+      llmLastResponses: conversationService.getLlmLastResponses(),
+    };
+    const systemPrompt = characterService.getSystemPrompt(systemPromptContext);
 
     // 사용자 메시지에 컨텍스트 정보 추가
     const shopData = shopService.getOwnedItems();
@@ -133,6 +137,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
       activeRpPack: shopService.getActiveRpPack(),
+      userLastResponses: conversationService.getUserLastResponses(),
+      llmLastResponses: conversationService.getLlmLastResponses(),
     };
 
     const contextMessage = generateChatPrompt(promptContext);
@@ -154,8 +160,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     const responseTime = (endTime - startTime) / 1000; // 초 단위로 변환
     console.log(`✅ ${currentModel.toUpperCase()} API 응답 완료: ${responseTime.toFixed(2)}초`);
 
-    // appearanceOn/appearanceOff 처리
-    await responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
+    // outfitToWear/outfitToRemove 처리
+    await responseService.processAppearanceChange(response.outfitToWear, response.outfitToRemove);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -200,6 +206,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
         response.emotion,
         response.matureTags,
         response.segments,
+        response.currentActivity,
       );
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);
@@ -224,8 +231,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      appearanceOn: response.appearanceOn,
-      appearanceOff: response.appearanceOff,
+      outfitToWear: response.outfitToWear,
+      outfitToRemove: response.outfitToRemove,
       location: response.location, // RP팩 위치 정보 추가
       audioData: clientAudioData,
     };
@@ -474,7 +481,7 @@ router.post('/chat', async (req, res) => {
       characterMessage.noPoint[Math.floor(Math.random() * characterMessage.noPoint.length)];
 
     // 포인트가 0일 때 TTS로 메시지 재생
-    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], []);
+    await responseService.playResponse(randomMessage.message, randomMessage.emotion, [], [], null);
 
     return res.json({
       message: randomMessage.message,
@@ -491,7 +498,11 @@ router.post('/chat', async (req, res) => {
     const currentModel = conversationService.getCurrentModel();
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
-    const systemPrompt = characterService.getSystemPrompt();
+    const systemPromptContext = {
+      userLastResponses: conversationService.getUserLastResponses(),
+      llmLastResponses: conversationService.getLlmLastResponses(),
+    };
+    const systemPrompt = characterService.getSystemPrompt(systemPromptContext);
 
     // 사용자 메시지에 컨텍스트 정보 추가
     const shopData = shopService.getOwnedItems();
@@ -510,6 +521,8 @@ router.post('/chat', async (req, res) => {
       isAdultCharacter: characterService.isJailbreakCharacter(),
       character: characterService.getActiveCharacter(),
       activeRpPack: shopService.getActiveRpPack(),
+      userLastResponses: conversationService.getUserLastResponses(),
+      llmLastResponses: conversationService.getLlmLastResponses(),
     };
 
     const contextMessage = generateChatPrompt(promptContext);
@@ -531,8 +544,8 @@ router.post('/chat', async (req, res) => {
     const responseTime = (endTime - startTime) / 1000; // 초 단위로 변환
     console.log(`✅ ${currentModel.toUpperCase()} API 응답 완료: ${responseTime.toFixed(2)}초`);
 
-    // appearanceOn/appearanceOff 처리
-    responseService.processAppearanceChange(response.appearanceOn, response.appearanceOff);
+    // outfitToWear/outfitToRemove 처리
+    responseService.processAppearanceChange(response.outfitToWear, response.outfitToRemove);
 
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
@@ -577,6 +590,7 @@ router.post('/chat', async (req, res) => {
         response.emotion,
         response.matureTags,
         response.segments,
+        response.currentActivity,
       );
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);
@@ -594,8 +608,8 @@ router.post('/chat', async (req, res) => {
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
-      appearanceOn: response.appearanceOn,
-      appearanceOff: response.appearanceOff,
+      outfitToWear: response.outfitToWear,
+      outfitToRemove: response.outfitToRemove,
       location: response.location, // RP팩 위치 정보 추가
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
@@ -644,6 +658,56 @@ router.post('/delete-tts', (req, res) => {
   } catch (error) {
     console.error('[TTS DELETE] Error deleting TTS file:', error);
     res.status(500).json({ error: 'Failed to delete TTS file' });
+  }
+});
+
+// 효과음 파일 목록을 반환하는 엔드포인트
+router.get('/effects/list/:effectType', (req, res) => {
+  try {
+    const { effectType } = req.params;
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+    // 캐릭터별 효과음 폴더 경로 결정
+    let effectDir;
+    const characterSpecificDir = path.join(
+      process.cwd(),
+      'mature_tts',
+      activeCharacter,
+      effectType,
+    );
+
+    // 캐릭터 전용 폴더가 있으면 사용, 없으면 기본 폴더 사용
+    if (fs.existsSync(characterSpecificDir)) {
+      effectDir = characterSpecificDir;
+      console.log(
+        `[EFFECT LIST] Using character-specific folder for ${activeCharacter}: ${effectDir}`,
+      );
+    } else {
+      // 기본 효과음 폴더 (fallback)
+      effectDir = path.join(process.cwd(), 'mature_tts', effectType);
+      console.log(`[EFFECT LIST] Using default folder for ${activeCharacter}: ${effectDir}`);
+    }
+
+    if (!fs.existsSync(effectDir)) {
+      console.warn(`[EFFECT LIST] Effect directory not found: ${effectDir}`);
+      return res.status(404).json({ error: 'Effect directory not found' });
+    }
+
+    const files = fs.readdirSync(effectDir).filter((file) => file.endsWith('.mp3'));
+    if (files.length === 0) {
+      console.warn(`[EFFECT LIST] No MP3 files found in: ${effectDir}`);
+      return res.json({ files: [] });
+    }
+
+    console.log(`[EFFECT LIST] Found ${files.length} files for ${effectType}: ${files.join(', ')}`);
+    res.json({
+      files,
+      character: activeCharacter,
+      effectType,
+    });
+  } catch (error) {
+    console.error('[EFFECT LIST] Error getting effect file list:', error);
+    res.status(500).json({ error: 'Failed to get effect file list' });
   }
 });
 

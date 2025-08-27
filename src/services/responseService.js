@@ -52,9 +52,10 @@ class ResponseService {
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
       const affinity = processedResponse.affinity;
-      const appearanceOn = processedResponse.appearanceOn || [];
-      const appearanceOff = processedResponse.appearanceOff || [];
+      const outfitToWear = processedResponse.outfitToWear || [];
+      const outfitToRemove = processedResponse.outfitToRemove || [];
       const location = processedResponse.location || null; // 위치 정보 추가
+      const currentActivity = processedResponse.currentActivity || null; // 성적 활동 정보
       matureTags = processedResponse.matureTags || [];
       segments = processedResponse.segments || [];
 
@@ -71,9 +72,10 @@ class ResponseService {
         pose,
         usage,
         affinity,
-        appearanceOn,
-        appearanceOff,
+        outfitToWear,
+        outfitToRemove,
         location, // 위치 정보 추가
+        currentActivity, // 성적 활동 정보 추가
         matureTags,
         segments,
       };
@@ -89,27 +91,27 @@ class ResponseService {
     const matchDialogue = dialogueText.match(/dialogue:\s*["']([^"']+)["']/i);
     const matchPose = dialogueText.match(/pose:\s*["']?([^"',}]+)["']?/i);
     const matchAffinity = dialogueText.match(/affinity:\s*["']?([^"',}]+)["']?/i);
-    const matchOutfitOn = dialogueText.match(/appearanceOn:\s*(\[[\s\S]*?\])/i);
-    const matchOutfitOff = dialogueText.match(/appearanceOff:\s*(\[[\s\S]*?\])/i);
+    const matchOutfitOn = dialogueText.match(/outfitToWear:\s*(\[[\s\S]*?\])/i);
+    const matchOutfitOff = dialogueText.match(/outfitToRemove:\s*(\[[\s\S]*?\])/i);
 
-    let appearanceOn = [];
-    let appearanceOff = [];
+    let outfitToWear = [];
+    let outfitToRemove = [];
 
     if (matchOutfitOn) {
       try {
-        const appearanceOnText = matchOutfitOn[0].replace(/appearanceOn:\s*/, '');
-        appearanceOn = JSON.parse(appearanceOnText);
+        const outfitToWearText = matchOutfitOn[0].replace(/outfitToWear:\s*/, '');
+        outfitToWear = JSON.parse(outfitToWearText);
       } catch (e) {
-        console.warn('Failed to parse appearanceOn from regex:', e);
+        console.warn('Failed to parse outfitToWear from regex:', e);
       }
     }
 
     if (matchOutfitOff) {
       try {
-        const appearanceOffText = matchOutfitOff[0].replace(/appearanceOff:\s*/, '');
-        appearanceOff = JSON.parse(appearanceOffText);
+        const outfitToRemoveText = matchOutfitOff[0].replace(/outfitToRemove:\s*/, '');
+        outfitToRemove = JSON.parse(outfitToRemoveText);
       } catch (e) {
-        console.warn('Failed to parse appearanceOff from regex:', e);
+        console.warn('Failed to parse outfitToRemove from regex:', e);
       }
     }
 
@@ -119,8 +121,8 @@ class ResponseService {
       pose: matchPose ? matchPose[1].trim() : null,
       usage: null,
       affinity: matchAffinity ? matchAffinity[1].trim() : null,
-      appearanceOn,
-      appearanceOff,
+      outfitToWear,
+      outfitToRemove,
       matureTags: [],
       segments: [],
     };
@@ -200,7 +202,7 @@ class ResponseService {
     }
   }
 
-  async playResponse(dialogue, emotion, matureTags = [], segments = []) {
+  async playResponse(dialogue, emotion, matureTags = [], segments = [], currentActivity = null) {
     try {
       // mature 태그 사용 빈도 추적을 위한 맵
       const tagCountMap = new Map();
@@ -289,10 +291,11 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // 4단계: 무한재생용 효과음 URL 생성
-        let infiniteEffectUrl = null;
-        if (infiniteTag) {
-          infiniteEffectUrl = this.getRandomEffectUrl(infiniteTag);
+        // 4단계: intercourse 배경음 처리
+        let backgroundAudio = null;
+        if (currentActivity === 'intercourse') {
+          backgroundAudio = 'intercourse';
+          console.log(`[BACKGROUND] Adding intercourse background audio`);
         }
 
         // 5단계: 클라이언트로 전송할 데이터 반환
@@ -301,11 +304,12 @@ class ResponseService {
           emotion,
           segments: clientSegments,
           infiniteTag,
-          infiniteEffectUrl,
+          backgroundAudio,
           matureTags: Array.from(tagCountMap.keys()),
         };
 
         console.log(`[CLIENT] Prepared ${clientSegments.length} segments for client playback`);
+        console.log(`[DEBUG] Sending backgroundAudio: ${backgroundAudio}`);
         return clientData;
       } else {
         // segments가 없으면 TTS만 생성하고 클라이언트 데이터 반환
@@ -325,10 +329,11 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // 무한재생용 효과음 URL 생성
-        let infiniteEffectUrl = null;
-        if (infiniteTag) {
-          infiniteEffectUrl = this.getRandomEffectUrl(infiniteTag);
+        // intercourse 배경음 처리
+        let backgroundAudio = null;
+        if (currentActivity === 'intercourse') {
+          backgroundAudio = 'intercourse';
+          console.log(`[BACKGROUND] Adding intercourse background audio`);
         }
 
         return {
@@ -336,7 +341,7 @@ class ResponseService {
           emotion,
           segments: [],
           infiniteTag,
-          infiniteEffectUrl,
+          backgroundAudio,
           matureTags: Array.from(tagCountMap.keys()),
         };
       }
@@ -392,14 +397,30 @@ class ResponseService {
     try {
       // 활성 캐릭터 확인
       const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+      console.log(
+        `[EFFECT DEBUG] Active character: ${activeCharacter}, Effect type: ${effectType}`,
+      );
 
       // 캐릭터별 효과음 폴더 경로 결정
       let effectDir;
-      if (activeCharacter === 'blacknila') {
-        effectDir = path.join(process.cwd(), 'mature_tts', 'blacknila', effectType);
+      const characterSpecificDir = path.join(
+        process.cwd(),
+        'mature_tts',
+        activeCharacter,
+        effectType,
+      );
+      console.log(`[EFFECT DEBUG] Checking character-specific directory: ${characterSpecificDir}`);
+
+      // 캐릭터 전용 폴더가 있으면 사용, 없으면 기본 폴더 사용
+      if (fs.existsSync(characterSpecificDir)) {
+        effectDir = characterSpecificDir;
+        console.log(
+          `[EFFECT] Using character-specific folder for ${activeCharacter}: ${effectDir}`,
+        );
       } else {
-        // 기본 효과음 폴더 (shaki 등)
+        // 기본 효과음 폴더 (fallback)
         effectDir = path.join(process.cwd(), 'mature_tts', effectType);
+        console.log(`[EFFECT] Using default folder for ${activeCharacter}: ${effectDir}`);
       }
 
       if (!fs.existsSync(effectDir)) {
@@ -414,14 +435,14 @@ class ResponseService {
       }
 
       const randomFile = files[Math.floor(Math.random() * files.length)];
-      const effectUrl =
-        activeCharacter === 'blacknila'
-          ? `/api/effects/blacknila/${effectType}/${randomFile}`
-          : `/api/effects/${effectType}/${randomFile}`;
 
-      console.log(
-        `[EFFECT] Selected random effect for ${activeCharacter}: ${effectType}/${randomFile}`,
-      );
+      // 캐릭터 전용 폴더를 사용 중인지 확인
+      const isUsingCharacterFolder = fs.existsSync(characterSpecificDir);
+      const effectUrl = isUsingCharacterFolder
+        ? `/api/effects/${activeCharacter}/${effectType}/${randomFile}`
+        : `/api/effects/${effectType}/${randomFile}`;
+
+      console.log(`[EFFECT] Selected random effect for ${activeCharacter}: ${effectUrl}`);
       return effectUrl;
     } catch (error) {
       console.error(`[EFFECT] Error getting random effect URL for ${effectType}:`, error);
@@ -429,10 +450,10 @@ class ResponseService {
     }
   }
 
-  processAppearanceChange(appearanceOn, appearanceOff) {
-    // appearanceOff 처리 (벗기기)
-    if (Array.isArray(appearanceOff) && appearanceOff.length > 0) {
-      for (const category of appearanceOff) {
+  processAppearanceChange(outfitToWear, outfitToRemove) {
+    // outfitToRemove 처리 (벗기기)
+    if (Array.isArray(outfitToRemove) && outfitToRemove.length > 0) {
+      for (const category of outfitToRemove) {
         if (category) {
           console.log(`Processing appearance removal: ${category}`);
           try {
@@ -444,9 +465,9 @@ class ResponseService {
       }
     }
 
-    // appearanceOn 처리 (입기)
-    if (Array.isArray(appearanceOn) && appearanceOn.length > 0) {
-      for (const category of appearanceOn) {
+    // outfitToWear 처리 (입기)
+    if (Array.isArray(outfitToWear) && outfitToWear.length > 0) {
+      for (const category of outfitToWear) {
         if (category) {
           console.log(`Processing outfit wearing: ${category}`);
           try {
@@ -459,7 +480,10 @@ class ResponseService {
     }
 
     // 모든 변경 완료 후 시스템 프롬프트 업데이트
-    if ((appearanceOn && appearanceOn.length > 0) || (appearanceOff && appearanceOff.length > 0)) {
+    if (
+      (outfitToWear && outfitToWear.length > 0) ||
+      (outfitToRemove && outfitToRemove.length > 0)
+    ) {
       try {
         characterService.updateSystemPrompt(characterService.getAppearanceData().appearanceData);
       } catch (error) {

@@ -14,6 +14,7 @@ interface AudioData {
   segments: AudioSegment[];
   infiniteTag?: string;
   infiniteEffectUrl?: string;
+  backgroundAudio?: string;
   matureTags: string[];
 }
 
@@ -22,6 +23,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
   const gainNodeRef = useRef<GainNode | null>(null);
   const isPlayingRef = useRef(false);
   const infiniteIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const backgroundAudioRef = useRef<boolean>(false);
 
   // TTS 파일명 추출 함수
   const extractFileName = useCallback((audioUrl: string): string | null => {
@@ -195,6 +197,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
   const stopPlayback = useCallback(() => {
     console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
     isPlayingRef.current = false;
+    backgroundAudioRef.current = false;
     stopInfinitePlayback();
     console.log(`[CLIENT] Stopped all playback`);
   }, [stopInfinitePlayback]);
@@ -261,6 +264,45 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
     [loadAudioBuffer, playWithFade, playEffect, stopPlayback],
   );
 
+  // 배경음 재생 시작 (큰 볼륨으로)
+  const startBackgroundAudio = useCallback(
+    (effectType: string) => {
+      backgroundAudioRef.current = true;
+      console.log(`[CLIENT] Starting LOUD background audio: ${effectType}`);
+
+      const playNextBackgroundEffect = async () => {
+        if (!backgroundAudioRef.current) {
+          console.log(`[CLIENT] Background audio stopped for ${effectType}`);
+          return;
+        }
+
+        try {
+          // intercourse는 항상 기본 폴더 사용 (공용)
+          const url = `/api/effects/${effectType}/${effectType}.mp3`;
+          console.log(`[CLIENT] Using default background: ${url}`);
+          console.log(`[CLIENT] Playing loud background: ${url}`);
+          const audioBuffer = await loadAudioBuffer(url);
+
+          // 배경음은 큰 볼륨으로 재생
+          await playWithFade(audioBuffer, true, true, true);
+
+          // 배경음 재생 완료 후 바로 다음 배경음 재생
+          if (backgroundAudioRef.current) {
+            playNextBackgroundEffect();
+          }
+        } catch (error) {
+          console.error(`[CLIENT] Error playing background effect ${effectType}:`, error);
+          if (backgroundAudioRef.current) {
+            playNextBackgroundEffect();
+          }
+        }
+      };
+
+      playNextBackgroundEffect();
+    },
+    [loadAudioBuffer, playWithFade],
+  );
+
   // 무한재생 시작
   const startInfinitePlayback = useCallback(
     (effectType: string, effectUrl?: string) => {
@@ -282,9 +324,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
           // 서버에서 제공한 URL 사용, 없으면 클라이언트에서 생성
           const url =
             effectUrl ||
-            (currentCharacter.toLowerCase() === 'blacknila'
-              ? `/api/effects/blacknila/${effectType}/${effectType}_${Math.floor(Math.random() * 2) + 1}.mp3`
-              : `/api/effects/${effectType}/${effectType}_${Math.floor(Math.random() * 2) + 1}.mp3`);
+            `/api/effects/${currentCharacter.toLowerCase()}/${effectType}/${effectType}_${Math.floor(Math.random() * 2) + 1}.mp3`;
           const audioBuffer = await loadAudioBuffer(url);
           await playWithFade(audioBuffer, true, true, true); // isFirst: true, isLast: true, isEffect: true
 
@@ -318,7 +358,13 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       // 이전 재생 중지
       stopPlayback();
 
-      // 세그먼트 재생
+      // 배경음 시작 (TTS와 동시 재생)
+      if (audioData.backgroundAudio) {
+        console.log(`[CLIENT] Starting background audio: ${audioData.backgroundAudio}`);
+        startBackgroundAudio(audioData.backgroundAudio);
+      }
+
+      // 세그먼트 재생 (배경음과 동시에)
       await playSegments(audioData.segments);
 
       // 무한재생 시작
@@ -330,7 +376,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
         isPlayingRef.current = false;
       }
     },
-    [playSegments, startInfinitePlayback, stopPlayback],
+    [playSegments, startInfinitePlayback, stopPlayback, startBackgroundAudio],
   );
 
   return {

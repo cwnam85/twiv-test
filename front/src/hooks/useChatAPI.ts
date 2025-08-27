@@ -63,10 +63,10 @@ const useChatAPI = ({
       console.log('Full server response:', data);
       console.log('Response keys:', Object.keys(data));
 
-      // appearanceOn/appearanceOff 처리 (배열 형태 지원)
+      // outfitToWear/outfitToRemove 처리 (배열 형태 지원)
       if (
-        (Array.isArray(data.appearanceOn) && data.appearanceOn.length > 0) ||
-        (Array.isArray(data.appearanceOff) && data.appearanceOff.length > 0)
+        (Array.isArray(data.outfitToWear) && data.outfitToWear.length > 0) ||
+        (Array.isArray(data.outfitToRemove) && data.outfitToRemove.length > 0)
       ) {
         // 외모 변경이 발생했으면 최신 외모 데이터를 다시 받아오기
         const newAppearanceData = await onAppearanceRefresh();
@@ -86,14 +86,14 @@ const useChatAPI = ({
             belt: '벨트',
           };
 
-          if (Array.isArray(data.appearanceOff)) {
-            for (const category of data.appearanceOff) {
+          if (Array.isArray(data.outfitToRemove)) {
+            for (const category of data.outfitToRemove) {
               const categoryText = categoryMap[category] || category;
               console.log(`외모 변경: ${categoryText}를 벗었어요`);
             }
           }
-          if (Array.isArray(data.appearanceOn)) {
-            for (const category of data.appearanceOn) {
+          if (Array.isArray(data.outfitToWear)) {
+            for (const category of data.outfitToWear) {
               const categoryText = categoryMap[category] || category;
               console.log(`외모 변경: ${categoryText}를 입었어요`);
             }

@@ -1,9 +1,7 @@
-import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import Speaker from 'speaker';
 import path from 'path';
 import { fileURLToPath } from 'url';
-// audioConfig.js 파일이 제거되었으므로 import 제거
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

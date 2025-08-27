@@ -154,7 +154,14 @@ class SectionLoader {
 
   // 전체 프롬프트 조합 (nunjucks 템플릿 사용)
   buildPrompt(context = {}) {
-    const { isNSFW = false, currentAppearance = null, affinity = 1, user = 'user' } = context;
+    const {
+      isNSFW = false,
+      currentAppearance = null,
+      affinity = 1,
+      user = 'user',
+      userLastResponses = [],
+      llmLastResponses = [],
+    } = context;
 
     // RP팩 활성화 상태 확인
     const activeRpPack = this.getActiveRpPack();
@@ -194,6 +201,8 @@ class SectionLoader {
       rpPackDescription,
       rpPackGlobalNote,
       rpPackLocationGuide,
+      userLastResponses: (userLastResponses || []).join('\n\n'),
+      llmLastResponses: (llmLastResponses || []).join('\n\n'),
     };
 
     // 공통 메인 템플릿 로드 및 렌더링

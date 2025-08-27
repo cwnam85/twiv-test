@@ -114,7 +114,7 @@ class CharacterService {
     return null;
   }
 
-  loadSystemPrompt(appearanceData = null) {
+  loadSystemPrompt(appearanceData = null, context = {}) {
     try {
       if (this.activeCharacter) {
         const { affinity } = affinityService.getData();
@@ -126,6 +126,8 @@ class CharacterService {
           currentAppearance: appearanceData || this.initialAppearanceData,
           affinity: affinity,
           user: 'user',
+          userLastResponses: context.userLastResponses || [],
+          llmLastResponses: context.llmLastResponses || [],
         });
 
         if (prompt) {
@@ -247,9 +249,9 @@ class CharacterService {
     };
   }
 
-  getSystemPrompt() {
+  getSystemPrompt(context = {}) {
     // 실제 affinity 값으로 시스템 프롬프트를 로드
-    return this.loadSystemPrompt();
+    return this.loadSystemPrompt(null, context);
   }
 
   isJailbreakCharacter() {

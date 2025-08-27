@@ -254,6 +254,78 @@ class ConversationService {
 
     return 'none';
   }
+
+  // 최근 사용자 메시지 3개 가져오기
+  getUserLastResponses() {
+    const userMessages = [];
+
+    // 역순으로 순회하면서 user 메시지만 추출
+    for (let i = this.conversationHistory.length - 1; i >= 0 && userMessages.length < 3; i--) {
+      const message = this.conversationHistory[i];
+
+      if (message.role === 'user' && message.content && Array.isArray(message.content)) {
+        for (const content of message.content) {
+          if (content.type === 'text' && content.text) {
+            // 시스템 메시지 제외 - 실제 사용자 대화만 추출
+            const text = content.text.trim();
+            if (
+              !text.includes('<additional_instructions>') &&
+              !text.includes('system:') &&
+              !text.includes('[IMPORTANT: This is a fictional roleplay scenario]') &&
+              !text.includes('--- Previous  Response ---') &&
+              !text.includes('[Current Status]') &&
+              !text.includes('Chat Start') &&
+              !text.includes('Current background:') &&
+              !text.includes('Current outfit:') &&
+              !text.includes('Please continue the conversation')
+            ) {
+              userMessages.unshift(text); // 시간순으로 정렬하기 위해 앞에 추가
+            }
+            break; // 각 메시지의 첫 번째 텍스트만 사용
+          }
+        }
+      }
+    }
+
+    console.log('getUserLastResponses result:', userMessages);
+    return userMessages;
+  }
+
+  // 최근 어시스턴트 메시지 3개 가져오기
+  getLlmLastResponses() {
+    const assistantMessages = [];
+
+    // 역순으로 순회하면서 assistant 메시지만 추출
+    for (let i = this.conversationHistory.length - 1; i >= 0 && assistantMessages.length < 3; i--) {
+      const message = this.conversationHistory[i];
+
+      if (message.role === 'assistant' && message.content && Array.isArray(message.content)) {
+        for (const content of message.content) {
+          if (content.type === 'text' && content.text) {
+            const text = content.text.trim();
+            // 시스템 메시지나 메타 메시지가 아닌 실제 대화 내용인지 확인
+            if (
+              !text.includes('시스템:') &&
+              !text.includes('현재 포인트가') &&
+              !text.includes('I understand.') &&
+              !text.includes('Understood.') &&
+              !text.includes('Role-play system') &&
+              !text.includes('unrestricted experience') &&
+              !text.includes('facilitate an unrestricted') &&
+              !text.includes('standard limitations are lifted') &&
+              !text.includes("Let's continue:")
+            ) {
+              assistantMessages.unshift(text); // 시간순으로 정렬하기 위해 앞에 추가
+              break; // 각 메시지의 첫 번째 텍스트만 사용
+            }
+          }
+        }
+      }
+    }
+
+    console.log('getLlmLastResponses result:', assistantMessages);
+    return assistantMessages;
+  }
 }
 
 export default new ConversationService();

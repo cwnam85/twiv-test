@@ -70,8 +70,5 @@
   "ownedRpPacks": [
     "onsen_rp_pack"
   ],
-  "activeRpPack": {
-    "id": "onsen_rp_pack",
-    "activatedAt": "2025-08-15T01:13:40.276Z"
-  }
+  "activeRpPack": null
 }

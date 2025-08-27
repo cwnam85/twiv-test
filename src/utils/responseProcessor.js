@@ -79,8 +79,8 @@ export function processAIResponse(rawResponse) {
         emotion: 'neutral',
         pose: 'stand',
         affinity: '0',
-        outfitOn: [],
-        outfitOff: [],
+        outfitToWear: [],
+        outfitToRemove: [],
         matureTags: [],
         segments: [],
       };
@@ -126,9 +126,10 @@ export function processAIResponse(rawResponse) {
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
           affinity: jsonData.affinity || '0',
-          outfitOn: jsonData.outfitOn || [], // 새로운 형식
-          outfitOff: jsonData.outfitOff || [], // 새로운 형식
+          outfitToWear: jsonData.outfitToWear || [], // 새로운 형식
+          outfitToRemove: jsonData.outfitToRemove || [], // 새로운 형식
           location: jsonData.location || null, // RP팩 위치 정보
+          currentActivity: jsonData.currentActivity || null, // 성적 활동 정보
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };
@@ -147,9 +148,10 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
-      outfitOn: [],
-      outfitOff: [],
+      outfitToWear: [],
+      outfitToRemove: [],
       location: null, // RP팩 위치 정보
+      currentActivity: null, // 성적 활동 정보
       matureTags: tags,
       segments: segments, // 세그먼트 정보 추가
     };
@@ -160,9 +162,10 @@ export function processAIResponse(rawResponse) {
       emotion: 'neutral',
       pose: 'stand',
       affinity: '0',
-      outfitOn: [],
-      outfitOff: [],
+      outfitToWear: [],
+      outfitToRemove: [],
       location: null, // RP팩 위치 정보
+      currentActivity: null, // 성적 활동 정보
       matureTags: [],
       segments: [],
     };
