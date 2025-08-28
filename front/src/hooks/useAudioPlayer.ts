@@ -18,7 +18,10 @@ interface AudioData {
   matureTags: string[];
 }
 
-export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
+export const useAudioPlayer = (
+  currentCharacter: string = 'shaki',
+  onPlaybackComplete?: () => void,
+) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const isPlayingRef = useRef(false);
@@ -367,6 +370,12 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
       // 세그먼트 재생 (배경음과 동시에)
       await playSegments(audioData.segments);
 
+      // TTS 재생 완료 콜백 호출
+      if (onPlaybackComplete) {
+        console.log('[CLIENT] TTS playback completed, calling callback');
+        onPlaybackComplete();
+      }
+
       // 무한재생 시작
       if (audioData.infiniteTag) {
         isPlayingRef.current = true; // 무한재생을 위해 true로 설정
@@ -376,7 +385,7 @@ export const useAudioPlayer = (currentCharacter: string = 'shaki') => {
         isPlayingRef.current = false;
       }
     },
-    [playSegments, startInfinitePlayback, stopPlayback, startBackgroundAudio],
+    [playSegments, startInfinitePlayback, stopPlayback, startBackgroundAudio, onPlaybackComplete],
   );
 
   return {

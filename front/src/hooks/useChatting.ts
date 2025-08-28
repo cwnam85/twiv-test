@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import useCharacter from './useCharacter';
 import useAffinity from './useAffinity';
 import useAppearance from './useAppearance';
@@ -8,6 +8,7 @@ import useChatAPI from './useChatAPI';
 import usePurchase from './usePurchase';
 import useShop from './useShop';
 import { useAudioPlayer } from './useAudioPlayer';
+import useAutoChat from './useAutoChat';
 
 const useChatting = () => {
   const [input, setInput] = useState('');
@@ -44,8 +45,18 @@ const useChatting = () => {
     closePurchaseModal,
   } = useModal();
 
-  // 오디오 플레이어 훅
+  // 오디오 플레이어 훅 (일단 콜백 없이)
   const { playAudioData, stopPlayback } = useAudioPlayer(currentCharacter);
+
+  // 자동 대화 훅
+  const { isAutoChatMode, startAutoChat, stopAutoChat, triggerAutoMessage } = useAutoChat();
+
+  // 자동모드 상태를 ref로 추적 (클로저 문제 해결)
+  const isAutoChatModeRef = useRef(isAutoChatMode);
+  useEffect(() => {
+    isAutoChatModeRef.current = isAutoChatMode;
+    console.log('🔄 자동모드 ref 업데이트:', isAutoChatMode);
+  }, [isAutoChatMode]);
 
   // Shop 훅 설정
   const {
@@ -88,7 +99,27 @@ const useChatting = () => {
     },
     onModalOpen: openModal,
     onPurchaseModalOpen: openPurchaseModal,
-    onAudioData: playAudioData,
+    onAudioData: async (audioData: unknown) => {
+      console.log('📢 TTS 재생 시작, 자동모드:', isAutoChatModeRef.current);
+      await playAudioData(audioData as Parameters<typeof playAudioData>[0]);
+      console.log('✅ TTS 재생 완료, 자동모드:', isAutoChatModeRef.current);
+
+      // TTS 재생 완료 후 자동 대화 트리거
+      if (isAutoChatModeRef.current) {
+        console.log('🔄 TTS 완료, 2초 후 자동 메시지 전송');
+        setTimeout(() => {
+          console.log('⏰ 2초 타이머 완료, 자동모드:', isAutoChatModeRef.current);
+          if (isAutoChatModeRef.current) {
+            console.log('🚀 자동 메시지 트리거 호출');
+            triggerAutoMessage(sendMessage);
+          } else {
+            console.log('❌ 자동모드가 비활성화되어 메시지 전송 취소');
+          }
+        }, 2000); // 2초 후 자동 메시지
+      } else {
+        console.log('⏹️ 자동모드 비활성화 상태로 자동 메시지 건너뜀');
+      }
+    },
     onLocationUpdate: handleLocationUpdate,
     onLoadingChange: setIsLoading,
   });
@@ -174,6 +205,10 @@ const useChatting = () => {
     isLoading,
     // RP팩 위치
     currentLocation,
+    // 자동 대화 관련
+    isAutoChatMode,
+    startAutoChat: () => startAutoChat(sendMessage),
+    stopAutoChat,
   };
 };
 

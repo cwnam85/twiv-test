@@ -45,6 +45,10 @@ function App() {
     isLoading,
     // RP팩 위치
     currentLocation,
+    // 자동 대화 관련
+    isAutoChatMode,
+    startAutoChat,
+    stopAutoChat,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -55,6 +59,11 @@ function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // 컴포넌트 마운트 시 자동 대화 상태 확인 (일시적으로 비활성화)
+  // useEffect(() => {
+  //   checkAutoChatStatus();
+  // }, [checkAutoChatStatus]);
 
   // 부스터 상태가 변경될 때 시작 시간 설정
   useEffect(() => {
@@ -183,6 +192,43 @@ function App() {
             </div>
           ))}
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* 자동 대화 컨트롤 */}
+        <div className="mb-4 flex gap-2 items-center">
+          <div className="flex gap-2">
+            <button
+              onClick={startAutoChat}
+              disabled={isAutoChatMode || isLoading}
+              className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                isAutoChatMode || isLoading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600'
+              }`}
+            >
+              🤖 자동 대화 시작
+            </button>
+            <button
+              onClick={stopAutoChat}
+              disabled={!isAutoChatMode || isLoading}
+              className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                !isAutoChatMode || isLoading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-red-500 hover:bg-red-600'
+              }`}
+            >
+              🛑 자동 대화 중지
+            </button>
+          </div>
+          <div className="flex-1">
+            {isAutoChatMode && (
+              <div className="bg-green-100 px-3 py-1 rounded-lg">
+                <span className="text-green-800 font-semibold text-sm">
+                  🤖 자동 대화 모드 활성화 중
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 입력 영역 */}

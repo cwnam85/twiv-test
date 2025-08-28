@@ -20,6 +20,11 @@ import { generateChatPrompt } from '../utils/templateRenderer.js';
 
 const router = express.Router();
 
+// 자동 대화 모드 상태 관리
+let isAutoChatMode = false;
+let autoChatTimer = null;
+let sseClients = []; // SSE 클라이언트들 저장
+
 // 서버 시작 시 WebSocket 연결
 const webSocket = connectWebSocket();
 
@@ -83,6 +88,11 @@ async function processLLMResponseWithRetry(
 
   // 모든 시도 실패 시 마지막 에러 던지기
   throw lastError;
+}
+
+// 자동 대화용 프롬프트 반환 함수
+function getAutoPrompt() {
+  return 'User has activated auto-conversation mode. Please continue leading the conversation and further develop the current activities.';
 }
 
 // 핵심 채팅 처리 함수 (다른 라우터에서도 사용 가능)
@@ -208,6 +218,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
         response.segments,
         response.currentActivity,
       );
+
+      // 자동 대화 모드일 때는 클라이언트에서 자동 대화를 처리하므로 여기서는 아무것도 하지 않음
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);
       clientAudioData = null;
@@ -714,6 +726,62 @@ router.get('/effects/list/:effectType', (req, res) => {
 // 캐릭터 설정 정보를 반환하는 엔드포인트
 router.get('/character-settings', (req, res) => {
   res.json(CHARACTER_SETTINGS);
+});
+
+// 자동 대화 모드 시작
+router.post('/start-auto-chat', async (req, res) => {
+  try {
+    console.log('🤖 자동 대화 모드 시작');
+    isAutoChatMode = true;
+
+    res.json({
+      success: true,
+      message: '자동 대화 모드가 시작되었습니다.',
+      isAutoChatMode: true,
+    });
+  } catch (error) {
+    console.error('자동 대화 모드 시작 오류:', error);
+    res.status(500).json({ error: '자동 대화 모드 시작 중 오류가 발생했습니다.' });
+  }
+});
+
+// 자동 대화 모드 중지
+router.post('/stop-auto-chat', (req, res) => {
+  try {
+    console.log('🛑 자동 대화 모드 중지');
+    isAutoChatMode = false;
+
+    if (autoChatTimer) {
+      clearTimeout(autoChatTimer);
+      autoChatTimer = null;
+    }
+
+    res.json({
+      success: true,
+      message: '자동 대화 모드가 중지되었습니다.',
+      isAutoChatMode: false,
+    });
+  } catch (error) {
+    console.error('자동 대화 모드 중지 오류:', error);
+    res.status(500).json({ error: '자동 대화 모드 중지 중 오류가 발생했습니다.' });
+  }
+});
+
+// 자동 대화 상태 확인
+router.get('/auto-chat-status', (req, res) => {
+  res.json({ isAutoChatMode });
+});
+
+// 자동 대화용 프롬프트 제공
+router.get('/auto-prompt', (req, res) => {
+  if (!isAutoChatMode) {
+    return res.status(400).json({ error: '자동 대화 모드가 활성화되지 않았습니다.' });
+  }
+
+  res.json({
+    prompt: getAutoPrompt(),
+    isAutoChatMode: true,
+  });
 });
 
 export default router;
