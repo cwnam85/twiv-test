@@ -274,6 +274,7 @@ export const useAudioPlayer = (
       console.log(`[CLIENT] Starting LOUD background audio: ${effectType}`);
 
       const playNextBackgroundEffect = async () => {
+        // 매번 체크하여 중지 요청 시 즉시 종료
         if (!backgroundAudioRef.current) {
           console.log(`[CLIENT] Background audio stopped for ${effectType}`);
           return;
@@ -286,17 +287,32 @@ export const useAudioPlayer = (
           console.log(`[CLIENT] Playing loud background: ${url}`);
           const audioBuffer = await loadAudioBuffer(url);
 
+          // 재생 직전에 다시 한 번 체크
+          if (!backgroundAudioRef.current) {
+            console.log(`[CLIENT] Background audio cancelled before playback for ${effectType}`);
+            return;
+          }
+
           // 배경음은 큰 볼륨으로 재생
           await playWithFade(audioBuffer, true, true, true);
 
-          // 배경음 재생 완료 후 바로 다음 배경음 재생
+          // 재생 완료 후에도 체크하여 중지 요청 시 재귀 호출 중단
           if (backgroundAudioRef.current) {
+            console.log(`[CLIENT] Background audio continues for ${effectType}`);
             playNextBackgroundEffect();
+          } else {
+            console.log(`[CLIENT] Background audio stopped after playback for ${effectType}`);
           }
         } catch (error) {
           console.error(`[CLIENT] Error playing background effect ${effectType}:`, error);
+          // 에러 발생 시에도 중지 체크
           if (backgroundAudioRef.current) {
-            playNextBackgroundEffect();
+            // 짧은 대기 후 재시도
+            setTimeout(() => {
+              if (backgroundAudioRef.current) {
+                playNextBackgroundEffect();
+              }
+            }, 1000);
           }
         }
       };
@@ -370,19 +386,20 @@ export const useAudioPlayer = (
       // 세그먼트 재생 (배경음과 동시에)
       await playSegments(audioData.segments);
 
-      // TTS 재생 완료 콜백 호출
-      if (onPlaybackComplete) {
-        console.log('[CLIENT] TTS playback completed, calling callback');
-        onPlaybackComplete();
-      }
-
       // 무한재생 시작
       if (audioData.infiniteTag) {
+        console.log('[CLIENT] Starting infinite playback, then calling completion callback');
         isPlayingRef.current = true; // 무한재생을 위해 true로 설정
         startInfinitePlayback(audioData.infiniteTag, audioData.infiniteEffectUrl);
       } else {
         // 무한재생이 없으면 재생 상태를 false로 설정
         isPlayingRef.current = false;
+      }
+
+      // TTS 재생 완료 콜백 호출 (무한재생 시작 후)
+      if (onPlaybackComplete) {
+        console.log('[CLIENT] TTS playback completed (including infinite setup), calling callback');
+        onPlaybackComplete();
       }
     },
     [playSegments, startInfinitePlayback, stopPlayback, startBackgroundAudio, onPlaybackComplete],
