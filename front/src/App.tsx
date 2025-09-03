@@ -1,6 +1,7 @@
 import Modal from './components/Modal';
 import useChatting from './hooks/useChatting';
 import { useRef, useEffect, useState } from 'react';
+import { AutoChatSpeed } from './hooks/useAutoChat';
 import AppearanceStatus from './components/AppearanceStatus';
 import Shop from './components/Shop';
 
@@ -20,6 +21,7 @@ function App() {
     affinity,
     pose,
     emotion,
+    action,
     point,
 
     currentCharacter,
@@ -47,13 +49,14 @@ function App() {
     currentLocation,
     // 자동 대화 관련
     isAutoChatMode,
+    autoChatSpeed,
+    setAutoChatSpeed,
     startAutoChat,
     stopAutoChat,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
-  console.log('App rendered, currentLocation:', currentLocation);
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
@@ -169,6 +172,11 @@ function App() {
             <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-purple-800 font-semibold">포즈: {pose}</span>
             </div>
+            <div className="bg-orange-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-orange-800 font-semibold">액션: {action}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
             {/* 디버깅용: RP팩 상태와 위치 정보 확인 */}
             <div className="bg-gray-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-gray-800 font-semibold">
@@ -195,39 +203,80 @@ function App() {
         </div>
 
         {/* 자동 대화 컨트롤 */}
-        <div className="mb-4 flex gap-2 items-center">
-          <div className="flex gap-2">
-            <button
-              onClick={startAutoChat}
-              disabled={isAutoChatMode || isLoading}
-              className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                isAutoChatMode || isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600'
-              }`}
-            >
-              🤖 자동 대화 시작
-            </button>
-            <button
-              onClick={stopAutoChat}
-              disabled={!isAutoChatMode || isLoading}
-              className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                !isAutoChatMode || isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-red-500 hover:bg-red-600'
-              }`}
-            >
-              🛑 자동 대화 중지
-            </button>
-          </div>
-          <div className="flex-1">
+        <div className="mb-4 space-y-3">
+          {/* 속도 설정 */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">대화 속도:</span>
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              {[
+                { value: 'slow', label: '느리게', emoji: '🐌' },
+                { value: 'medium', label: '중간', emoji: '🚶' },
+                { value: 'fast', label: '빠르게', emoji: '🏃' },
+              ].map(({ value, label, emoji }) => (
+                <button
+                  key={value}
+                  onClick={() => setAutoChatSpeed(value as AutoChatSpeed)}
+                  disabled={isAutoChatMode}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                    autoChatSpeed === value
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : isAutoChatMode
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-gray-600 hover:bg-white hover:shadow-sm cursor-pointer'
+                  }`}
+                >
+                  {emoji} {label}
+                </button>
+              ))}
+            </div>
             {isAutoChatMode && (
-              <div className="bg-green-100 px-3 py-1 rounded-lg">
-                <span className="text-green-800 font-semibold text-sm">
-                  🤖 자동 대화 모드 활성화 중
-                </span>
+              <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
+                속도 변경은 자동 대화 중지 후 가능합니다
               </div>
             )}
+          </div>
+
+          {/* 자동 대화 시작/중지 버튼 */}
+          <div className="flex gap-2 items-center">
+            <div className="flex gap-2">
+              <button
+                onClick={startAutoChat}
+                disabled={isAutoChatMode || isLoading}
+                className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                  isAutoChatMode || isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600'
+                }`}
+              >
+                🤖 자동 대화 시작
+              </button>
+              <button
+                onClick={stopAutoChat}
+                disabled={!isAutoChatMode || isLoading}
+                className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                  !isAutoChatMode || isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                🛑 자동 대화 중지
+              </button>
+            </div>
+            <div className="flex-1">
+              {isAutoChatMode && (
+                <div className="bg-green-100 px-3 py-1 rounded-lg">
+                  <span className="text-green-800 font-semibold text-sm">
+                    🤖 자동 대화 모드 활성화 중 (
+                    {autoChatSpeed === 'slow'
+                      ? '🐌 느리게'
+                      : autoChatSpeed === 'fast'
+                        ? '🏃 빠르게'
+                        : '🚶 중간'}
+                    )
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

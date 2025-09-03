@@ -1,0 +1,46 @@
+{
+  "poseList": [
+    {
+      "name": "stand",
+      "description" : "Standing pose (basic conversation, active situations, character facing forward)",
+      "unlock_affinity": 0,
+      "sfw": true,
+      "nsfw": true
+    },
+    {
+      "name": "sit",
+      "description" : "Sitting pose (relaxed conversation, resting state, sitting position, facing forward(user))",
+      "unlock_affinity": 0,
+      "sfw": true,
+      "nsfw": true
+    },
+    {
+      "name": "spreadlegs",
+      "description" : "Spread legs pose (legs spread apart, suitable for explicit or sexual situations)",
+      "unlock_affinity": 80,
+      "sfw": false,
+      "nsfw": true
+    },
+    {
+      "name": "doggy",
+      "description" : "Doggy style pose (showing back, suitable for buttocks exposure requests facing back)",
+      "unlock_affinity": 100,
+      "sfw": false,
+      "nsfw": true
+    },
+    {
+      "name": "missionary",
+      "description" : "Missionary pose (missionary position, 한국어로는 정상위, suitable for most intimate sexual situations, facing forward(user))",
+      "unlock_affinity": 100,
+      "sfw": false,
+      "nsfw": true
+    },
+    {
+      "name": "standingdoggy",
+      "description" : "Standing doggy style pose (standing doggy position, 한국어로는 후배위, suitable for more aggressive sexual situations. facing back)",
+      "unlock_affinity": 100,
+      "sfw": false,
+      "nsfw": true
+    }
+  ]
+}

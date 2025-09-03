@@ -27,6 +27,7 @@ export const useAudioPlayer = (
   const isPlayingRef = useRef(false);
   const infiniteIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const backgroundAudioRef = useRef<boolean>(false);
+  const infinitePlayingRef = useRef<boolean>(false);
 
   // TTS 파일명 추출 함수
   const extractFileName = useCallback((audioUrl: string): string | null => {
@@ -192,7 +193,8 @@ export const useAudioPlayer = (
       clearInterval(infiniteIntervalRef.current);
       infiniteIntervalRef.current = null;
     }
-    // isPlayingRef.current = false로 설정하여 재귀 호출을 중단
+    // 무한재생 전용 플래그를 false로 설정하여 재귀 호출을 즉시 중단
+    infinitePlayingRef.current = false;
     console.log(`[CLIENT] Stopped infinite playback`);
   }, []);
 
@@ -201,6 +203,7 @@ export const useAudioPlayer = (
     console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
     isPlayingRef.current = false;
     backgroundAudioRef.current = false;
+    infinitePlayingRef.current = false; // 무한재생도 즉시 중지
     stopInfinitePlayback();
     console.log(`[CLIENT] Stopped all playback`);
   }, [stopInfinitePlayback]);
@@ -307,10 +310,14 @@ export const useAudioPlayer = (
           console.error(`[CLIENT] Error playing background effect ${effectType}:`, error);
           // 에러 발생 시에도 중지 체크
           if (backgroundAudioRef.current) {
-            // 짧은 대기 후 재시도
+            // 짧은 대기 후 재시도 (재시도 전에도 체크)
             setTimeout(() => {
               if (backgroundAudioRef.current) {
                 playNextBackgroundEffect();
+              } else {
+                console.log(
+                  `[CLIENT] Background audio stopped during error retry for ${effectType}`,
+                );
               }
             }, 1000);
           }
@@ -325,15 +332,17 @@ export const useAudioPlayer = (
   // 무한재생 시작
   const startInfinitePlayback = useCallback(
     (effectType: string, effectUrl?: string) => {
-      if (infiniteIntervalRef.current) {
-        clearInterval(infiniteIntervalRef.current);
-      }
+      // 기존 무한재생 중지
+      stopInfinitePlayback();
 
+      // 무한재생 플래그 설정
+      infinitePlayingRef.current = true;
       console.log(`[CLIENT] Starting infinite playback of ${effectType}`);
 
       // 재귀적으로 효과음을 재생하는 함수
       const playNextEffect = async () => {
-        if (!isPlayingRef.current) {
+        // 무한재생 전용 플래그 체크 (더 즉각적인 중지)
+        if (!infinitePlayingRef.current) {
           console.log(`[CLIENT] Infinite playback stopped for ${effectType}`);
           return;
         }
@@ -345,16 +354,29 @@ export const useAudioPlayer = (
             effectUrl ||
             `/api/effects/${currentCharacter.toLowerCase()}/${effectType}/${effectType}_${Math.floor(Math.random() * 2) + 1}.mp3`;
           const audioBuffer = await loadAudioBuffer(url);
+
+          // 재생 시작 전에 다시 한 번 체크
+          if (!infinitePlayingRef.current) {
+            console.log(
+              `[CLIENT] Infinite playback cancelled before audio playback for ${effectType}`,
+            );
+            return;
+          }
+
           await playWithFade(audioBuffer, true, true, true); // isFirst: true, isLast: true, isEffect: true
 
-          // 효과음 재생 완료 후 바로 다음 효과음 재생
-          if (isPlayingRef.current) {
+          // 효과음 재생 완료 후 바로 다음 효과음 재생 (다시 체크)
+          if (infinitePlayingRef.current) {
             playNextEffect();
+          } else {
+            console.log(
+              `[CLIENT] Infinite playback stopped after audio completion for ${effectType}`,
+            );
           }
         } catch (error) {
           console.error(`[CLIENT] Error playing infinite effect ${effectType}:`, error);
-          // 에러 발생시에도 바로 재시도
-          if (isPlayingRef.current) {
+          // 에러 발생시에도 플래그 체크 후 재시도
+          if (infinitePlayingRef.current) {
             playNextEffect();
           }
         }
@@ -363,7 +385,7 @@ export const useAudioPlayer = (
       // 첫 번째 효과음 재생 시작
       playNextEffect();
     },
-    [loadAudioBuffer, playWithFade, currentCharacter],
+    [loadAudioBuffer, playWithFade, currentCharacter, stopInfinitePlayback],
   );
 
   // 메인 재생 함수

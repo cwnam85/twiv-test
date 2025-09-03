@@ -4,6 +4,32 @@ import nunjucks from 'nunjucks';
 import characterStateService from '../services/characterStateService.js';
 import backgroundService from '../services/backgroundService.js';
 
+// poseList.json 로드
+function loadPoseList() {
+  const poseListPath = path.join(process.cwd(), 'src', 'data', 'poseList.json');
+  try {
+    const data = fs.readFileSync(poseListPath, 'utf8');
+    const parsed = JSON.parse(data);
+    return parsed.poseList || [];
+  } catch (error) {
+    console.error('Error loading poseList.json:', error);
+    return [];
+  }
+}
+
+// actionList.json 로드
+function loadActionList() {
+  const actionListPath = path.join(process.cwd(), 'src', 'data', 'actionList.json');
+  try {
+    const data = fs.readFileSync(actionListPath, 'utf8');
+    const parsed = JSON.parse(data);
+    return parsed.actionList || [];
+  } catch (error) {
+    console.error('Error loading actionList.json:', error);
+    return [];
+  }
+}
+
 // 템플릿 파일 읽기
 function readTemplate(templateName) {
   const templatePath = path.join(process.cwd(), 'src', 'templates', `${templateName}.md`);
@@ -159,6 +185,10 @@ export function generateChatPrompt(context) {
   // 현재 배경의 spots 정보 가져오기
   const location = backgroundService.getBackgroundSpots(activeCharacter, context.currentBackground);
 
+  // poseList와 actionList 로드
+  const poseList = loadPoseList();
+  const actionList = loadActionList();
+
   const templateContext = {
     userInput: context.userInput || '',
     lastMessage: context.lastMessage || 'none',
@@ -180,6 +210,8 @@ export function generateChatPrompt(context) {
     activeRpPack: context.activeRpPack || null,
     userLastResponses: (context.userLastResponses || []).join('\n\n'),
     llmLastResponses: (context.llmLastResponses || []).join('\n\n'),
+    poseList: poseList, // poseList 추가
+    actionList: actionList, // actionList 추가
   };
 
   // 디버깅을 위한 로그

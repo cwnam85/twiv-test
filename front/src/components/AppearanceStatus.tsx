@@ -16,6 +16,10 @@ const AppearanceStatus: React.FC<AppearanceStatusProps> = ({ appearance, appeara
 
   const characterState = getCurrentCharacterState();
 
+  // 디버깅을 위한 로그
+  console.log('AppearanceStatus - appearanceStateData:', appearanceStateData);
+  console.log('AppearanceStatus - characterState:', characterState);
+
   // 헤어스타일 표시 이름 변환
   const getHairDisplayName = (hairName: string) => {
     return hairName;

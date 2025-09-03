@@ -21,6 +21,7 @@ interface ChatAPIHandlers {
   onPointUpdate: (point: number) => void;
   onPoseUpdate: (pose: string) => void;
   onEmotionUpdate: (emotion: string) => void;
+  onActionUpdate: (action: string) => void;
   onAppearanceRefresh: () => Promise<AppearanceData | null>;
   onModalOpen: () => void;
   onPurchaseModalOpen: (content: string, userInput: string) => void;
@@ -35,6 +36,7 @@ const useChatAPI = ({
   onPointUpdate,
   onPoseUpdate,
   onEmotionUpdate,
+  onActionUpdate,
   onAppearanceRefresh,
   onModalOpen,
   onPurchaseModalOpen,
@@ -122,12 +124,15 @@ const useChatAPI = ({
       if (data.point !== undefined) {
         onPointUpdate(data.point);
       }
-      // pose와 emotion 업데이트
+      // pose, emotion, action 업데이트
       if (data.pose) {
         onPoseUpdate(data.pose);
       }
       if (data.emotion) {
         onEmotionUpdate(data.emotion);
+      }
+      if (data.action) {
+        onActionUpdate(data.action);
       }
 
       // 오디오 데이터 처리
@@ -136,19 +141,8 @@ const useChatAPI = ({
       }
 
       // RP팩 위치 업데이트 (RP팩이 활성화된 경우에만)
-      console.log('Location data received:', data.location);
-      console.log('onLocationUpdate function exists:', !!onLocationUpdate);
-      console.log('Full response data:', data);
-      if (data.location && onLocationUpdate) {
-        console.log('Updating location to:', data.location);
-        onLocationUpdate(data.location);
-      } else {
-        console.log(
-          'Location update skipped - location:',
-          data.location,
-          'onLocationUpdate:',
-          !!onLocationUpdate,
-        );
+      if (data.spot && onLocationUpdate) {
+        onLocationUpdate(data.spot);
       }
     } catch (error) {
       console.error('Error:', error);

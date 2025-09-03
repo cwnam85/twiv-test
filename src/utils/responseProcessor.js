@@ -78,6 +78,7 @@ export function processAIResponse(rawResponse) {
         dialogue: '응답을 처리할 수 없습니다.',
         emotion: 'neutral',
         pose: 'stand',
+        action: 'SpeakNatural',
         affinity: '0',
         outfitToWear: [],
         outfitToRemove: [],
@@ -117,22 +118,25 @@ export function processAIResponse(rawResponse) {
         // mature 태그 처리
         const { segments, tags } = extractMatureTags(dialogue);
 
-        console.log('Parsed JSON location:', jsonData.location);
-        return {
+        console.log('🔍 JSON 파싱 결과 - action:', jsonData.action);
+        const result = {
           dialogue: segments
             .filter((seg) => seg.type === 'text')
             .map((seg) => seg.content)
             .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
+          action: jsonData.action || null, // action 필드 추가
           affinity: jsonData.affinity || '0',
           outfitToWear: jsonData.outfitToWear || [], // 새로운 형식
           outfitToRemove: jsonData.outfitToRemove || [], // 새로운 형식
-          location: jsonData.location || null, // RP팩 위치 정보
+          spot: jsonData.spot || null, // RP팩 위치 정보
           currentActivity: jsonData.currentActivity || null, // 성적 활동 정보
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };
+        console.log('🔍 최종 파싱 결과 - action:', result.action);
+        return result;
       } catch (e) {
         console.warn('JSON 파싱 실패, 전체 텍스트 사용:', e.message);
       }
@@ -147,10 +151,11 @@ export function processAIResponse(rawResponse) {
         .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
       emotion: 'neutral',
       pose: 'stand',
+      action: 'SpeakNatural', // 기본 action 추가
       affinity: '0',
       outfitToWear: [],
       outfitToRemove: [],
-      location: null, // RP팩 위치 정보
+      spot: null, // RP팩 위치 정보
       currentActivity: null, // 성적 활동 정보
       matureTags: tags,
       segments: segments, // 세그먼트 정보 추가
@@ -161,10 +166,11 @@ export function processAIResponse(rawResponse) {
       dialogue: '응답을 처리할 수 없습니다.',
       emotion: 'neutral',
       pose: 'stand',
+      action: 'SpeakNatural',
       affinity: '0',
       outfitToWear: [],
       outfitToRemove: [],
-      location: null, // RP팩 위치 정보
+      spot: null, // RP팩 위치 정보
       currentActivity: null, // 성적 활동 정보
       matureTags: [],
       segments: [],

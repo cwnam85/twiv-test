@@ -91,16 +91,25 @@ async function processLLMResponseWithRetry(
 }
 
 // 자동 대화용 프롬프트 반환 함수
-function getAutoPrompt() {
-  return 'User has activated auto-conversation mode. Please continue leading the conversation and further develop the current activities.';
+function getAutoPrompt(speed = 'medium') {
+  try {
+    const autoPromptsPath = path.join(process.cwd(), 'src', 'data', 'autoPrompts.json');
+    const autoPromptsData = JSON.parse(fs.readFileSync(autoPromptsPath, 'utf8'));
+
+    return autoPromptsData[speed] || autoPromptsData.medium;
+  } catch (error) {
+    console.error('Error reading auto prompts:', error);
+    // 폴백: 기본 프롬프트 반환
+    return 'User has activated auto-conversation mode. Please continue leading the conversation and further develop the current activities.';
+  }
 }
 
 // 핵심 채팅 처리 함수 (다른 라우터에서도 사용 가능)
 export async function processChatMessage(userMessage, realMessage, skipPointCheck = false) {
   // 포인트 체크 (skipPointCheck가 true면 건너뛰기)
   if (!skipPointCheck && !affinityService.hasEnoughPoints()) {
-    const activeCharacter = characterService.getActiveCharacter();
-    const characterMessage = CHARACTER_MESSAGES[activeCharacter] || CHARACTER_MESSAGES.meuaeng;
+    const currentCharacter = characterService.getActiveCharacter();
+    const characterMessage = CHARACTER_MESSAGES[currentCharacter] || CHARACTER_MESSAGES.meuaeng;
 
     // 랜덤하게 메시지 선택
     const randomMessage =
@@ -127,6 +136,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     const systemPromptContext = {
       userLastResponses: conversationService.getUserLastResponses(),
       llmLastResponses: conversationService.getLlmLastResponses(),
+      activeRpPack: shopService.getActiveRpPack(),
     };
     const systemPrompt = characterService.getSystemPrompt(systemPromptContext);
 
@@ -216,7 +226,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
         response.emotion,
         response.matureTags,
         response.segments,
-        response.currentActivity,
+        response.action,
       );
 
       // 자동 대화 모드일 때는 클라이언트에서 자동 대화를 처리하므로 여기서는 아무것도 하지 않음
@@ -228,10 +238,22 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);
 
-    // 캐릭터 상태에 마지막 포즈 저장
+    // 캐릭터 상태에 마지막 포즈 저장 (activeCharacter는 위에서 이미 선언됨)
     if (response.pose) {
-      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
       characterStateService.setLastPose(activeCharacter, response.pose);
+    }
+
+    // 캐릭터 상태에 마지막 액션 저장
+    console.log('🎭 액션 처리:', { pose: response.pose, action: response.action });
+    if (response.pose === 'stand' || response.pose === 'sit') {
+      // stand/sit 포즈일 때는 action이 있어야 함
+      const actionToSave = response.action || 'SpeakNatural'; // 기본값 설정
+      console.log('💾 액션 저장:', actionToSave);
+      characterStateService.setLastAction(activeCharacter, actionToSave);
+    } else {
+      // 19금 포즈일 때는 action을 빈 문자열로 저장
+      console.log('💾 19금 포즈로 액션 빈 문자열 저장');
+      characterStateService.setLastAction(activeCharacter, '');
     }
 
     return {
@@ -239,13 +261,14 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       isPaid: false,
       ...affinityService.getData(),
       pose: response.pose,
+      action: response.action,
       emotion: response.emotion,
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
       outfitToWear: response.outfitToWear,
       outfitToRemove: response.outfitToRemove,
-      location: response.location, // RP팩 위치 정보 추가
+      spot: response.spot, // RP팩 위치 정보 추가
       audioData: clientAudioData,
     };
   } catch (error) {
@@ -342,6 +365,7 @@ router.post('/purchase', async (req, res) => {
       message: purchaseResponse.dialogue,
       emotion: purchaseResponse.emotion,
       pose: purchaseResponse.pose,
+      action: purchaseResponse.action,
       ...affinityService.getData(),
       purchaseCompleted: true,
       purchasedContent: requestedContent,
@@ -352,9 +376,25 @@ router.post('/purchase', async (req, res) => {
     responseService.sendPoseToWarudo(purchaseResponse.pose);
 
     // 캐릭터 상태에 마지막 포즈 저장
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
     if (purchaseResponse.pose) {
-      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
       characterStateService.setLastPose(activeCharacter, purchaseResponse.pose);
+    }
+
+    // 캐릭터 상태에 마지막 액션 저장
+    console.log('🎭 구매 액션 처리:', {
+      pose: purchaseResponse.pose,
+      action: purchaseResponse.action,
+    });
+    if (purchaseResponse.pose === 'stand' || purchaseResponse.pose === 'sit') {
+      // stand/sit 포즈일 때는 action이 있어야 함
+      const actionToSave = purchaseResponse.action || 'SpeakNatural'; // 기본값 설정
+      console.log('💾 구매 액션 저장:', actionToSave);
+      characterStateService.setLastAction(activeCharacter, actionToSave);
+    } else {
+      // 19금 포즈일 때는 action을 빈 문자열로 저장
+      console.log('💾 구매 19금 포즈로 액션 빈 문자열 저장');
+      characterStateService.setLastAction(activeCharacter, '');
     }
   } catch (error) {
     console.error('구매 완료 처리 중 오류가 발생했습니다.', error);
@@ -485,8 +525,8 @@ router.post('/chat', async (req, res) => {
 
   // 포인트가 0이면 즉시 요청 거부
   if (!affinityService.hasEnoughPoints()) {
-    const activeCharacter = characterService.getActiveCharacter();
-    const characterMessage = CHARACTER_MESSAGES[activeCharacter] || CHARACTER_MESSAGES.meuaeng;
+    const currentCharacter = characterService.getActiveCharacter();
+    const characterMessage = CHARACTER_MESSAGES[currentCharacter] || CHARACTER_MESSAGES.meuaeng;
 
     // 랜덤하게 메시지 선택
     const randomMessage =
@@ -513,6 +553,7 @@ router.post('/chat', async (req, res) => {
     const systemPromptContext = {
       userLastResponses: conversationService.getUserLastResponses(),
       llmLastResponses: conversationService.getLlmLastResponses(),
+      activeRpPack: shopService.getActiveRpPack(),
     };
     const systemPrompt = characterService.getSystemPrompt(systemPromptContext);
 
@@ -602,7 +643,7 @@ router.post('/chat', async (req, res) => {
         response.emotion,
         response.matureTags,
         response.segments,
-        response.currentActivity,
+        response.action,
       );
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);
@@ -610,29 +651,41 @@ router.post('/chat', async (req, res) => {
     }
 
     // 클라이언트에 응답 전송
-    console.log('Response location:', response.location);
     res.json({
       message: response.dialogue,
       isPaid: false,
       ...affinityService.getData(),
       pose: response.pose,
+      action: response.action,
       emotion: response.emotion,
       usage: response.usage,
       purchaseRequired: response.purchaseRequired,
       requestedContent: response.requestedContent,
       outfitToWear: response.outfitToWear,
       outfitToRemove: response.outfitToRemove,
-      location: response.location, // RP팩 위치 정보 추가
+      spot: response.spot, // RP팩 위치 정보 추가
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
 
     // Warudo에 포즈 변경 메시지 전송
     responseService.sendPoseToWarudo(response.pose);
 
-    // 캐릭터 상태에 마지막 포즈 저장
+    // 캐릭터 상태에 마지막 포즈 저장 (activeCharacter는 위에서 이미 선언됨)
     if (response.pose) {
-      const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
       characterStateService.setLastPose(activeCharacter, response.pose);
+    }
+
+    // 캐릭터 상태에 마지막 액션 저장
+    console.log('🎭 메인채팅 액션 처리:', { pose: response.pose, action: response.action });
+    if (response.pose === 'stand' || response.pose === 'sit') {
+      // stand/sit 포즈일 때는 action이 있어야 함
+      const actionToSave = response.action || 'SpeakNatural'; // 기본값 설정
+      console.log('💾 메인채팅 액션 저장:', actionToSave);
+      characterStateService.setLastAction(activeCharacter, actionToSave);
+    } else {
+      // 19금 포즈일 때는 action을 빈 문자열로 저장
+      console.log('💾 메인채팅 19금 포즈로 액션 빈 문자열 저장');
+      characterStateService.setLastAction(activeCharacter, '');
     }
   } catch (error) {
     console.error(`Error calling ${conversationService.getCurrentModel()} API:`, error);
@@ -778,9 +831,12 @@ router.get('/auto-prompt', (req, res) => {
     return res.status(400).json({ error: '자동 대화 모드가 활성화되지 않았습니다.' });
   }
 
+  const speed = req.query.speed || 'medium'; // 쿼리 파라미터로 속도 받기
+
   res.json({
-    prompt: getAutoPrompt(),
+    prompt: getAutoPrompt(speed),
     isAutoChatMode: true,
+    speed: speed,
   });
 });
 

@@ -9,6 +9,7 @@ interface PurchaseHandlers {
   onPointUpdate: (point: number) => void;
   onPoseUpdate: (pose: string) => void;
   onEmotionUpdate: (emotion: string) => void;
+  onActionUpdate: (action: string) => void;
 }
 
 const usePurchase = ({
@@ -19,6 +20,7 @@ const usePurchase = ({
   onPointUpdate,
   onPoseUpdate,
   onEmotionUpdate,
+  onActionUpdate,
 }: PurchaseHandlers) => {
   const handlePurchaseAction = async (purchase: boolean) => {
     if (purchase) {
@@ -85,6 +87,9 @@ const usePurchase = ({
       }
       if (data.emotion) {
         onEmotionUpdate(data.emotion);
+      }
+      if (data.action) {
+        onActionUpdate(data.action);
       }
     } catch (error) {
       console.error('Purchase confirmation error:', error);

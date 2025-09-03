@@ -3,6 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import nunjucks from 'nunjucks';
 import shopService from '../src/services/shopService.js';
+import backgroundService from '../src/services/backgroundService.js';
+import characterStateService from '../src/services/characterStateService.js';
 
 class SectionLoader {
   constructor(character) {
@@ -187,6 +189,17 @@ class SectionLoader {
       }
     }
 
+    // 배경 서비스에서 spots 정보 가져오기 (templateRenderer.js와 동일한 방식)
+    let location = null;
+    if (activeRpPack) {
+      try {
+        const currentBackground = characterStateService.getCurrentBackground(this.character);
+        location = backgroundService.getBackgroundSpots(this.character, currentBackground);
+      } catch (error) {
+        console.error('Error getting background spots in SectionLoader:', error);
+      }
+    }
+
     // 템플릿 컨텍스트 구성
     const templateContext = {
       isNSFW,
@@ -201,6 +214,7 @@ class SectionLoader {
       rpPackDescription,
       rpPackGlobalNote,
       rpPackLocationGuide,
+      location,
       userLastResponses: (userLastResponses || []).join('\n\n'),
       llmLastResponses: (llmLastResponses || []).join('\n\n'),
     };

@@ -65,10 +65,25 @@
       "itemType": "booster",
       "price": 200,
       "purchasedAt": "2025-08-13T06:40:04.820Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-08-28T08:06:31.421Z"
+    },
+    {
+      "itemId": "affinity_booster",
+      "itemType": "booster",
+      "price": 200,
+      "purchasedAt": "2025-09-01T02:28:01.731Z"
     }
   ],
   "ownedRpPacks": [
     "onsen_rp_pack"
   ],
-  "activeRpPack": null
+  "activeRpPack": {
+    "id": "onsen_rp_pack",
+    "activatedAt": "2025-09-03T04:19:43.492Z"
+  }
 }

@@ -5,6 +5,7 @@ const useCharacter = () => {
   const [currentCharacter, setCurrentCharacter] = useState('Default Character');
   const [pose, setPose] = useState('stand');
   const [emotion, setEmotion] = useState('Neutral');
+  const [action, setAction] = useState('SpeakNatural');
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -38,6 +39,10 @@ const useCharacter = () => {
     setEmotion(newEmotion);
   };
 
+  const updateAction = (newAction: string) => {
+    setAction(newAction);
+  };
+
   // 성인용 캐릭터 여부를 계산하는 함수
   const isAdultCharacter = characterForAdult[currentCharacter] || false;
 
@@ -46,9 +51,11 @@ const useCharacter = () => {
     setCurrentCharacter,
     pose,
     emotion,
+    action,
     isAdultCharacter,
     updatePose,
     updateEmotion,
+    updateAction,
   };
 };
 

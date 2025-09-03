@@ -51,11 +51,12 @@ class ResponseService {
       dialogue = processedResponse.dialogue;
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
+      const action = processedResponse.action; // action 필드 추가
       const affinity = processedResponse.affinity;
       const outfitToWear = processedResponse.outfitToWear || [];
       const outfitToRemove = processedResponse.outfitToRemove || [];
-      const location = processedResponse.location || null; // 위치 정보 추가
-      const currentActivity = processedResponse.currentActivity || null; // 성적 활동 정보
+      const spot = processedResponse.spot || null; // 위치 정보 추가
+      // currentActivity는 이제 action으로 통합됨
       matureTags = processedResponse.matureTags || [];
       segments = processedResponse.segments || [];
 
@@ -70,12 +71,12 @@ class ResponseService {
         dialogue,
         emotion,
         pose,
+        action, // action 필드 추가
         usage,
         affinity,
         outfitToWear,
         outfitToRemove,
-        location, // 위치 정보 추가
-        currentActivity, // 성적 활동 정보 추가
+        spot, // 위치 정보 추가
         matureTags,
         segments,
       };
@@ -119,6 +120,7 @@ class ResponseService {
       dialogue: matchDialogue ? matchDialogue[1].trim() : null,
       emotion: matchEmotion ? matchEmotion[1].trim() : null,
       pose: matchPose ? matchPose[1].trim() : null,
+      action: 'SpeakNatural', // 정규식 방식에서는 기본값 사용
       usage: null,
       affinity: matchAffinity ? matchAffinity[1].trim() : null,
       outfitToWear,
@@ -202,7 +204,7 @@ class ResponseService {
     }
   }
 
-  async playResponse(dialogue, emotion, matureTags = [], segments = [], currentActivity = null) {
+  async playResponse(dialogue, emotion, matureTags = [], segments = [], action = null) {
     try {
       // mature 태그 사용 빈도 추적을 위한 맵
       const tagCountMap = new Map();
@@ -291,9 +293,9 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // 4단계: intercourse 배경음 처리
+        // 4단계: action 기반 배경음 처리
         let backgroundAudio = null;
-        if (currentActivity === 'intercourse') {
+        if (action === 'Intercourse') {
           backgroundAudio = 'intercourse';
           console.log(`[BACKGROUND] Adding intercourse background audio`);
         }
@@ -329,9 +331,9 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // intercourse 배경음 처리
+        // action 기반 배경음 처리
         let backgroundAudio = null;
-        if (currentActivity === 'intercourse') {
+        if (action === 'Intercourse') {
           backgroundAudio = 'intercourse';
           console.log(`[BACKGROUND] Adding intercourse background audio`);
         }

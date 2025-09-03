@@ -15,14 +15,14 @@ const useChatting = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
 
-  // 위치 업데이트 함수에 로그 추가
+  // 위치 업데이트 함수
   const handleLocationUpdate = (location: string | null) => {
-    console.log('handleLocationUpdate called with:', location);
     setCurrentLocation(location);
   };
 
   // 각각의 작은 훅들을 사용
-  const { currentCharacter, pose, emotion, updatePose, updateEmotion } = useCharacter();
+  const { currentCharacter, pose, emotion, action, updatePose, updateEmotion, updateAction } =
+    useCharacter();
 
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
 
@@ -49,7 +49,14 @@ const useChatting = () => {
   const { playAudioData, stopPlayback } = useAudioPlayer(currentCharacter);
 
   // 자동 대화 훅
-  const { isAutoChatMode, startAutoChat, stopAutoChat, triggerAutoMessage } = useAutoChat();
+  const {
+    isAutoChatMode,
+    autoChatSpeed,
+    setAutoChatSpeed,
+    startAutoChat,
+    stopAutoChat,
+    triggerAutoMessage,
+  } = useAutoChat();
 
   // 자동모드 상태를 ref로 추적 (클로저 문제 해결)
   const isAutoChatModeRef = useRef(isAutoChatMode);
@@ -93,6 +100,7 @@ const useChatting = () => {
     onPointUpdate: updatePoint,
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
+    onActionUpdate: updateAction,
     onAppearanceRefresh: async () => {
       const result = await refreshAppearanceData();
       return result?.appearanceData || null;
@@ -133,6 +141,7 @@ const useChatting = () => {
     onPointUpdate: updatePoint,
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
+    onActionUpdate: updateAction,
   });
 
   // 메시지 전송 핸들러
@@ -180,6 +189,7 @@ const useChatting = () => {
     maxAffinity,
     pose,
     emotion,
+    action,
     currentCharacter,
     appearance,
     appearanceStateData,
@@ -207,6 +217,8 @@ const useChatting = () => {
     currentLocation,
     // 자동 대화 관련
     isAutoChatMode,
+    autoChatSpeed,
+    setAutoChatSpeed,
     startAutoChat: () => startAutoChat(sendMessage),
     stopAutoChat,
   };

@@ -214,9 +214,8 @@ const useShop = ({
         }
 
         // 위치 정보 처리
-        if (data.location && onLocationUpdate) {
-          console.log('Location update from RP pack activation:', data.location);
-          onLocationUpdate(data.location);
+        if (data.spot && onLocationUpdate) {
+          onLocationUpdate(data.spot);
         }
 
         return data;
@@ -272,6 +271,11 @@ const useShop = ({
             console.log('Playing RP pack audio data:', data.rpPackReaction.audioData);
             onAudioData(data.rpPackReaction.audioData);
           }
+        }
+
+        // RP팩 비활성화 시 위치 초기화
+        if (onLocationUpdate) {
+          onLocationUpdate(null);
         }
 
         return data;

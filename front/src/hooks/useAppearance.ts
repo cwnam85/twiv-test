@@ -57,6 +57,7 @@ const useAppearance = () => {
 
   const refreshAppearanceData = async () => {
     try {
+      console.log('🔄 RefreshAppearanceData 호출됨');
       let newAppearanceData = null;
 
       // 기존 외모 데이터 새로고침
@@ -72,6 +73,7 @@ const useAppearance = () => {
       const stateResponse = await fetch('http://localhost:3333/appearance-state');
       if (stateResponse.ok) {
         const newStateData = await stateResponse.json();
+        console.log('📋 새로운 상태 데이터:', newStateData);
         setAppearanceStateData(newStateData);
         return { appearanceData: newAppearanceData, stateData: newStateData };
       }

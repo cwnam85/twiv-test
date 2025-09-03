@@ -15,6 +15,7 @@ class CharacterStateService {
           current_appearance: 'casual',
           current_background: 'default',
           last_pose: 'stand',
+          last_action: 'SpeakNatural',
           // 새로운 구조: 직접 아이템으로 접근
           hair: true,
           bra: true,
@@ -31,6 +32,7 @@ class CharacterStateService {
           current_appearance: 'casual',
           current_background: 'default',
           last_pose: 'stand',
+          last_action: 'SpeakNatural',
           // 새로운 구조: 직접 아이템으로 접근
           hair: true,
           bra: true,
@@ -84,6 +86,12 @@ class CharacterStateService {
     return characterState ? characterState.last_pose : 'stand';
   }
 
+  // 특정 캐릭터의 마지막 액션
+  getLastAction(character) {
+    const characterState = this.getCharacterState(character);
+    return characterState ? characterState.last_action : 'SpeakNatural';
+  }
+
   // 특정 캐릭터의 복장 파트 상태
   getAppearanceParts(character) {
     const characterState = this.getCharacterState(character);
@@ -117,6 +125,7 @@ class CharacterStateService {
         current_appearance: 'casual',
         current_background: 'default',
         last_pose: 'stand',
+        last_action: 'SpeakNatural',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
@@ -144,6 +153,7 @@ class CharacterStateService {
         current_appearance: 'casual',
         current_background: 'default',
         last_pose: 'stand',
+        last_action: 'SpeakNatural',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
@@ -171,6 +181,7 @@ class CharacterStateService {
         current_appearance: 'casual',
         current_background: 'default',
         last_pose: 'stand',
+        last_action: 'SpeakNatural',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
@@ -189,6 +200,39 @@ class CharacterStateService {
     return this.saveState(state);
   }
 
+  // 특정 캐릭터의 마지막 액션 변경
+  setLastAction(character, action) {
+    console.log(`🔧 setLastAction 호출됨: character=${character}, action=${action}`);
+    const state = this.getState();
+
+    if (!state[character]) {
+      state[character] = {
+        current_appearance: 'casual',
+        current_background: 'default',
+        last_pose: 'stand',
+        last_action: 'SpeakNatural',
+        // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
+      };
+    }
+
+    const oldAction = state[character].last_action;
+    state[character].last_action = action || '';
+    console.log(`💾 액션 업데이트: ${oldAction} → ${state[character].last_action}`);
+    const result = this.saveState(state);
+    console.log(`💾 파일 저장 결과: ${result}`);
+    return result;
+  }
+
   // 특정 캐릭터의 복장 파트 상태 변경
   setAppearancePart(character, parentCategory, category, enabled) {
     const state = this.getState();
@@ -198,6 +242,7 @@ class CharacterStateService {
         current_appearance: 'casual',
         current_background: 'default',
         last_pose: 'stand',
+        last_action: 'SpeakNatural',
         // 새로운 구조: 직접 아이템으로 접근
         hair: true,
         bra: true,
