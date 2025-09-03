@@ -1,0 +1,11 @@
+{
+  "id": "default_rp_pack",
+  "name": "기본 RP팩",
+  "price": 0,
+  "description": "defaultRP/description.md",
+  "globalnote": "defaultRP/globalnote.md",
+  "locationguide": "defaultRP/locationguide.md",
+  "messagePrompt": "defaultRP/messagePrompt.md",
+  "autoPurchaseAppearances": null,
+  "autoPurchaseBackgrounds": null
+}

@@ -300,6 +300,15 @@ class ShopService {
       ],
       rpPacks: [
         {
+          id: 'default_rp_pack',
+          name: '기본 RP팩',
+          type: 'rp_pack',
+          price: 0,
+          description: '캐릭터의 일상적인 방송 공간에서의 자연스러운 대화',
+          globalnoteFile: 'defaultRP/globalnote.md',
+          autoPurchaseOutfits: [],
+        },
+        {
           id: 'onsen_rp_pack',
           name: '온천 RP팩',
           type: 'rp_pack',
@@ -321,25 +330,16 @@ class ShopService {
       // backgroundService를 사용하여 사용 가능한 배경 목록 가져오기
       const availableBackgrounds = backgroundService.getAvailableBackgrounds(activeCharacter);
 
-      // 기본 배경 추가
-      const backgrounds = [
-        {
-          id: 'default',
-          name: '기본 배경',
-          type: 'background',
-          price: 0,
-          description: '기본 배경으로 돌아갑니다.',
-        },
-        ...availableBackgrounds.map((bg) => ({
-          id: bg.id,
-          name: bg.name,
-          type: 'background',
-          price: bg.price || 100, // 기본 가격 100
-          description: bg.description,
-          hasSpots: bg.hasSpots,
-          spotsCount: bg.spotsCount,
-        })),
-      ];
+      // 배경 목록을 상점 아이템 형태로 변환
+      const backgrounds = availableBackgrounds.map((bg) => ({
+        id: bg.id,
+        name: bg.name,
+        type: 'background',
+        price: bg.price || 100, // 기본 가격 100
+        description: bg.description,
+        hasSpots: bg.hasSpots,
+        spotsCount: bg.spotsCount,
+      }));
 
       return backgrounds;
     } catch (error) {
@@ -485,17 +485,20 @@ class ShopService {
       throw new Error('구매하지 않은 RP팩입니다.');
     }
 
-    // 이미 활성화된 RP팩이 있는지 확인
+    // 이미 활성화된 RP팩이 있으면 자동으로 비활성화
     if (shopData.activeRpPack) {
-      throw new Error('이미 활성화된 RP팩이 있습니다.');
+      console.log(`Deactivating current RP pack: ${shopData.activeRpPack.id}`);
+      this.deactivateRpPack();
     }
 
     // RP팩별 배경 및 의상 매핑
     const rpPackBackgrounds = {
+      default_rp_pack: 'default',
       onsen_rp_pack: 'onsen',
     };
 
     const rpPackOutfits = {
+      default_rp_pack: 'casual',
       onsen_rp_pack: 'kimono',
     };
 
@@ -527,18 +530,8 @@ class ShopService {
       }
       characterStateService.setCurrentAppearance(activeCharacter, newAppearance);
 
-      // RP 팩 의상 변경 시 착용 상태 초기화
-      try {
-        characterService.changeToOutfit(newAppearance);
-        console.log(
-          `Outfit changed to ${newAppearance} for RP pack ${rpPackId} with proper initialization`,
-        );
-      } catch (error) {
-        console.error('Error initializing outfit state for RP pack:', error);
-        // fallback: 기본 의상 변경만 수행
-        characterStateService.setCurrentAppearance(activeCharacter, newAppearance);
-        console.log(`Outfit changed to ${newAppearance} for RP pack ${rpPackId} (fallback)`);
-      }
+      // RP 팩 의상 변경 완료
+      console.log(`Outfit changed to ${newAppearance} for RP pack ${rpPackId}`);
     }
 
     // 데이터 저장
@@ -570,21 +563,9 @@ class ShopService {
     shopData.activeRpPack = null;
     characterStateService.setCurrentBackground(activeCharacter, 'default');
 
-    // RP 팩 비활성화 시 의상 변경 및 착용 상태 초기화
-    try {
-      const characterService = require('./characterService.js').default;
-      characterService.changeToOutfit('casual');
-      console.log(
-        'Background and outfit changed back to default after RP pack deactivation with proper initialization',
-      );
-    } catch (error) {
-      console.error('Error initializing outfit state for RP pack deactivation:', error);
-      // fallback: 기본 의상 변경만 수행
-      characterStateService.setCurrentAppearance(activeCharacter, 'casual');
-      console.log(
-        'Background and outfit changed back to default after RP pack deactivation (fallback)',
-      );
-    }
+    // RP 팩 비활성화 시 의상 변경
+    characterStateService.setCurrentAppearance(activeCharacter, 'casual');
+    console.log('Background and outfit changed back to default after RP pack deactivation');
 
     // 데이터 저장
     if (!this.saveShopData(shopData)) {
@@ -673,6 +654,20 @@ class ShopService {
         const locationguidePath = path.join(process.cwd(), rpPack.locationguide);
         if (fs.existsSync(locationguidePath)) {
           content.locationguide = fs.readFileSync(locationguidePath, 'utf8');
+        }
+      }
+
+      // messagePrompt 파일 읽기
+      if (rpPack.messagePrompt) {
+        const messagePromptPath = path.join(process.cwd(), rpPack.messagePrompt);
+        console.log(`Loading messagePrompt from: ${messagePromptPath}`);
+        if (fs.existsSync(messagePromptPath)) {
+          content.messagePrompt = fs.readFileSync(messagePromptPath, 'utf8');
+          console.log(
+            `messagePrompt loaded successfully: ${content.messagePrompt.substring(0, 100)}...`,
+          );
+        } else {
+          console.warn(`messagePrompt file not found: ${messagePromptPath}`);
         }
       }
 

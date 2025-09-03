@@ -2,10 +2,6 @@
 
 {% include "configuration.md" %}
 
-{% if activeRpPack %}
-{{ rpPackDescription }}
-{% endif %}
-
 ## Character Profile
 
 ### Basic Information

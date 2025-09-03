@@ -1,5 +1,13 @@
 {
-  "name": "기본 배경",
+  "id": 0,
+  "name": "Home",
   "price": 0,
-  "description": "기본 배경으로 돌아갑니다."
+  "description": "Return to the character's cozy home.",
+  "spots": {
+    "Streaming Room": {
+      "description": "Room for streaming and broadcasting",
+      "defaultOutfit": 1,
+      "defaultPose": "sit"
+    }
+  }
 }

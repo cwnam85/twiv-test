@@ -250,8 +250,14 @@ class CharacterService {
   }
 
   getSystemPrompt(context = {}) {
+    console.log('🔍 CharacterService - getSystemPrompt called with context:', context);
     // 실제 affinity 값으로 시스템 프롬프트를 로드
-    return this.loadSystemPrompt(null, context);
+    const result = this.loadSystemPrompt(null, context);
+    console.log(
+      '🔍 CharacterService - loadSystemPrompt result length:',
+      result ? result.length : 'null',
+    );
+    return result;
   }
 
   isJailbreakCharacter() {

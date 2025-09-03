@@ -172,6 +172,7 @@ class SectionLoader {
     let rpPackDescription = '';
     let rpPackGlobalNote = '';
     let rpPackLocationGuide = '';
+    let rpPackMessagePrompt = '';
 
     if (activeRpPack) {
       const rpPackId = activeRpPack.id;
@@ -185,6 +186,10 @@ class SectionLoader {
           rpPackDescription = rpPackContent.description || '';
           rpPackGlobalNote = rpPackContent.globalnote || '';
           rpPackLocationGuide = rpPackContent.locationguide || '';
+          rpPackMessagePrompt = rpPackContent.messagePrompt || '';
+          console.log(
+            `SectionLoader - rpPackMessagePrompt loaded: ${rpPackMessagePrompt ? rpPackMessagePrompt.substring(0, 100) + '...' : 'empty'}`,
+          );
         }
       }
     }
@@ -214,6 +219,7 @@ class SectionLoader {
       rpPackDescription,
       rpPackGlobalNote,
       rpPackLocationGuide,
+      rpPackMessagePrompt,
       location,
       userLastResponses: (userLastResponses || []).join('\n\n'),
       llmLastResponses: (llmLastResponses || []).join('\n\n'),
@@ -231,6 +237,7 @@ class SectionLoader {
         // 줄바꿈 문자 정규화
         return this.normalizeLineEndings(renderedPrompt);
       } catch (error) {
+        console.error('🔍 SectionLoader - Template rendering error:', error);
         throw new Error(`Template rendering failed: ${error.message}`);
       }
     } else {

@@ -6,6 +6,19 @@ class BackgroundService {
     this.backgroundsPath = path.join(process.cwd(), 'vtuber_prompts', 'characters');
   }
 
+  // poseList.json 로드
+  loadPoseList() {
+    const poseListPath = path.join(process.cwd(), 'src', 'data', 'poseList.json');
+    try {
+      const data = fs.readFileSync(poseListPath, 'utf8');
+      const parsed = JSON.parse(data);
+      return parsed.poseList || [];
+    } catch (error) {
+      console.error('Error loading poseList.json:', error);
+      return [];
+    }
+  }
+
   // 배경 JSON 파일 로드
   loadBackgroundData(character, backgroundId) {
     try {
@@ -62,12 +75,25 @@ class BackgroundService {
 
   // 배경의 장소 목록 가져오기
   getBackgroundSpots(character, backgroundId) {
-    if (!backgroundId || backgroundId === 'default') {
+    const backgroundData = this.loadBackgroundData(character, backgroundId);
+    if (!backgroundData?.spots) {
       return null;
     }
 
-    const backgroundData = this.loadBackgroundData(character, backgroundId);
-    return backgroundData?.spots || null;
+    // poseList.json에서 모든 포즈 목록 로드
+    const poseList = this.loadPoseList();
+
+    // spots 데이터를 복사하고 allowedPoses를 동적으로 설정
+    const spots = {};
+    Object.entries(backgroundData.spots).forEach(([spotName, spotInfo]) => {
+      spots[spotName] = {
+        ...spotInfo,
+        // JSON 파일에 allowedPoses가 있으면 그대로 사용, 없으면 모든 포즈 사용
+        allowedPoses: spotInfo.allowedPoses || poseList.map((pose) => pose.name),
+      };
+    });
+
+    return spots;
   }
 
   // 특정 장소의 정보 가져오기

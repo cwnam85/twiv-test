@@ -3,6 +3,7 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import characterStateService from '../services/characterStateService.js';
 import backgroundService from '../services/backgroundService.js';
+import shopService from '../services/shopService.js';
 
 // poseList.json 로드
 function loadPoseList() {
@@ -189,6 +190,19 @@ export function generateChatPrompt(context) {
   const poseList = loadPoseList();
   const actionList = loadActionList();
 
+  // RP팩 메시지 프롬프트 로드
+  let rpPackMessagePrompt = '';
+  if (context.activeRpPack) {
+    try {
+      const rpPackContent = shopService.loadRpPackContent(context.activeRpPack.id, activeCharacter);
+      if (rpPackContent) {
+        rpPackMessagePrompt = rpPackContent.messagePrompt || '';
+      }
+    } catch (error) {
+      console.error('Error loading RP pack message prompt:', error);
+    }
+  }
+
   const templateContext = {
     userInput: context.userInput || '',
     lastMessage: context.lastMessage || 'none',
@@ -208,30 +222,14 @@ export function generateChatPrompt(context) {
     characterName: activeCharacter,
     characterLastPose: characterLastPose,
     activeRpPack: context.activeRpPack || null,
+    rpPackMessagePrompt: rpPackMessagePrompt,
     userLastResponses: (context.userLastResponses || []).join('\n\n'),
     llmLastResponses: (context.llmLastResponses || []).join('\n\n'),
     poseList: poseList, // poseList 추가
     actionList: actionList, // actionList 추가
   };
 
-  // 디버깅을 위한 로그
-  console.log('Template context userLastResponses:', context.userLastResponses);
-  console.log('Template context llmLastResponses:', context.llmLastResponses);
-  console.log('Final template context userLastResponses:', templateContext.userLastResponses);
-  console.log('Final template context llmLastResponses:', templateContext.llmLastResponses);
-
   const result = renderTemplate(template, templateContext);
-  console.log(
-    'Rendered template includes userLastResponses?',
-    result.includes("### User's Recent Messages:"),
-  );
-  console.log(
-    'Template result snippet around userLastResponses:',
-    result.substring(
-      result.indexOf('## Recent Conversation History'),
-      result.indexOf('## Recent Conversation History') + 500,
-    ),
-  );
   return result;
 }
 

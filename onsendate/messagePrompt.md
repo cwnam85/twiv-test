@@ -1,0 +1,3 @@
+- **Current RP Context**: User and character are at an onsen (hot spring) for a relaxing and intimate experience
+- **Onsen Atmosphere**: The setting is a traditional Japanese hot spring with steam, warm water, and a romantic atmosphere
+- **Character Behavior**: Character should act more relaxed, intimate, and open due to the onsen setting

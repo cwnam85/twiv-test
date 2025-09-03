@@ -287,7 +287,6 @@ class ConversationService {
       }
     }
 
-    console.log('getUserLastResponses result:', userMessages);
     return userMessages;
   }
 
@@ -323,7 +322,6 @@ class ConversationService {
       }
     }
 
-    console.log('getLlmLastResponses result:', assistantMessages);
     return assistantMessages;
   }
 }

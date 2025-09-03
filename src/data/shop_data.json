@@ -1,6 +1,7 @@
 {
   "ownedBackgrounds": [
-    "onsen"
+    "onsen",
+    "default"
   ],
   "ownedAppearances": [
     "swimsuit",
@@ -80,10 +81,11 @@
     }
   ],
   "ownedRpPacks": [
+    "default_rp_pack",
     "onsen_rp_pack"
   ],
   "activeRpPack": {
-    "id": "onsen_rp_pack",
-    "activatedAt": "2025-09-03T04:19:43.492Z"
+    "id": "default_rp_pack",
+    "activatedAt": "2025-09-03T09:18:09.537Z"
   }
 }
