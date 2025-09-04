@@ -46,7 +46,7 @@ const useChatting = () => {
   } = useModal();
 
   // 오디오 플레이어 훅 (일단 콜백 없이)
-  const { playAudioData, stopPlayback } = useAudioPlayer(currentCharacter);
+  const { playAudioData } = useAudioPlayer(currentCharacter);
 
   // 자동 대화 훅
   const {
@@ -210,7 +210,7 @@ const useChatting = () => {
     openShop,
     closeShop,
     // 오디오 관련
-    stopPlayback,
+    // stopPlayback, // 더 이상 사용하지 않음
     // 로딩 상태
     isLoading,
     // RP팩 위치

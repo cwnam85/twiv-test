@@ -124,7 +124,16 @@ export const useAudioPlayer = (
           startTime + AUDIO_CONFIG.FADE_IN_DURATION,
         );
       } else {
-        // 첫 번째 세그먼트인 경우 즉시 볼륨 설정
+        // 첫 번째 세그먼트인 경우 AudioContext 다시 활성화 후 볼륨 설정
+        if (audioContext.state === 'suspended') {
+          try {
+            await audioContext.resume();
+            console.log(`[CLIENT] AudioContext resumed for first segment`);
+          } catch (error) {
+            console.error(`[CLIENT] Error resuming AudioContext for first segment:`, error);
+          }
+        }
+        // 이전에 0으로 설정된 것을 덮어씀
         gainNode.gain.setValueAtTime(volumeMultiplier, startTime);
       }
 
@@ -187,25 +196,54 @@ export const useAudioPlayer = (
     [loadAudioBuffer, playWithFade],
   );
 
-  // 무한재생 중지
+  // 무한재생 중지 (즉시 끊기)
   const stopInfinitePlayback = useCallback(() => {
     if (infiniteIntervalRef.current) {
       clearInterval(infiniteIntervalRef.current);
       infiniteIntervalRef.current = null;
     }
+
     // 무한재생 전용 플래그를 false로 설정하여 재귀 호출을 즉시 중단
     infinitePlayingRef.current = false;
-    console.log(`[CLIENT] Stopped infinite playback`);
+
+    // 현재 재생 중인 오디오도 즉시 중단
+    if (audioContextRef.current && gainNodeRef.current) {
+      try {
+        // 볼륨을 즉시 0으로 설정하여 소리 끄기
+        gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+        // AudioContext 일시정지
+        audioContextRef.current.suspend();
+        console.log(`[CLIENT] Immediately stopped current audio playback`);
+      } catch (error) {
+        console.error(`[CLIENT] Error stopping audio immediately:`, error);
+      }
+    }
+
+    console.log(`[CLIENT] Stopped infinite playback (immediate stop)`);
   }, []);
 
-  // 전체 재생 중지
+  // 전체 재생 중지 (즉시 끊기)
   const stopPlayback = useCallback(() => {
     console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
     isPlayingRef.current = false;
     backgroundAudioRef.current = false;
     infinitePlayingRef.current = false; // 무한재생도 즉시 중지
+
+    // 현재 재생 중인 모든 오디오 즉시 중단
+    if (audioContextRef.current && gainNodeRef.current) {
+      try {
+        // 볼륨을 즉시 0으로 설정하여 소리 끄기
+        gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+        // AudioContext 일시정지
+        audioContextRef.current.suspend();
+        console.log(`[CLIENT] Immediately stopped all audio playback`);
+      } catch (error) {
+        console.error(`[CLIENT] Error stopping all audio immediately:`, error);
+      }
+    }
+
     stopInfinitePlayback();
-    console.log(`[CLIENT] Stopped all playback`);
+    console.log(`[CLIENT] Stopped all playback (immediate stop)`);
   }, [stopInfinitePlayback]);
 
   // 세그먼트 순차 재생
@@ -241,6 +279,21 @@ export const useAudioPlayer = (
           const isFirst = i === 0;
           const isLast = i === segments.length - 1;
 
+          // 첫 번째 세그먼트가 재생되기 시작할 때 이전 오디오 즉시 중단
+          if (isFirst) {
+            console.log(`[CLIENT] First segment starting - stopping previous audio immediately`);
+            if (audioContextRef.current && gainNodeRef.current) {
+              try {
+                // 이전 오디오 즉시 중단
+                gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+                audioContextRef.current.suspend();
+                console.log(`[CLIENT] Previous audio stopped immediately`);
+              } catch (error) {
+                console.error(`[CLIENT] Error stopping previous audio:`, error);
+              }
+            }
+          }
+
           console.log(`[CLIENT] Playing segment ${i + 1}/${segments.length}: ${segment.type}`);
 
           if (segment.type === 'text') {
@@ -272,7 +325,17 @@ export const useAudioPlayer = (
 
   // 배경음 재생 시작 (큰 볼륨으로)
   const startBackgroundAudio = useCallback(
-    (effectType: string) => {
+    async (effectType: string) => {
+      // AudioContext 다시 활성화 (이전에 suspend된 경우)
+      if (audioContextRef.current) {
+        try {
+          await audioContextRef.current.resume();
+          console.log(`[CLIENT] AudioContext resumed for background audio`);
+        } catch (error) {
+          console.error(`[CLIENT] Error resuming AudioContext for background audio:`, error);
+        }
+      }
+
       backgroundAudioRef.current = true;
       console.log(`[CLIENT] Starting LOUD background audio: ${effectType}`);
 
@@ -331,9 +394,19 @@ export const useAudioPlayer = (
 
   // 무한재생 시작
   const startInfinitePlayback = useCallback(
-    (effectType: string, effectUrl?: string) => {
+    async (effectType: string, effectUrl?: string) => {
       // 기존 무한재생 중지
       stopInfinitePlayback();
+
+      // AudioContext 다시 활성화 (이전에 suspend된 경우)
+      if (audioContextRef.current) {
+        try {
+          await audioContextRef.current.resume();
+          console.log(`[CLIENT] AudioContext resumed for infinite playback`);
+        } catch (error) {
+          console.error(`[CLIENT] Error resuming AudioContext for infinite playback:`, error);
+        }
+      }
 
       // 무한재생 플래그 설정
       infinitePlayingRef.current = true;
@@ -396,13 +469,20 @@ export const useAudioPlayer = (
         return;
       }
 
-      // 이전 재생 중지
-      stopPlayback();
+      // 새로운 재생을 위해 AudioContext 다시 활성화
+      if (audioContextRef.current) {
+        try {
+          await audioContextRef.current.resume();
+          console.log(`[CLIENT] AudioContext resumed for new playback`);
+        } catch (error) {
+          console.error(`[CLIENT] Error resuming AudioContext:`, error);
+        }
+      }
 
       // 배경음 시작 (TTS와 동시 재생)
       if (audioData.backgroundAudio) {
         console.log(`[CLIENT] Starting background audio: ${audioData.backgroundAudio}`);
-        startBackgroundAudio(audioData.backgroundAudio);
+        await startBackgroundAudio(audioData.backgroundAudio);
       }
 
       // 세그먼트 재생 (배경음과 동시에)
@@ -412,7 +492,7 @@ export const useAudioPlayer = (
       if (audioData.infiniteTag) {
         console.log('[CLIENT] Starting infinite playback, then calling completion callback');
         isPlayingRef.current = true; // 무한재생을 위해 true로 설정
-        startInfinitePlayback(audioData.infiniteTag, audioData.infiniteEffectUrl);
+        await startInfinitePlayback(audioData.infiniteTag, audioData.infiniteEffectUrl);
       } else {
         // 무한재생이 없으면 재생 상태를 false로 설정
         isPlayingRef.current = false;
@@ -424,12 +504,12 @@ export const useAudioPlayer = (
         onPlaybackComplete();
       }
     },
-    [playSegments, startInfinitePlayback, stopPlayback, startBackgroundAudio, onPlaybackComplete],
+    [playSegments, startInfinitePlayback, startBackgroundAudio, onPlaybackComplete],
   );
 
   return {
     playAudioData,
-    stopPlayback,
+    // stopPlayback, // 더 이상 외부에서 사용하지 않음
     isPlaying: isPlayingRef.current,
   };
 };

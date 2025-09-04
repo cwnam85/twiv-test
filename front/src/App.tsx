@@ -42,7 +42,7 @@ function App() {
     openShop,
     closeShop,
     // 오디오 관련
-    stopPlayback,
+    // stopPlayback, // 더 이상 사용하지 않음
     // 로딩 상태
     isLoading,
     // RP팩 위치
@@ -285,7 +285,6 @@ function App() {
           className="flex gap-2"
           onSubmit={(e) => {
             console.log('=== FORM SUBMITTED ===');
-            stopPlayback(); // 새 메시지 전송 시 이전 오디오 중지
             handleSend(e);
           }}
         >
