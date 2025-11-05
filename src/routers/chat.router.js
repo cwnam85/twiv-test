@@ -183,6 +183,15 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     // outfitToWear/outfitToRemove 처리
     await responseService.processAppearanceChange(response.outfitToWear, response.outfitToRemove);
 
+    // NSFW 포즈 파싱 및 배경 효과음 설정
+    let nsfwBackgroundAudio = null;
+
+    if (response.pose && response.pose.includes(' - ')) {
+      console.log(`[NSFW] Detected NSFW pose format: ${response.pose}`);
+      nsfwBackgroundAudio = responseService.parseNSFWPose(response.pose);
+      console.log(`[DEBUG] parseNSFWPose result: ${nsfwBackgroundAudio}`);
+    }
+
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
       console.log(`Purchase required for: ${response.requestedContent}`);
@@ -227,6 +236,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
         response.matureTags,
         response.segments,
         response.action,
+        nsfwBackgroundAudio,
       );
 
       // 자동 대화 모드일 때는 클라이언트에서 자동 대화를 처리하므로 여기서는 아무것도 하지 않음
@@ -355,6 +365,8 @@ router.post('/purchase', async (req, res) => {
         purchaseResponse.emotion,
         purchaseResponse.matureTags,
         purchaseResponse.segments,
+        purchaseResponse.action,
+        nsfwBackgroundAudio,
       );
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);
@@ -600,6 +612,15 @@ router.post('/chat', async (req, res) => {
     // outfitToWear/outfitToRemove 처리
     responseService.processAppearanceChange(response.outfitToWear, response.outfitToRemove);
 
+    // NSFW 포즈 파싱 및 배경 효과음 설정
+    let nsfwBackgroundAudio = null;
+
+    if (response.pose && response.pose.includes(' - ')) {
+      console.log(`[NSFW] Detected NSFW pose format: ${response.pose}`);
+      nsfwBackgroundAudio = responseService.parseNSFWPose(response.pose);
+      console.log(`[DEBUG] parseNSFWPose result: ${nsfwBackgroundAudio}`);
+    }
+
     // 구매 필요 감지 및 처리
     if (response.purchaseRequired && response.requestedContent) {
       console.log(`Purchase required for: ${response.requestedContent}`);
@@ -638,12 +659,23 @@ router.post('/chat', async (req, res) => {
     // 클라이언트용 오디오 데이터 생성
     let clientAudioData = null;
     try {
+      // NSFW 포즈에서 action 파싱
+      let actionToUse = response.action;
+      if (response.pose && response.pose.includes(' - ')) {
+        const parts = response.pose.split(' - ');
+        if (parts.length === 2) {
+          actionToUse = parts[1].trim();
+          console.log(`[DEBUG] Using parsed action: ${actionToUse} instead of ${response.action}`);
+        }
+      }
+
       clientAudioData = await responseService.playResponse(
         response.dialogue,
         response.emotion,
         response.matureTags,
         response.segments,
-        response.action,
+        actionToUse,
+        nsfwBackgroundAudio,
       );
     } catch (audioError) {
       console.error('Error generating audio data:', audioError);

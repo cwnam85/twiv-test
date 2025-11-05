@@ -1,48 +1,20 @@
 {
-  "id": 12,
-  "name": "검은 의사 가운",
-  "description": "선생님의 검은 의상 가운",
+  "id": 20,
+  "name": "미카사 기본 의상",
+  "description": "다 비치는 시스루 와이셔츠",
   "parts": {
     "bra": {
-      "name": "black_bra",
-      "removable": {
-        "allow": "characterForAdult",
-        "affinity": 100
-      }
+      "name": "black_bra"
     },
     "top": {
-      "name": "white_formal_shirt",
-      "removable": {
-        "allow": "characterForAdult",
-        "affinity": 80
-      }
+      "name": "white_see-through_shirt"
     },
-    "outerwear": {
-      "name": "black_medical_coat",
-      "removable": {
-        "allow": "characterForAdult",
-        "affinity": 80
-      }
-    },
+    "outerwear": null,
     "panties": {
-      "name": "black_panties",
-      "removable": {
-        "allow": "locked",
-        "affinity": null
-      }
+      "name": "black_panties"
     },
-    "bottom": {
-      "name": "gray_mini_skirt_with_black_stockings",
-      "removable": {
-        "allow": "characterForAdult",
-        "affinity": 80
-      }
-    },
+    "bottom": null,
     "shoes": null,
-    "accessories": {
-      "necklace": {
-        "name": "stethoscope_necklace"
-      }
-    }
+    "accessories": null
   }
 }

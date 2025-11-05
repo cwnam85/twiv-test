@@ -31,7 +31,3 @@ export function playMP3(filename) {
       .pipe(speaker);
   });
 }
-
-// playMatureTTS 함수 제거 - 클라이언트에서 오디오 재생 처리
-
-// 오디오 처리 함수들 제거 - 클라이언트에서 처리

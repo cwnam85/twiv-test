@@ -1,6 +1,6 @@
 export const AUDIO_CONFIG = {
   // 효과음 볼륨 배수 (1.0 = 원본 크기, 2.0 = 2배, 0.5 = 절반)
-  EFFECT_VOLUME_MULTIPLIER: 3.0,
+  EFFECT_VOLUME_MULTIPLIER: 2.0,
 
   // TTS 볼륨 배수
   TTS_VOLUME_MULTIPLIER: 1.0,

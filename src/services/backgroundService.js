@@ -83,17 +83,26 @@ class BackgroundService {
     // poseList.json에서 모든 포즈 목록 로드
     const poseList = this.loadPoseList();
 
-    // spots 데이터를 복사하고 allowedPoses를 동적으로 설정
-    const spots = {};
-    Object.entries(backgroundData.spots).forEach(([spotName, spotInfo]) => {
-      spots[spotName] = {
+    // spots가 배열인지 객체인지 확인
+    if (Array.isArray(backgroundData.spots)) {
+      // 새로운 배열 형식 처리
+      return backgroundData.spots.map((spotInfo) => ({
         ...spotInfo,
         // JSON 파일에 allowedPoses가 있으면 그대로 사용, 없으면 모든 포즈 사용
         allowedPoses: spotInfo.allowedPoses || poseList.map((pose) => pose.name),
-      };
-    });
-
-    return spots;
+      }));
+    } else {
+      // 기존 객체 형식 처리 (하위 호환성)
+      const spots = {};
+      Object.entries(backgroundData.spots).forEach(([spotName, spotInfo]) => {
+        spots[spotName] = {
+          ...spotInfo,
+          // JSON 파일에 allowedPoses가 있으면 그대로 사용, 없으면 모든 포즈 사용
+          allowedPoses: spotInfo.allowedPoses || poseList.map((pose) => pose.name),
+        };
+      });
+      return spots;
+    }
   }
 
   // 특정 장소의 정보 가져오기
@@ -103,6 +112,12 @@ class BackgroundService {
       return null;
     }
 
+    // 배열인 경우 spotName으로 찾기
+    if (Array.isArray(spots)) {
+      return spots.find((spot) => spot.name === spotName) || null;
+    }
+
+    // 객체인 경우 (기존 형식)
     return spots[spotName] || null;
   }
 
@@ -131,6 +146,12 @@ class BackgroundService {
       return [];
     }
 
+    // 배열인 경우 name 속성으로 추출
+    if (Array.isArray(spots)) {
+      return spots.map((spot) => spot.name);
+    }
+
+    // 객체인 경우 (기존 형식)
     return Object.keys(spots);
   }
 

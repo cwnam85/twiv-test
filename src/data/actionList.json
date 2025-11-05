@@ -3,7 +3,8 @@
     {
       "name": "SpeakNatural",
       "description": "Natural gesture with hand and arm movements while speaking (default for speaking)",
-      "allowedPoses": ["stand", "sit"]
+      "allowedPoses": ["stand", "sit"],
+      "notAllowedPoses" : ["lying"]
     },
     {
       "name": "PointToScreen",

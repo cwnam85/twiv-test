@@ -15,6 +15,7 @@ interface AudioData {
   infiniteTag?: string;
   infiniteEffectUrl?: string;
   backgroundAudio?: string;
+  singleBackgroundAudio?: string; // TTS 완료 후 한 번만 재생되는 배경음
   matureTags: string[];
 }
 
@@ -23,7 +24,8 @@ export const useAudioPlayer = (
   onPlaybackComplete?: () => void,
 ) => {
   const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
+  const ttsGainNodeRef = useRef<GainNode | null>(null);
+  const effectGainNodeRef = useRef<GainNode | null>(null);
   const isPlayingRef = useRef(false);
   const infiniteIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const backgroundAudioRef = useRef<boolean>(false);
@@ -68,8 +70,14 @@ export const useAudioPlayer = (
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      gainNodeRef.current = audioContextRef.current.createGain();
-      gainNodeRef.current.connect(audioContextRef.current.destination);
+
+      // TTS용 gainNode 생성
+      ttsGainNodeRef.current = audioContextRef.current.createGain();
+      ttsGainNodeRef.current.connect(audioContextRef.current.destination);
+
+      // 효과음용 gainNode 생성
+      effectGainNodeRef.current = audioContextRef.current.createGain();
+      effectGainNodeRef.current.connect(audioContextRef.current.destination);
     }
   }, []);
 
@@ -91,63 +99,42 @@ export const useAudioPlayer = (
   const playWithFade = useCallback(
     async (
       audioBuffer: AudioBuffer,
-      isFirst: boolean,
-      isLast: boolean,
+      _isFirst: boolean,
+      _isLast: boolean,
       isEffect: boolean = false,
       audioUrl?: string, // TTS 파일 URL 추가
     ): Promise<void> => {
-      if (!audioContextRef.current || !gainNodeRef.current) {
+      if (!audioContextRef.current || !ttsGainNodeRef.current || !effectGainNodeRef.current) {
         initAudioContext();
       }
 
       const audioContext = audioContextRef.current!;
-      const gainNode = gainNodeRef.current!;
+      // 오디오 타입에 따라 적절한 gainNode 선택
+      const gainNode = isEffect ? effectGainNodeRef.current! : ttsGainNodeRef.current!;
 
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(gainNode);
 
       const startTime = audioContext.currentTime;
-      const duration = audioBuffer.duration;
 
       // 효과음인 경우 볼륨 조절
       const volumeMultiplier = isEffect
         ? AUDIO_CONFIG.EFFECT_VOLUME_MULTIPLIER
         : AUDIO_CONFIG.TTS_VOLUME_MULTIPLIER;
 
-      // 페이드 효과 적용
-      if (!isFirst) {
-        // 페이드 인
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(
-          volumeMultiplier,
-          startTime + AUDIO_CONFIG.FADE_IN_DURATION,
-        );
-      } else {
-        // 첫 번째 세그먼트인 경우 AudioContext 다시 활성화 후 볼륨 설정
-        if (audioContext.state === 'suspended') {
-          try {
-            await audioContext.resume();
-            console.log(`[CLIENT] AudioContext resumed for first segment`);
-          } catch (error) {
-            console.error(`[CLIENT] Error resuming AudioContext for first segment:`, error);
-          }
+      // 페이드 효과 제거 - 모든 오디오를 즉시 재생
+      if (audioContext.state === 'suspended') {
+        try {
+          await audioContext.resume();
+          console.log(`[CLIENT] AudioContext resumed for audio playback`);
+        } catch (error) {
+          console.error(`[CLIENT] Error resuming AudioContext:`, error);
         }
-        // 이전에 0으로 설정된 것을 덮어씀
-        gainNode.gain.setValueAtTime(volumeMultiplier, startTime);
       }
+      gainNode.gain.setValueAtTime(volumeMultiplier, startTime);
 
-      if (!isLast) {
-        // 페이드 아웃
-        gainNode.gain.setValueAtTime(
-          volumeMultiplier,
-          startTime + duration - AUDIO_CONFIG.FADE_OUT_DURATION,
-        );
-        gainNode.gain.linearRampToValueAtTime(
-          AUDIO_CONFIG.MIN_FADE_VOLUME * volumeMultiplier,
-          startTime + duration,
-        );
-      }
+      // 페이드 아웃 효과 제거 - 모든 오디오를 자연스럽게 끝냄
 
       source.start();
 
@@ -207,10 +194,11 @@ export const useAudioPlayer = (
     infinitePlayingRef.current = false;
 
     // 현재 재생 중인 오디오도 즉시 중단
-    if (audioContextRef.current && gainNodeRef.current) {
+    if (audioContextRef.current && ttsGainNodeRef.current && effectGainNodeRef.current) {
       try {
-        // 볼륨을 즉시 0으로 설정하여 소리 끄기
-        gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+        // TTS와 효과음 모두 볼륨을 즉시 0으로 설정하여 소리 끄기
+        ttsGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+        effectGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
         // AudioContext 일시정지
         audioContextRef.current.suspend();
         console.log(`[CLIENT] Immediately stopped current audio playback`);
@@ -222,36 +210,16 @@ export const useAudioPlayer = (
     console.log(`[CLIENT] Stopped infinite playback (immediate stop)`);
   }, []);
 
-  // 전체 재생 중지 (즉시 끊기)
-  const stopPlayback = useCallback(() => {
-    console.log(`[CLIENT] Stopping all playback (was playing: ${isPlayingRef.current})`);
-    isPlayingRef.current = false;
-    backgroundAudioRef.current = false;
-    infinitePlayingRef.current = false; // 무한재생도 즉시 중지
-
-    // 현재 재생 중인 모든 오디오 즉시 중단
-    if (audioContextRef.current && gainNodeRef.current) {
-      try {
-        // 볼륨을 즉시 0으로 설정하여 소리 끄기
-        gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
-        // AudioContext 일시정지
-        audioContextRef.current.suspend();
-        console.log(`[CLIENT] Immediately stopped all audio playback`);
-      } catch (error) {
-        console.error(`[CLIENT] Error stopping all audio immediately:`, error);
-      }
-    }
-
-    stopInfinitePlayback();
-    console.log(`[CLIENT] Stopped all playback (immediate stop)`);
-  }, [stopInfinitePlayback]);
-
   // 세그먼트 순차 재생
   const playSegments = useCallback(
     async (segments: AudioSegment[]): Promise<void> => {
       if (isPlayingRef.current) {
-        console.log('[CLIENT] Already playing, stopping current playback');
-        stopPlayback();
+        console.log(
+          '[CLIENT] Already playing, stopping current TTS playback (keeping background audio)',
+        );
+        // 배경음은 유지하고 TTS만 중지
+        isPlayingRef.current = false;
+        infinitePlayingRef.current = false;
       }
 
       isPlayingRef.current = true;
@@ -282,10 +250,14 @@ export const useAudioPlayer = (
           // 첫 번째 세그먼트가 재생되기 시작할 때 이전 오디오 즉시 중단
           if (isFirst) {
             console.log(`[CLIENT] First segment starting - stopping previous audio immediately`);
-            if (audioContextRef.current && gainNodeRef.current) {
+            if (audioContextRef.current && ttsGainNodeRef.current && effectGainNodeRef.current) {
               try {
-                // 이전 오디오 즉시 중단
-                gainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+                // 이전 오디오 즉시 중단 (TTS와 효과음 모두)
+                ttsGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+                effectGainNodeRef.current.gain.setValueAtTime(
+                  0,
+                  audioContextRef.current.currentTime,
+                );
                 audioContextRef.current.suspend();
                 console.log(`[CLIENT] Previous audio stopped immediately`);
               } catch (error) {
@@ -320,12 +292,77 @@ export const useAudioPlayer = (
       }
       // 무한재생이 시작될 예정이므로 여기서 isPlayingRef를 false로 설정하지 않음
     },
-    [loadAudioBuffer, playWithFade, playEffect, stopPlayback],
+    [loadAudioBuffer, playWithFade, playEffect],
+  );
+
+  // 한 번만 재생되는 배경음 함수
+  const playSingleBackgroundAudio = useCallback(
+    async (effectType: string): Promise<void> => {
+      console.log(`[DEBUG SINGLE] playSingleBackgroundAudio called with effectType: ${effectType}`);
+
+      // 기존 배경음 중지
+      if (backgroundAudioRef.current) {
+        console.log(`[CLIENT] Stopping previous background audio for single background audio`);
+        backgroundAudioRef.current = false;
+
+        // 현재 재생 중인 오디오 즉시 중지
+        if (audioContextRef.current && effectGainNodeRef.current) {
+          try {
+            effectGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+            console.log(
+              `[CLIENT] Previous background audio stopped immediately for single background audio`,
+            );
+          } catch (error) {
+            console.error(
+              `[CLIENT] Error stopping previous background audio for single background audio:`,
+              error,
+            );
+          }
+        }
+      }
+
+      try {
+        console.log(`[DEBUG SINGLE] Fetching random effect for: ${effectType}`);
+        // 랜덤 효과음 파일 선택을 위해 백엔드 API 호출
+        const response = await fetch(`/api/effects/random/${effectType}`);
+        if (!response.ok) {
+          throw new Error(`Failed to get random effect URL for ${effectType}`);
+        }
+        const { url } = await response.json();
+
+        console.log(`[CLIENT] Playing single background audio: ${url}`);
+        const audioBuffer = await loadAudioBuffer(url);
+
+        console.log(`[DEBUG SINGLE] About to call playWithFade with isEffect: true`);
+        // 한 번만 재생 (isEffect: true로 효과음 볼륨 적용)
+        await playWithFade(audioBuffer, true, true, true);
+        console.log(`[CLIENT] ✓ Single background audio completed`);
+      } catch (error) {
+        console.error(`[CLIENT] Error playing single background audio ${effectType}:`, error);
+      }
+    },
+    [loadAudioBuffer, playWithFade],
   );
 
   // 배경음 재생 시작 (큰 볼륨으로)
   const startBackgroundAudio = useCallback(
     async (effectType: string) => {
+      // 기존 배경음 중지
+      if (backgroundAudioRef.current) {
+        console.log(`[CLIENT] Stopping previous background audio`);
+        backgroundAudioRef.current = false;
+
+        // 현재 재생 중인 오디오 즉시 중지
+        if (audioContextRef.current && effectGainNodeRef.current) {
+          try {
+            effectGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+            console.log(`[CLIENT] Previous background audio stopped immediately`);
+          } catch (error) {
+            console.error(`[CLIENT] Error stopping previous background audio:`, error);
+          }
+        }
+      }
+
       // AudioContext 다시 활성화 (이전에 suspend된 경우)
       if (audioContextRef.current) {
         try {
@@ -347,9 +384,13 @@ export const useAudioPlayer = (
         }
 
         try {
-          // intercourse는 항상 기본 폴더 사용 (공용)
-          const url = `/api/effects/${effectType}/${effectType}.mp3`;
-          console.log(`[CLIENT] Using default background: ${url}`);
+          // 랜덤 효과음 파일 선택을 위해 백엔드 API 호출
+          const response = await fetch(`/api/effects/random/${effectType}`);
+          if (!response.ok) {
+            throw new Error(`Failed to get random effect URL for ${effectType}`);
+          }
+          const { url } = await response.json();
+          console.log(`[CLIENT] Using random background: ${url}`);
           console.log(`[CLIENT] Playing loud background: ${url}`);
           const audioBuffer = await loadAudioBuffer(url);
 
@@ -479,6 +520,25 @@ export const useAudioPlayer = (
         }
       }
 
+      // 이전 배경음 중지
+      if (backgroundAudioRef.current) {
+        console.log(`[CLIENT] Stopping previous background audio for new playback`);
+        backgroundAudioRef.current = false;
+
+        // 현재 재생 중인 오디오 즉시 중지
+        if (audioContextRef.current && effectGainNodeRef.current) {
+          try {
+            effectGainNodeRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+            console.log(`[CLIENT] Previous background audio stopped immediately for new playback`);
+          } catch (error) {
+            console.error(
+              `[CLIENT] Error stopping previous background audio for new playback:`,
+              error,
+            );
+          }
+        }
+      }
+
       // 배경음 시작 (TTS와 동시 재생)
       if (audioData.backgroundAudio) {
         console.log(`[CLIENT] Starting background audio: ${audioData.backgroundAudio}`);
@@ -488,13 +548,28 @@ export const useAudioPlayer = (
       // 세그먼트 재생 (배경음과 동시에)
       await playSegments(audioData.segments);
 
+      // TTS 완료 후 한 번만 재생되는 배경음
+      if (audioData.singleBackgroundAudio) {
+        console.log(
+          `[CLIENT] Playing single background audio after TTS: ${audioData.singleBackgroundAudio}`,
+        );
+        console.log(
+          `[DEBUG CLIENT] singleBackgroundAudio: ${audioData.singleBackgroundAudio}, backgroundAudio: ${audioData.backgroundAudio}, infiniteTag: ${audioData.infiniteTag}`,
+        );
+        await playSingleBackgroundAudio(audioData.singleBackgroundAudio);
+      }
+
       // 무한재생 시작
       if (audioData.infiniteTag) {
         console.log('[CLIENT] Starting infinite playback, then calling completion callback');
+        console.log(
+          `[DEBUG INFINITE] infiniteTag: ${audioData.infiniteTag}, infiniteEffectUrl: ${audioData.infiniteEffectUrl}`,
+        );
         isPlayingRef.current = true; // 무한재생을 위해 true로 설정
         await startInfinitePlayback(audioData.infiniteTag, audioData.infiniteEffectUrl);
       } else {
         // 무한재생이 없으면 재생 상태를 false로 설정
+        console.log(`[DEBUG INFINITE] No infiniteTag, setting isPlayingRef to false`);
         isPlayingRef.current = false;
       }
 
@@ -504,7 +579,13 @@ export const useAudioPlayer = (
         onPlaybackComplete();
       }
     },
-    [playSegments, startInfinitePlayback, startBackgroundAudio, onPlaybackComplete],
+    [
+      playSegments,
+      startInfinitePlayback,
+      startBackgroundAudio,
+      playSingleBackgroundAudio,
+      onPlaybackComplete,
+    ],
   );
 
   return {

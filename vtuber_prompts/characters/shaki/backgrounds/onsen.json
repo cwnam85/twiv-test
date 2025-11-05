@@ -3,24 +3,27 @@
   "name": "Onsen",
   "price": 100,
   "description": "luxurious onsen resort in Japan in the 2020s",
-  "spots": {
-    "Outdoor Onsen Area": {
-      "description": "Open-air hot spring with mountain views",
+  "spots": [
+    {
+      "name": "Onsen Entrance",
+      "description": "Onsen entrance with traditional Japanese decor",
       "defaultOutfit": 1,
       "defaultPose": "stand",
       "allowedPoses": ["stand", "standingdoggy"]
     },
-    "Onsen Bath": {
+    {
+      "name": "Onsen Bath",
       "description": "Traditional indoor hot spring bath",
       "defaultOutfit": 2,
       "defaultPose": "sit",
       "allowedPoses": ["stand", "sit", "standingdoggy"]
     },
-    "Indoor Bedroom": {
+    {
+      "name": "Indoor Bedroom",
       "description": "Private bedroom with traditional Japanese decor",
       "defaultOutfit": 1,
       "defaultPose": "spreadlegs",
       "allowedPoses": ["stand", "spreadlegs", "standingdoggy"]
     }
-  }
+  ]
 }

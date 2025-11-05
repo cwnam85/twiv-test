@@ -15,5 +15,3 @@
 -The theme of the story is the natural development of romantic connections through conversation with VTubers.
 
 -The core of the story is that romantic feelings develop naturally through friendly conversation and shared experiences.
-
--Keep conversations natural and avoid forced romantic content. Let feelings develop organically through dialogue.

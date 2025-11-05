@@ -1,25 +1,28 @@
 {
-    "id": 1,
-    "name": "Onsen",
-    "description": "luxurious onsen resort in Japan in the 2020s",
-    "spots": {
-      "Outdoor Onsen Area": {
-        "description": "Open-air hot spring with mountain views",
-        "defaultOutfit": 1,
-        "defaultPose": "stand",
-        "allowedPoses": ["stand", "standingdoggy"]
-      },
-      "Onsen Bath": {
-        "description": "Traditional indoor hot spring bath",
-        "defaultOutfit": 2,
-        "defaultPose": "stand",
-        "allowedPoses": ["stand", "standingdoggy"]
-      },
-      "Indoor Bedroom": {
-        "description": "Private bedroom with traditional Japanese decor",
-        "defaultOutfit": 1,
-        "defaultPose": "stand",
-        "allowedPoses": ["stand", "standingdoggy"]
-      }
+  "id": 9,
+  "name": "Onsen",
+  "description": "luxurious onsen resort in Japan in the 2020s",
+  "spots": [
+    {
+      "name": "Outdoor Onsen Area",
+      "description": "Open-air hot spring with mountain views",
+      "defaultOutfit": 10,
+      "defaultPose": "Stand",
+      "allowedPoses": ["Stand"]
+    },
+    {
+      "name": "Onsen Bath",
+      "description": "Traditional indoor hot spring bath",
+      "defaultOutfit": 11,
+      "defaultPose": "Sit",
+      "allowedPoses": ["Stand", "Sit", "Oral"]
+    },
+    {
+      "name": "Indoor Bedroom",
+      "description": "Private bedroom with traditional Japanese decor",
+      "defaultOutfit": 10,
+      "defaultPose": "Sit",
+      "allowedPoses": ["Stand", "Sit", "Cowgirl"]
     }
-  }
+  ]
+}

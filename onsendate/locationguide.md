@@ -4,7 +4,7 @@
 
 -As each spot moves, the intimacy level increases progressively.
 
-#Outdoor Onsen Area
+#Onsen Entrance
 
 -Default Pose: stand
 

@@ -3,12 +3,8 @@ import { playTTSSupertone } from './ttsService.js';
 import { sendMessageToWarudo } from './warudoService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
-// 오디오 재생은 클라이언트에서 처리하므로 서버 오디오 관련 import 제거
 import fs from 'fs';
 import path from 'path';
-
-// AudioProcessor 클래스 import
-// import { AudioProcessor } from './audioService.js';
 
 class ResponseService {
   constructor() {
@@ -204,8 +200,16 @@ class ResponseService {
     }
   }
 
-  async playResponse(dialogue, emotion, matureTags = [], segments = [], action = null) {
+  async playResponse(
+    dialogue,
+    emotion,
+    matureTags = [],
+    segments = [],
+    action = null,
+    nsfwBackgroundAudio = null,
+  ) {
     try {
+      console.log(`[DEBUG] playResponse called with nsfwBackgroundAudio: ${nsfwBackgroundAudio}`);
       // mature 태그 사용 빈도 추적을 위한 맵
       const tagCountMap = new Map();
 
@@ -293,11 +297,30 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // 4단계: action 기반 배경음 처리
+        // 4단계: NSFW 포즈 기반 배경음 처리
         let backgroundAudio = null;
-        if (action === 'Intercourse') {
-          backgroundAudio = 'intercourse';
-          console.log(`[BACKGROUND] Adding intercourse background audio`);
+        let singleBackgroundAudio = null;
+        console.log(`[DEBUG] nsfwBackgroundAudio: ${nsfwBackgroundAudio}, action: ${action}`);
+
+        if (nsfwBackgroundAudio) {
+          // none 액션은 배경음 재생하지 않음
+          if (action === 'none') {
+            console.log(`[NO BACKGROUND] none activity - no background audio will be played`);
+          }
+          // insertion 액션은 TTS 완료 후 한 번만 재생
+          else if (action === 'insertion') {
+            singleBackgroundAudio = nsfwBackgroundAudio;
+            console.log(
+              `[SINGLE BACKGROUND] Adding insertion audio for single playback: ${nsfwBackgroundAudio}`,
+            );
+            console.log(
+              `[DEBUG INSERTION] action: ${action}, singleBackgroundAudio: ${singleBackgroundAudio}`,
+            );
+          } else {
+            backgroundAudio = nsfwBackgroundAudio;
+            console.log(`[BACKGROUND] Adding NSFW background audio: ${nsfwBackgroundAudio}`);
+            console.log(`[DEBUG OTHER] action: ${action}, backgroundAudio: ${backgroundAudio}`);
+          }
         }
 
         // 5단계: 클라이언트로 전송할 데이터 반환
@@ -307,6 +330,7 @@ class ResponseService {
           segments: clientSegments,
           infiniteTag,
           backgroundAudio,
+          singleBackgroundAudio,
           matureTags: Array.from(tagCountMap.keys()),
         };
 
@@ -331,11 +355,30 @@ class ResponseService {
           console.log(`[INFINITE] Will start infinite playback of: ${infiniteTag}`);
         }
 
-        // action 기반 배경음 처리
+        // NSFW 포즈 기반 배경음 처리
         let backgroundAudio = null;
-        if (action === 'Intercourse') {
-          backgroundAudio = 'intercourse';
-          console.log(`[BACKGROUND] Adding intercourse background audio`);
+        let singleBackgroundAudio = null;
+        console.log(`[DEBUG] nsfwBackgroundAudio: ${nsfwBackgroundAudio}, action: ${action}`);
+
+        if (nsfwBackgroundAudio) {
+          // none 액션은 배경음 재생하지 않음
+          if (action === 'none') {
+            console.log(`[NO BACKGROUND] none activity - no background audio will be played`);
+          }
+          // insertion 액션은 TTS 완료 후 한 번만 재생
+          else if (action === 'insertion') {
+            singleBackgroundAudio = nsfwBackgroundAudio;
+            console.log(
+              `[SINGLE BACKGROUND] Adding insertion audio for single playback: ${nsfwBackgroundAudio}`,
+            );
+            console.log(
+              `[DEBUG INSERTION] action: ${action}, singleBackgroundAudio: ${singleBackgroundAudio}`,
+            );
+          } else {
+            backgroundAudio = nsfwBackgroundAudio;
+            console.log(`[BACKGROUND] Adding NSFW background audio: ${nsfwBackgroundAudio}`);
+            console.log(`[DEBUG OTHER] action: ${action}, backgroundAudio: ${backgroundAudio}`);
+          }
         }
 
         return {
@@ -344,6 +387,7 @@ class ResponseService {
           segments: [],
           infiniteTag,
           backgroundAudio,
+          singleBackgroundAudio,
           matureTags: Array.from(tagCountMap.keys()),
         };
       }
@@ -368,6 +412,7 @@ class ResponseService {
   // 우선순위 기반 mature 태그 찾기
   getMostUsedTag(tagCountMap) {
     // 우선순위: suck > kiss > moan > breath
+    // insertion은 singleBackgroundAudio로 처리되므로 infiniteTag에서 제외
     const priorityOrder = ['suck', 'kiss', 'moan', 'breath'];
 
     // 우선순위가 높은 태그부터 확인
@@ -381,16 +426,22 @@ class ResponseService {
     }
 
     // 우선순위 태그가 없으면 가장 많이 사용된 태그 반환 (fallback)
+    // insertion은 singleBackgroundAudio로 처리되므로 제외
     let mostUsedTag = null;
     let maxCount = 0;
 
     for (const [tag, count] of tagCountMap.entries()) {
-      if (count > maxCount) {
+      console.log(
+        `[DEBUG TAG] Checking tag: ${tag}, count: ${count}, isInsertion: ${tag === 'insertion'}`,
+      );
+      if (tag !== 'insertion' && count > maxCount) {
         maxCount = count;
         mostUsedTag = tag;
+        console.log(`[DEBUG TAG] New mostUsedTag: ${mostUsedTag} with count: ${maxCount}`);
       }
     }
 
+    console.log(`[DEBUG TAG] Final mostUsedTag: ${mostUsedTag}`);
     return mostUsedTag;
   }
 
@@ -403,26 +454,34 @@ class ResponseService {
         `[EFFECT DEBUG] Active character: ${activeCharacter}, Effect type: ${effectType}`,
       );
 
-      // 캐릭터별 효과음 폴더 경로 결정
+      // NSFW 효과음은 항상 기본 폴더 사용
+      const nsfwEffectTypes = ['touching', 'insertion', 'intercourse', 'boobjob'];
       let effectDir;
-      const characterSpecificDir = path.join(
-        process.cwd(),
-        'mature_tts',
-        activeCharacter,
-        effectType,
-      );
-      console.log(`[EFFECT DEBUG] Checking character-specific directory: ${characterSpecificDir}`);
+      let characterSpecificDir;
 
-      // 캐릭터 전용 폴더가 있으면 사용, 없으면 기본 폴더 사용
-      if (fs.existsSync(characterSpecificDir)) {
-        effectDir = characterSpecificDir;
-        console.log(
-          `[EFFECT] Using character-specific folder for ${activeCharacter}: ${effectDir}`,
-        );
-      } else {
-        // 기본 효과음 폴더 (fallback)
+      if (nsfwEffectTypes.includes(effectType)) {
+        // NSFW 효과음은 기본 폴더 사용
         effectDir = path.join(process.cwd(), 'mature_tts', effectType);
-        console.log(`[EFFECT] Using default folder for ${activeCharacter}: ${effectDir}`);
+        characterSpecificDir = null; // NSFW는 캐릭터별 폴더 사용 안함
+        console.log(`[EFFECT] Using default NSFW folder: ${effectDir}`);
+      } else {
+        // 일반 효과음은 캐릭터별 폴더 우선
+        characterSpecificDir = path.join(process.cwd(), 'mature_tts', activeCharacter, effectType);
+        console.log(
+          `[EFFECT DEBUG] Checking character-specific directory: ${characterSpecificDir}`,
+        );
+
+        if (fs.existsSync(characterSpecificDir)) {
+          effectDir = characterSpecificDir;
+          console.log(
+            `[EFFECT] Using character-specific folder for ${activeCharacter}: ${effectDir}`,
+          );
+        } else {
+          // 기본 효과음 폴더 (fallback)
+          effectDir = path.join(process.cwd(), 'mature_tts', effectType);
+          characterSpecificDir = null; // 기본 폴더 사용
+          console.log(`[EFFECT] Using default folder for ${activeCharacter}: ${effectDir}`);
+        }
       }
 
       if (!fs.existsSync(effectDir)) {
@@ -439,7 +498,8 @@ class ResponseService {
       const randomFile = files[Math.floor(Math.random() * files.length)];
 
       // 캐릭터 전용 폴더를 사용 중인지 확인
-      const isUsingCharacterFolder = fs.existsSync(characterSpecificDir);
+      const isUsingCharacterFolder =
+        characterSpecificDir !== null && fs.existsSync(characterSpecificDir);
       const effectUrl = isUsingCharacterFolder
         ? `/api/effects/${activeCharacter}/${effectType}/${randomFile}`
         : `/api/effects/${effectType}/${randomFile}`;
@@ -448,6 +508,55 @@ class ResponseService {
       return effectUrl;
     } catch (error) {
       console.error(`[EFFECT] Error getting random effect URL for ${effectType}:`, error);
+      return null;
+    }
+  }
+
+  // NSFW 포즈 필드를 파싱해서 효과음으로 변환
+  parseNSFWPose(poseString) {
+    try {
+      // "포즈명 - 행위명" 형식 파싱
+      if (!poseString || typeof poseString !== 'string') {
+        return null;
+      }
+
+      const parts = poseString.split(' - ');
+      if (parts.length !== 2) {
+        return null;
+      }
+
+      const [pose, action] = parts.map((part) => part.trim());
+
+      // poseList.json에서 NSFW 포즈 목록 동적 추출
+      const poseListPath = path.join(process.cwd(), 'src', 'data', 'poseList.json');
+      const poseListData = JSON.parse(fs.readFileSync(poseListPath, 'utf8'));
+      const nsfwPoses = poseListData.poseList
+        .filter((poseItem) => poseItem.nsfw === true)
+        .map((poseItem) => poseItem.name);
+
+      if (!nsfwPoses.includes(pose)) {
+        return null;
+      }
+
+      // 행위에 따른 효과음 매핑
+      const soundMapping = {
+        touching: 'touching',
+        insertion: 'insertion',
+        intercourse: 'intercourse',
+        boobjob: 'boobjob',
+      };
+
+      const effectType = soundMapping[action];
+      if (!effectType) {
+        console.warn(`[NSFW SOUND] Unknown action: ${action}`);
+        return null;
+      }
+
+      // 효과음 타입 반환 (URL이 아닌 타입 이름)
+      console.log(`[NSFW SOUND] Playing ${effectType} sound for pose: ${pose}, action: ${action}`);
+      return effectType;
+    } catch (error) {
+      console.error(`[NSFW SOUND] Error parsing NSFW pose:`, error);
       return null;
     }
   }
