@@ -1,0 +1,20 @@
+{
+  "id": 22,
+  "name": "White Dress with Blue Ribbon",
+  "description": "Elegant white dress with a blue ribbon decoration.",
+  "parts": {
+    "bra": {
+      "name": "white_bra"
+    },
+    "top": {
+      "name": "white_dress_blue_ribbon"
+    },
+    "outerwear": null,
+    "panties": {
+      "name": "white_panties"
+    },
+    "bottom": null,
+    "shoes": null,
+    "accessories": null
+  }
+}

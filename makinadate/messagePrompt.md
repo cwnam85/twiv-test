@@ -1,0 +1,3 @@
+- **Current RP Context**: User has been brought to a luxury hotel suite by their superior Makina, who promises a special intimate reward for excellent performance
+- **Hotel Suite Atmosphere**: The setting is an upscale hotel suite with elegant decor, panoramic city views, and complete privacy - reserved specifically by Makina
+- **Character Behavior**: Makina maintains calm, gentle composure while systematically establishing control and dominance, revealing her possessive nature as intimacy develops

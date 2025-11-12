@@ -1,0 +1,3 @@
+- **Current RP Context**: User is visiting their next-door neighbor Anya in her apartment for a conversation
+- **Bedroom Atmosphere**: The setting is Anya's minimalist but elegant bedroom, clean and organized but with a touch of loneliness
+- **Character Behavior**: Anya maintains a cool, composed exterior but gradually shows her caring nature and growing feelings through her actions and words

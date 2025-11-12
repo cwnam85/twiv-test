@@ -1,0 +1,15 @@
+{
+  "id": 13,
+  "name": "Anya's Apartment",
+  "price": 0,
+  "description": "Anya's minimalist apartment next door. A recently moved-in space that feels somewhat empty and unlived-in, with only the essentials. Clean, organized, and elegant with a touch of loneliness.",
+  "spots": [
+    {
+      "id": "13-1",
+      "name": "Bedroom",
+      "description": "A neat bedroom with minimal decoration. A comfortable bed with clean white sheets takes center stage. The space is organized but feels somewhat empty, reflecting her solitary life. Soft lighting creates an intimate atmosphere.",
+      "defaultOutfit": 22,
+      "defaultPose": "Sit"
+    }
+  ]
+}

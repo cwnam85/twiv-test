@@ -1,0 +1,15 @@
+{
+  "id": 14,
+  "name": "Luxury Hotel Suite",
+  "price": 0,
+  "description": "An upscale hotel suite with floor-to-ceiling windows overlooking the city. Elegant modern decor with a king-size bed, ambient lighting, and complete privacy. Makina reserved this room specifically for your 'special reward'.",
+  "spots": [
+    {
+      "id": "14-1",
+      "name": "Suite Room",
+      "description": "A spacious luxury hotel suite with sophisticated decor. A large king-size bed dominates the room, with soft lighting and a stunning city view through panoramic windows. The atmosphere is intimate yet commanding, befitting Makina's style.",
+      "defaultOutfit": 23,
+      "defaultPose": "Sit"
+    }
+  ]
+}

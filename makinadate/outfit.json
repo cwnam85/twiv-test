@@ -1,0 +1,22 @@
+{
+  "id": 23,
+  "name": "Maid Bikini",
+  "description": "Black maid bikini with frills and ribbons. Provocative yet playful outfit with maid headdress, detached collar, thighhighs, and decorative garters.",
+  "parts": {
+    "bra": {
+      "name": "black_maid_bikini_top_frills"
+    },
+    "top": null,
+    "outerwear": null,
+    "panties": {
+      "name": "black_bikini_panties"
+    },
+    "bottom": {
+      "name": "black_thighhighs"
+    },
+    "shoes": null,
+    "accessories": {
+      "name": "maid_headdress_detached_collar_ribbon_arm_garter_leg_garter_wrist_cuffs"
+    }
+  }
+}
