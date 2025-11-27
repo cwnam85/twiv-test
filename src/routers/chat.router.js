@@ -2,7 +2,6 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { playMP3 } from '../services/audioService.js';
-import { connectWebSocket } from '../services/warudoService.js';
 import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
 import { CHARACTER_SETTINGS } from '../../vtuber_prompts/character_settings.js';
 import affinityService from '../services/affinityService.js';
@@ -24,9 +23,6 @@ const router = express.Router();
 let isAutoChatMode = false;
 let autoChatTimer = null;
 let sseClients = []; // SSE 클라이언트들 저장
-
-// 서버 시작 시 WebSocket 연결
-const webSocket = connectWebSocket();
 
 // 시스템 메시지를 대화 기록에 추가 (Grok 모델에만 적용)
 conversationService.addSystemMessageIfNeeded();
@@ -245,9 +241,6 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       clientAudioData = null;
     }
 
-    // Warudo에 포즈 변경 메시지 전송
-    responseService.sendPoseToWarudo(response.pose);
-
     // 캐릭터 상태에 마지막 포즈 저장 (activeCharacter는 위에서 이미 선언됨)
     if (response.pose) {
       characterStateService.setLastPose(activeCharacter, response.pose);
@@ -268,6 +261,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
 
     return {
       message: response.dialogue,
+      narration: response.narration,
+      inner_thoughts: response.inner_thoughts,
       isPaid: false,
       ...affinityService.getData(),
       pose: response.pose,
@@ -375,6 +370,8 @@ router.post('/purchase', async (req, res) => {
 
     res.json({
       message: purchaseResponse.dialogue,
+      narration: purchaseResponse.narration,
+      inner_thoughts: purchaseResponse.inner_thoughts,
       emotion: purchaseResponse.emotion,
       pose: purchaseResponse.pose,
       action: purchaseResponse.action,
@@ -383,9 +380,6 @@ router.post('/purchase', async (req, res) => {
       purchasedContent: requestedContent,
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
-
-    // Warudo에 포즈 변경 메시지 전송
-    responseService.sendPoseToWarudo(purchaseResponse.pose);
 
     // 캐릭터 상태에 마지막 포즈 저장
     const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
@@ -685,6 +679,8 @@ router.post('/chat', async (req, res) => {
     // 클라이언트에 응답 전송
     res.json({
       message: response.dialogue,
+      narration: response.narration,
+      inner_thoughts: response.inner_thoughts,
       isPaid: false,
       ...affinityService.getData(),
       pose: response.pose,
@@ -698,9 +694,6 @@ router.post('/chat', async (req, res) => {
       spot: response.spot, // RP팩 위치 정보 추가
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
     });
-
-    // Warudo에 포즈 변경 메시지 전송
-    responseService.sendPoseToWarudo(response.pose);
 
     // 캐릭터 상태에 마지막 포즈 저장 (activeCharacter는 위에서 이미 선언됨)
     if (response.pose) {

@@ -182,6 +182,7 @@ export function generateChatPrompt(context) {
   // 활성 캐릭터 정보 가져오기
   const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
   const characterLastPose = characterStateService.getLastPose(activeCharacter);
+  const characterState = characterStateService.getCharacterState(activeCharacter);
 
   // 현재 배경의 spots 정보 가져오기
   const location = backgroundService.getBackgroundSpots(activeCharacter, context.currentBackground);
@@ -191,17 +192,46 @@ export function generateChatPrompt(context) {
   const actionList = loadActionList();
 
   // RP팩 메시지 프롬프트 로드
-  let rpPackMessagePrompt = '';
+  let rpPackMessagePrompt = {
+    context: '',
+    atmosphere: '',
+    behavior: '',
+  };
   if (context.activeRpPack) {
     try {
       const rpPackContent = shopService.loadRpPackContent(context.activeRpPack.id, activeCharacter);
-      if (rpPackContent) {
-        rpPackMessagePrompt = rpPackContent.messagePrompt || '';
+      if (rpPackContent && rpPackContent.messagePrompt) {
+        rpPackMessagePrompt = rpPackContent.messagePrompt;
       }
     } catch (error) {
       console.error('Error loading RP pack message prompt:', error);
     }
   }
+
+  // outfit 데이터 구조 생성
+  const outfit = {
+    name: context.appearanceData?.appearanceName || 'default',
+    description: context.appearanceData?.appearanceData?.description || '',
+    outfitStatus: characterState?.outfitStatus || 'Dressed',
+    parts: context.appearanceData?.appearanceData?.parts || {},
+  };
+
+  // characterStatus 구조 생성
+  const currentSpotName = characterState?.current_spot || (Array.isArray(location?.spots) ? location.spots[0]?.name : Object.keys(location || {})[0] || 'default');
+  const currentSpot = Array.isArray(location?.spots) 
+    ? location.spots.find(s => s.name === currentSpotName) || location.spots[0] || {}
+    : location?.[currentSpotName] || {};
+
+  const characterStatus = {
+    spot: currentSpot,
+  };
+
+  // rpPack 전체 구조 생성
+  const rpPack = {
+    messagePrompt: rpPackMessagePrompt,
+    poseList: poseList,
+    actionList: actionList,
+  };
 
   const templateContext = {
     userInput: context.userInput || '',
@@ -209,7 +239,10 @@ export function generateChatPrompt(context) {
     affinity: context.affinity || 0,
     currentBackground: generateBackgroundInfo(context.currentBackground),
     currentBackgroundId: context.currentBackground || 'default',
-    location: location,
+    location: {
+      name: generateBackgroundInfo(context.currentBackground),
+      spots: Array.isArray(location) ? location : (location ? Object.values(location) : []),
+    },
     currentAppearance: generateAppearanceInfo(context.appearanceData),
     appearanceDetail: generateAppearanceDetail(context.appearanceData),
     undressableItems: generateUndressableItems(context.appearanceData, context.affinity),
@@ -218,15 +251,20 @@ export function generateChatPrompt(context) {
     ownedBackgrounds: context.ownedBackgrounds || 'none',
     ownedAppearances: context.ownedAppearances || 'none',
     isAdultCharacter: context.isAdultCharacter || false,
+    characterForAdult: context.isAdultCharacter || false, // 템플릿에서 사용하는 이름
     character: context.character || 'shaki',
     characterName: activeCharacter,
     characterLastPose: characterLastPose,
+    characterStatus: characterStatus, // 템플릿에서 사용
+    outfit: outfit, // 템플릿에서 사용
     activeRpPack: context.activeRpPack || null,
-    rpPackMessagePrompt: rpPackMessagePrompt,
+    rpPack: rpPack, // 템플릿에서 rpPack.messagePrompt 등으로 접근
+    userLastMessages: (context.userLastResponses || []).join('\n\n'), // 템플릿에서 사용하는 이름
     userLastResponses: (context.userLastResponses || []).join('\n\n'),
     llmLastResponses: (context.llmLastResponses || []).join('\n\n'),
-    poseList: poseList, // poseList 추가
-    actionList: actionList, // actionList 추가
+    poseList: poseList,
+    actionList: actionList,
+    userRequestCharacterStatus: 'init', // 기본값 설정
   };
 
   const result = renderTemplate(template, templateContext);

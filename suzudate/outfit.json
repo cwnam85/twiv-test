@@ -1,0 +1,18 @@
+{
+  "id": 27,
+  "name": "오렌지 비키니",
+  "description": "밝고 활기찬 오렌지색 비키니. 여름 해변에 완벽하게 어울리는 상큼하고 귀여운 스타일로, 스즈의 에너지 넘치는 성격을 그대로 표현한다.",
+  "parts": {
+    "bra": {
+      "name": "orange_bikini_top"
+    },
+    "top": null,
+    "outerwear": null,
+    "panties": {
+      "name": "orange_bikini_bottom"
+    },
+    "bottom": null,
+    "shoes": "barefoot",
+    "accessories": null
+  }
+}

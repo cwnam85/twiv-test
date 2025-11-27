@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { AutoChatSpeed } from './hooks/useAutoChat';
 import AppearanceStatus from './components/AppearanceStatus';
 import Shop from './components/Shop';
+import InnerThoughtsModal from './components/InnerThoughtsModal';
 
 function App() {
   const {
@@ -57,6 +58,7 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
+  const [isInnerThoughtsModalOpen, setIsInnerThoughtsModalOpen] = useState(false);
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
@@ -153,9 +155,14 @@ function App() {
             <h1 className="text-2xl font-bold">Chat with {currentCharacter}</h1>
             <div className="flex items-center gap-2">
               <div className="bg-blue-100 px-4 py-2 rounded-lg">
-                <span className="text-blue-800 font-semibold">호감도: {affinity}</span>
-                <span className="text-blue-800 font-semibold ml-2">포인트: {point}</span>
+                <span className="text-blue-800 font-semibold">포인트: {point}</span>
               </div>
+              <button
+                onClick={() => setIsInnerThoughtsModalOpen(true)}
+                className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 flex items-center gap-2"
+              >
+                💭 내면의 생각
+              </button>
               <button
                 onClick={openShop}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
@@ -189,14 +196,26 @@ function App() {
         {/* 채팅 메시지 영역 */}
         <div className="bg-gray-100 rounded-lg p-4 h-[400px] overflow-y-auto mb-4">
           {messages.map((message, index) => (
-            <div key={index} className={`mb-2 ${message.isUser ? 'text-right' : 'text-left'}`}>
-              <span
-                className={`inline-block rounded-lg px-4 py-2 ${
-                  message.isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
-                }`}
-              >
-                {message.text}
-              </span>
+            <div key={index} className={`mb-3 ${message.isUser ? 'text-right' : 'text-left'}`}>
+              {/* 메인 메시지 */}
+              <div>
+                <span
+                  className={`inline-block rounded-lg px-4 py-2 ${
+                    message.isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
+                  }`}
+                >
+                  {message.text}
+                </span>
+              </div>
+              
+              {/* Narration (dialogue와 함께 표시) */}
+              {!message.isUser && message.narration && (
+                <div className="mt-1 text-left">
+                  <span className="inline-block rounded-lg px-3 py-1 bg-gray-200 text-gray-600 text-sm italic">
+                    {message.narration}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -344,6 +363,15 @@ function App() {
           onClose={closeShop}
         />
       )}
+
+      {/* 내면의 생각 모달 */}
+      <InnerThoughtsModal
+        isOpen={isInnerThoughtsModalOpen}
+        onClose={() => setIsInnerThoughtsModalOpen(false)}
+        messages={messages}
+        affinity={affinity}
+        currentEmotion={emotion}
+      />
     </div>
   );
 }

@@ -62,12 +62,22 @@ export function processAIResponse(rawResponse) {
     if (typeof rawResponse === 'string') {
       responseText = rawResponse;
     } else if (typeof rawResponse === 'object' && rawResponse !== null) {
-      // 객체인 경우 dialogue 필드 추출
+      // 객체인 경우
       if (rawResponse.dialogue) {
-        responseText =
-          typeof rawResponse.dialogue === 'string'
-            ? rawResponse.dialogue
-            : JSON.stringify(rawResponse.dialogue);
+        // dialogue가 문자열이고 JSON 형태인 경우 (LLM이 dialogue 필드에 전체 JSON을 넣은 경우)
+        if (typeof rawResponse.dialogue === 'string') {
+          // dialogue가 JSON 문자열인지 확인
+          const trimmed = rawResponse.dialogue.trim();
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            // dialogue 필드 자체가 JSON 문자열이면 그것을 사용
+            responseText = rawResponse.dialogue;
+          } else {
+            // 일반 텍스트면 전체 객체를 JSON으로 변환
+            responseText = JSON.stringify(rawResponse);
+          }
+        } else {
+          responseText = JSON.stringify(rawResponse.dialogue);
+        }
       } else {
         // dialogue 필드가 없으면 전체 객체를 문자열로 변환
         responseText = JSON.stringify(rawResponse);
@@ -76,6 +86,8 @@ export function processAIResponse(rawResponse) {
       console.error('지원하지 않는 응답 타입:', typeof rawResponse, rawResponse);
       return {
         dialogue: '응답을 처리할 수 없습니다.',
+        narration: '',
+        inner_thoughts: '',
         emotion: 'neutral',
         pose: 'stand',
         action: 'SpeakNatural',
@@ -118,12 +130,19 @@ export function processAIResponse(rawResponse) {
         // mature 태그 처리
         const { segments, tags } = extractMatureTags(dialogue);
 
-        console.log('🔍 JSON 파싱 결과 - action:', jsonData.action);
+        console.log('🔍 JSON 파싱 결과:');
+        console.log('  - dialogue:', jsonData.dialogue);
+        console.log('  - narration:', jsonData.narration);
+        console.log('  - inner_thoughts:', jsonData.inner_thoughts);
+        console.log('  - action:', jsonData.action);
+
         const result = {
           dialogue: segments
             .filter((seg) => seg.type === 'text')
             .map((seg) => seg.content)
             .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
+          narration: jsonData.narration || '', // narration 필드 추가
+          inner_thoughts: jsonData.inner_thoughts || '', // inner_thoughts 필드 추가
           emotion: jsonData.emotion || 'neutral',
           pose: jsonData.pose || 'stand',
           action: jsonData.action || null, // action 필드 추가
@@ -135,7 +154,12 @@ export function processAIResponse(rawResponse) {
           matureTags: tags,
           segments: segments, // 세그먼트 정보 추가
         };
-        console.log('🔍 최종 파싱 결과 - action:', result.action);
+
+        console.log('✅ 최종 파싱 결과:');
+        console.log('  - dialogue:', result.dialogue);
+        console.log('  - narration:', result.narration);
+        console.log('  - inner_thoughts:', result.inner_thoughts);
+
         return result;
       } catch (e) {
         console.warn('JSON 파싱 실패, 전체 텍스트 사용:', e.message);
@@ -149,6 +173,8 @@ export function processAIResponse(rawResponse) {
         .filter((seg) => seg.type === 'text')
         .map((seg) => seg.content)
         .join(' '), // 텍스트 세그먼트만 합치고 공백 추가
+      narration: '', // 기본 narration
+      inner_thoughts: '', // 기본 inner_thoughts
       emotion: 'neutral',
       pose: 'stand',
       action: 'SpeakNatural', // 기본 action 추가
@@ -164,6 +190,8 @@ export function processAIResponse(rawResponse) {
     console.error('AI 응답 처리 중 오류:', error);
     return {
       dialogue: '응답을 처리할 수 없습니다.',
+      narration: '',
+      inner_thoughts: '',
       emotion: 'neutral',
       pose: 'stand',
       action: 'SpeakNatural',

@@ -1,0 +1,15 @@
+{
+  "id": 18,
+  "name": "Sunny Beach",
+  "price": 0,
+  "description": "A beautiful sandy beach with crystal clear blue water and warm sunshine. Perfect spot for siblings to enjoy a fun summer day together with swimming, games, and quality bonding time.",
+  "spots": [
+    {
+      "id": "18-1",
+      "name": "Beach",
+      "description": "A picturesque beach with soft white sand stretching along the shoreline. Clear turquoise water sparkles under the bright sun. Colorful beach umbrellas dot the sand, and the sound of gentle waves creates a relaxing atmosphere. The perfect setting for a carefree summer day with family.",
+      "defaultOutfit": 27,
+      "defaultPose": "Sit"
+    }
+  ]
+}

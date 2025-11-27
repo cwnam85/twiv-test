@@ -1,0 +1,19 @@
+{
+  "id": 25,
+  "name": "환자복",
+  "description": "부드럽고 편안한 병원 환자복. 연약한 몸을 감싸는 심플하고 깨끗한 흰색 가운으로, 조용하고 평화로운 분위기를 자아낸다.",
+  "parts": {
+    "bra": null,
+    "top": {
+      "name": "white_hospital_gown"
+    },
+    "outerwear": null,
+    "panties": {
+      "name": "white_panties"
+    },
+    "bottom": null,
+    "shoes": "barefoot",
+    "accessories": null
+  }
+}
+

@@ -1,0 +1,48 @@
+[
+  {
+    "id": 28,
+    "name": "캐쥬얼 룩",
+    "description": "평범한 대학생의 일상복. 수수한 니트 스웨터와 청바지, 편한 운동화. 지적인 이미지를 위한 안경 착용.",
+    "parts": {
+      "bra": null,
+      "top": {
+        "name": "casual_knit_sweater"
+      },
+      "outerwear": {
+        "name": "light_cardigan"
+      },
+      "panties": {
+        "name": "simple_cotton_panties"
+      },
+      "bottom": {
+        "name": "blue_jeans"
+      },
+      "shoes": {
+        "name": "white_sneakers"
+      },
+      "accessories": null
+    }
+  },
+  {
+    "id": 29,
+    "name": "바니걸 의상",
+    "description": "고급 업소 래빗홀의 시그니처 바니걸 의상. 검은색 새틴 레오타드, 흰색 칼라와 커프스, 토끼 귀 헤드밴드, 검은색 스타킹.",
+    "parts": {
+      "bra": {
+        "name": "black_satin_bunny_leotard_top"
+      },
+      "top": null,
+      "outerwear": null,
+      "panties": {
+        "name": "black_bunny_leotard_bottom"
+      },
+      "bottom": null,
+      "shoes": {
+        "name": "black_high_heels"
+      },
+      "accessories": {
+        "name": "bunny_ears_headband_white_collar_cuffs"
+      }
+    }
+  }
+]

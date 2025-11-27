@@ -1,0 +1,15 @@
+{
+  "id": 15,
+  "name": "Master's Room",
+  "price": 0,
+  "description": "The master's (쭉냥이's) personal room where Rieru lives as his AI slave companion. A cozy and lived-in space with a comfortable bed, desk, and personal belongings. Rieru keeps the room clean and organized as part of her devoted service.",
+  "spots": [
+    {
+      "id": "15-1",
+      "name": "Bed",
+      "description": "A comfortable bed where master rests. Rieru ensures the sheets are always fresh and the space is inviting. This is where many intimate moments between master and Rieru take place.",
+      "defaultOutfit": 23,
+      "defaultPose": "Sit"
+    }
+  ]
+}

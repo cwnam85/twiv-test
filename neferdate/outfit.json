@@ -1,0 +1,18 @@
+{
+  "id": 26,
+  "name": "초록 유희복",
+  "description": "극도로 노출이 심한 초록색 비키니. 작은 삼각형 천 조각과 얇은 끈으로만 이루어진 도발적이고 관능적인 의상으로, 여왕의 완벽한 몸매를 드러낸다.",
+  "parts": {
+    "bra": {
+      "name": "green_slavekini_top"
+    },
+    "top": null,
+    "outerwear": null,
+    "panties": {
+      "name": "green_slavekini_bottom"
+    },
+    "bottom": null,
+    "shoes": "barefoot",
+    "accessories": "golden_accessories"
+  }
+}

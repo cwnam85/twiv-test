@@ -2,8 +2,6 @@
 
 ## Prerequisites
 - Visual studio (C++)
-- Warudo (https://warudo.app)
-- OBS (https://obsproject.com)
 - FFMpeg (https://ffmpeg.org)
 
 ## Install

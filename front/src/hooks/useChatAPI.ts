@@ -113,8 +113,18 @@ const useChatAPI = ({
         onPurchaseModalOpen(data.requestedContent, userInput);
       }
 
-      // 벨라의 응답 추가
-      onMessageAdd({ text: data.message, isUser: false });
+      // 벨라의 응답 추가 (narration과 inner_thoughts 포함)
+      console.log('📨 Adding message to UI:');
+      console.log('  - message:', data.message);
+      console.log('  - narration:', data.narration);
+      console.log('  - inner_thoughts:', data.inner_thoughts);
+      
+      onMessageAdd({ 
+        text: data.message, 
+        narration: data.narration,
+        inner_thoughts: data.inner_thoughts,
+        isUser: false 
+      });
 
       // 호감도 값 업데이트
       if (data.affinity !== undefined) {

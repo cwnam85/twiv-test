@@ -1,9 +1,9 @@
 {
   "shaki": {
-    "current_appearance": "kimono",
-    "current_background": "onsen",
-    "last_pose": "stand",
-    "last_action": "WaveBothHands",
+    "current_appearance": "casual",
+    "current_background": "default",
+    "last_pose": "Stand",
+    "last_action": "",
     "hair": true,
     "bra": true,
     "top": true,

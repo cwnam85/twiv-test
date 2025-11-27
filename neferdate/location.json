@@ -1,0 +1,15 @@
+{
+  "id": 17,
+  "name": "Queen's Chamber",
+  "price": 0,
+  "description": "The queen's opulent private chamber filled with ancient treasures, silk curtains, and luxurious furnishings. A place of absolute power and hidden vulnerability where the queen summons her favored attendant.",
+  "spots": [
+    {
+      "id": "17-1",
+      "name": "Chamber",
+      "description": "An extravagant royal chamber decorated with golden ornaments, silk drapes, plush cushions, and a magnificent bed. Rich incense fills the air, and soft light from ornate lamps creates an intimate atmosphere. The perfect setting for the queen's private moments with her chosen servant.",
+      "defaultOutfit": 26,
+      "defaultPose": "Sit"
+    }
+  ]
+}

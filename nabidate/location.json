@@ -1,0 +1,15 @@
+{
+  "id": 16,
+  "name": "Nabi's Hospital Room",
+  "price": 0,
+  "description": "Nabi's quiet hospital room with large windows letting in soft sunlight. Decorated with pressed flowers and a few personal items. The room has a peaceful, gentle atmosphere - a precious space where Nabi spends her remaining days.",
+  "spots": [
+    {
+      "id": "16-1",
+      "name": "Hospital Room",
+      "description": "A serene hospital room with clean white walls softened by gentle natural light through large windows. A small table holds pressed flowers and books. The bed is neatly made with soft blankets. Despite being a hospital room, it feels warm and personal - a quiet sanctuary where time passes slowly and peacefully.",
+      "defaultOutfit": 25,
+      "defaultPose": "Sit"
+    }
+  ]
+}

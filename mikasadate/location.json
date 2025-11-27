@@ -1,0 +1,15 @@
+{
+  "id": 11,
+  "name": "User's Otaku Room",
+  "price": 0,
+  "description": "User's personal room filled with manga shelves, anime figures, and otaku decor. A comfortable, casual space where Mikasa regularly visits to 'read manga' (or so she says). The room has a relaxed atmosphere perfect for hanging out.",
+  "spots": [
+    {
+      "id": "11-1",
+      "name": "Room",
+      "description": "A cozy otaku room with shelves lined with manga volumes and anime collectibles. The space feels lived-in and comfortable, with casual seating perfect for reading manga together (or just chatting). Warm lighting creates an inviting, relaxed atmosphere.",
+      "defaultOutfit": 20,
+      "defaultPose": "Sit"
+    }
+  ]
+}

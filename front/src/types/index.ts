@@ -41,6 +41,8 @@ export interface AppearanceData {
 
 export interface Message {
   text: string;
+  narration?: string;
+  inner_thoughts?: string;
   isUser: boolean;
 }
 

@@ -1,6 +1,5 @@
 import { getLLMResponse } from './llmService.js';
 import { playTTSSupertone } from './ttsService.js';
-import { sendMessageToWarudo } from './warudoService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
 import fs from 'fs';
@@ -45,6 +44,8 @@ class ResponseService {
       const processedResponse = processAIResponse(responseLLM);
 
       dialogue = processedResponse.dialogue;
+      const narration = processedResponse.narration || ''; // narration 필드 추가
+      const inner_thoughts = processedResponse.inner_thoughts || ''; // inner_thoughts 필드 추가
       emotion = processedResponse.emotion;
       pose = processedResponse.pose;
       const action = processedResponse.action; // action 필드 추가
@@ -65,6 +66,8 @@ class ResponseService {
 
       return {
         dialogue,
+        narration, // narration 필드 추가
+        inner_thoughts, // inner_thoughts 필드 추가
         emotion,
         pose,
         action, // action 필드 추가
@@ -114,6 +117,8 @@ class ResponseService {
 
     return {
       dialogue: matchDialogue ? matchDialogue[1].trim() : null,
+      narration: '', // 정규식 방식에서는 빈 문자열
+      inner_thoughts: '', // 정규식 방식에서는 빈 문자열
       emotion: matchEmotion ? matchEmotion[1].trim() : null,
       pose: matchPose ? matchPose[1].trim() : null,
       action: 'SpeakNatural', // 정규식 방식에서는 기본값 사용
@@ -398,16 +403,6 @@ class ResponseService {
   }
 
   // playTTSFile 함수 제거 - 클라이언트에서 오디오 재생 처리
-
-  sendPoseToWarudo(pose) {
-    if (pose) {
-      const messageWarudo = JSON.stringify({
-        action: 'Pose',
-        data: pose,
-      });
-      sendMessageToWarudo(messageWarudo);
-    }
-  }
 
   // 우선순위 기반 mature 태그 찾기
   getMostUsedTag(tagCountMap) {

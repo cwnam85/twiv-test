@@ -1,0 +1,20 @@
+{
+  "id": 23,
+  "name": "바니걸 의상",
+  "description": "큐트하고 섹시한 바니걸 의상. 토끼 귀와 꼬리가 달려있어 귀엽고 매력적인 분위기를 연출한다.",
+  "parts": {
+    "bra": null,
+    "top": {
+      "name": "black_leotard_with_bunny_ears_bowtie_wrist_cuffs"
+    },
+    "outerwear": null,
+    "panties": null,
+    "bottom": {
+      "name": "black_thighhighs"
+    },
+    "shoes": "wearing_stockings_without_shoes",
+    "accessories": {
+      "name": "white_rabbit_tail_white_wrist_cuffs_black_bowtie"
+    }
+  }
+}
