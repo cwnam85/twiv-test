@@ -113,16 +113,20 @@ const useChatAPI = ({
         onPurchaseModalOpen(data.requestedContent, userInput);
       }
 
-      // 벨라의 응답 추가 (narration과 inner_thoughts 포함)
+      // 벨라의 응답 추가 (narration, inner_thoughts, emotion, affinity 포함)
       console.log('📨 Adding message to UI:');
       console.log('  - message:', data.message);
       console.log('  - narration:', data.narration);
       console.log('  - inner_thoughts:', data.inner_thoughts);
+      console.log('  - emotion:', data.emotion);
+      console.log('  - affinity:', data.affinity);
       
       onMessageAdd({ 
         text: data.message, 
         narration: data.narration,
         inner_thoughts: data.inner_thoughts,
+        emotion: data.emotion,
+        affinity: data.affinity !== undefined ? `${data.affinity > 0 ? '+' : ''}${data.affinity}` : undefined,
         isUser: false 
       });
 

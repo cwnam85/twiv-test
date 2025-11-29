@@ -78,14 +78,40 @@ const InnerThoughtsModal = ({
             botMessages.map((message, index) => (
               <div
                 key={index}
-                className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow space-y-3"
               >
+                {/* 나레이션 */}
+                {message.narration && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 font-semibold mb-1">📝 나레이션</div>
+                    <p className="text-gray-700 italic">{message.narration}</p>
+                  </div>
+                )}
+
+                {/* 내면의 생각 */}
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💭</span>
                   <div className="flex-1">
+                    <div className="text-xs text-purple-500 font-semibold mb-1">내면의 생각</div>
                     <p className="text-gray-700 leading-relaxed">{message.inner_thoughts}</p>
                   </div>
                 </div>
+
+                {/* 감정 및 호감도 정보 */}
+                {(message.emotion || message.affinity) && (
+                  <div className="flex gap-2 pt-2 border-t border-purple-200">
+                    {message.emotion && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-full text-xs font-medium text-pink-700">
+                        {emotionEmojis[message.emotion] || '😐'} {message.emotion}
+                      </span>
+                    )}
+                    {message.affinity && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-full text-xs font-medium text-red-700">
+                        ❤️ {message.affinity}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           )}

@@ -19,6 +19,16 @@ class BackgroundService {
     }
   }
 
+  // 기본 배경 데이터 생성
+  getDefaultBackgroundData() {
+    return {
+      name: 'Default Background',
+      description: 'Default background scene',
+      price: 0,
+      spots: null,
+    };
+  }
+
   // 배경 JSON 파일 로드
   loadBackgroundData(character, backgroundId) {
     try {
@@ -30,15 +40,17 @@ class BackgroundService {
       );
 
       if (!fs.existsSync(backgroundPath)) {
-        console.warn(`Background file not found: ${backgroundPath}`);
-        return null;
+        console.warn(
+          `[BACKGROUND SERVICE] Background file not found: ${backgroundPath}, using default`,
+        );
+        return this.getDefaultBackgroundData();
       }
 
       const backgroundData = fs.readFileSync(backgroundPath, 'utf8');
       return JSON.parse(backgroundData);
     } catch (error) {
       console.error(`Error loading background ${backgroundId} for character ${character}:`, error);
-      return null;
+      return this.getDefaultBackgroundData();
     }
   }
 

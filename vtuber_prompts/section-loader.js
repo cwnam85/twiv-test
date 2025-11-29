@@ -225,12 +225,38 @@ class SectionLoader {
       llmLastResponses: (llmLastResponses || []).join('\n\n'),
     };
 
-    // 공통 메인 템플릿 로드 및 렌더링
+    // 캐릭터별 main_template.md 우선 사용, 없으면 공통 템플릿 사용
+    const characterTemplatePath = path.join(this.characterPath, 'main_template.md');
     const sharedTemplatePath = path.join(this.sharedPath, 'main_template.md');
 
-    if (fs.existsSync(sharedTemplatePath)) {
+    let templatePath = null;
+    let templateName = null;
+
+    // 1. 캐릭터별 템플릿 확인
+    if (fs.existsSync(characterTemplatePath)) {
+      templatePath = characterTemplatePath;
+      templateName = 'main_template.md';
+      console.log(`[SECTION LOADER] Using character-specific template: ${characterTemplatePath}`);
+    }
+    // 2. 공통 템플릿 사용 (폴백)
+    else if (fs.existsSync(sharedTemplatePath)) {
+      templatePath = sharedTemplatePath;
+      templateName = 'main_template.md';
+      console.log(`[SECTION LOADER] Using shared template: ${sharedTemplatePath}`);
+    } else {
+      console.error(
+        `[SECTION LOADER] No template found for character: ${this.character}. Checked:`,
+      );
+      console.error(`  - Character template: ${characterTemplatePath}`);
+      console.error(`  - Shared template: ${sharedTemplatePath}`);
+      throw new Error(
+        `No main_template.md found for character '${this.character}' or in shared folder`,
+      );
+    }
+
+    if (templatePath) {
       try {
-        let renderedPrompt = this.env.render('main_template.md', templateContext);
+        let renderedPrompt = this.env.render(templateName, templateContext);
 
         // nunjucks가 자동으로 profile.md의 동적 섹션을 처리하므로 별도 교체 로직 불필요
 
@@ -241,7 +267,7 @@ class SectionLoader {
         throw new Error(`Template rendering failed: ${error.message}`);
       }
     } else {
-      throw new Error(`Shared template file not found: ${sharedTemplatePath}`);
+      throw new Error(`Template file not found for character: ${this.character}`);
     }
   }
 

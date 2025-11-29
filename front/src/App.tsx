@@ -5,6 +5,7 @@ import { AutoChatSpeed } from './hooks/useAutoChat';
 import AppearanceStatus from './components/AppearanceStatus';
 import Shop from './components/Shop';
 import InnerThoughtsModal from './components/InnerThoughtsModal';
+import { DisplayMode } from './types';
 
 function App() {
   const {
@@ -59,6 +60,17 @@ function App() {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
   const [isInnerThoughtsModalOpen, setIsInnerThoughtsModalOpen] = useState(false);
+  
+  // 디스플레이 모드 상태 (localStorage에서 불러오기)
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
+    const savedMode = localStorage.getItem('chatDisplayMode');
+    return (savedMode as DisplayMode) || 'mode3';
+  });
+
+  // 디스플레이 모드 변경 시 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('chatDisplayMode', displayMode);
+  }, [displayMode]);
 
   // 메시지가 추가될 때마다 자동으로 스크롤을 맨 아래로 이동
   useEffect(() => {
@@ -157,12 +169,14 @@ function App() {
               <div className="bg-blue-100 px-4 py-2 rounded-lg">
                 <span className="text-blue-800 font-semibold">포인트: {point}</span>
               </div>
-              <button
-                onClick={() => setIsInnerThoughtsModalOpen(true)}
-                className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 flex items-center gap-2"
-              >
-                💭 내면의 생각
-              </button>
+              {displayMode === 'mode3' && (
+                <button
+                  onClick={() => setIsInnerThoughtsModalOpen(true)}
+                  className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 flex items-center gap-2"
+                >
+                  💭 내면의 생각
+                </button>
+              )}
               <button
                 onClick={openShop}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
@@ -171,16 +185,63 @@ function App() {
               </button>
             </div>
           </div>
+          
+          {/* 디스플레이 모드 토글 */}
+          <div className="bg-white rounded-lg p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-gray-700">표시 모드:</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setDisplayMode('mode1')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    displayMode === 'mode1'
+                      ? 'bg-purple-500 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="나레이션 + 내면 + 호감도 + 감정"
+                >
+                  1안
+                </button>
+                <button
+                  onClick={() => setDisplayMode('mode2')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    displayMode === 'mode2'
+                      ? 'bg-purple-500 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="내면 + 호감도 + 감정 (나레이션 숨김)"
+                >
+                  2안
+                </button>
+                <button
+                  onClick={() => setDisplayMode('mode3')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    displayMode === 'mode3'
+                      ? 'bg-purple-500 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="대화만 표시 + 💭 버튼으로 상세 확인"
+                >
+                  3안
+                </button>
+              </div>
+            </div>
+          </div>
           {renderBoosterStatus()}
           <div className="flex gap-2">
-            <div className="bg-green-100 px-4 py-2 rounded-lg flex-1">
-              <span className="text-green-800 font-semibold">감정: {emotion}</span>
+            <div className="bg-red-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-red-800 font-semibold">❤️ 호감도: {affinity}</span>
             </div>
+            <div className="bg-green-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-green-800 font-semibold">😊 감정: {emotion}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
             <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
-              <span className="text-purple-800 font-semibold">포즈: {pose}</span>
+              <span className="text-purple-800 font-semibold">🧍 포즈: {pose}</span>
             </div>
             <div className="bg-orange-100 px-4 py-2 rounded-lg flex-1">
-              <span className="text-orange-800 font-semibold">액션: {action}</span>
+              <span className="text-orange-800 font-semibold">✋ 액션: {action}</span>
             </div>
           </div>
           <div className="flex gap-2">
@@ -208,13 +269,65 @@ function App() {
                 </span>
               </div>
               
-              {/* Narration (dialogue와 함께 표시) */}
-              {!message.isUser && message.narration && (
-                <div className="mt-1 text-left">
-                  <span className="inline-block rounded-lg px-3 py-1 bg-gray-200 text-gray-600 text-sm italic">
-                    {message.narration}
-                  </span>
-                </div>
+              {/* 모드별 추가 정보 표시 */}
+              {!message.isUser && (
+                <>
+                  {/* Mode 1: 나레이션 + 내면 + 호감도 + 감정 */}
+                  {displayMode === 'mode1' && (
+                    <div className="mt-1 text-left space-y-1">
+                      {message.narration && (
+                        <div className="inline-block rounded-lg px-3 py-2 bg-gray-200 text-gray-700 text-sm">
+                          <div className="font-semibold text-xs text-gray-500 mb-1">📝 나레이션</div>
+                          <div className="italic">{message.narration}</div>
+                        </div>
+                      )}
+                      {message.inner_thoughts && (
+                        <div className="inline-block rounded-lg px-3 py-2 bg-purple-100 text-purple-700 text-sm mt-1">
+                          <div className="font-semibold text-xs text-purple-500 mb-1">💭 내면의 생각</div>
+                          <div>{message.inner_thoughts}</div>
+                        </div>
+                      )}
+                      <div className="flex gap-1 mt-1">
+                        {message.emotion && (
+                          <span className="inline-block rounded-lg px-2 py-1 bg-pink-100 text-pink-700 text-xs font-medium">
+                            😊 {message.emotion}
+                          </span>
+                        )}
+                        {message.affinity && (
+                          <span className="inline-block rounded-lg px-2 py-1 bg-red-100 text-red-700 text-xs font-medium">
+                            ❤️ {message.affinity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode 2: 내면 + 호감도 + 감정 (나레이션 숨김) */}
+                  {displayMode === 'mode2' && (
+                    <div className="mt-1 text-left space-y-1">
+                      {message.inner_thoughts && (
+                        <div className="inline-block rounded-lg px-3 py-2 bg-purple-100 text-purple-700 text-sm">
+                          <div className="font-semibold text-xs text-purple-500 mb-1">💭 내면의 생각</div>
+                          <div>{message.inner_thoughts}</div>
+                        </div>
+                      )}
+                      <div className="flex gap-1 mt-1">
+                        {message.emotion && (
+                          <span className="inline-block rounded-lg px-2 py-1 bg-pink-100 text-pink-700 text-xs font-medium">
+                            😊 {message.emotion}
+                          </span>
+                        )}
+                        {message.affinity && (
+                          <span className="inline-block rounded-lg px-2 py-1 bg-red-100 text-red-700 text-xs font-medium">
+                            ❤️ {message.affinity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode 3: 아무것도 표시하지 않음 (모달에서만 확인) */}
+                </>
               )}
             </div>
           ))}

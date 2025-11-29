@@ -588,21 +588,36 @@ class ShopService {
     return shopData.activeRpPack || null;
   }
 
+  // 기본 RP 팩 데이터 생성
+  getDefaultRpPackData(rpPackId) {
+    return {
+      id: rpPackId || 'default_rp_pack',
+      name: 'Default RP Pack',
+      price: 0,
+      description: null,
+      globalnote: null,
+      locationguide: null,
+      messagePrompt: null,
+    };
+  }
+
   // RP 팩 JSON 파일 로드
   loadRpPack(character, rpPackId) {
     try {
       const rpPackPath = path.join(RP_PACKS_BASE_PATH, character, 'rppacks', `${rpPackId}.json`);
 
       if (!fs.existsSync(rpPackPath)) {
-        console.warn(`RP pack file not found: ${rpPackPath}`);
-        return null;
+        console.warn(
+          `[SHOP SERVICE] RP pack file not found: ${rpPackPath}, using default structure`,
+        );
+        return this.getDefaultRpPackData(rpPackId);
       }
 
       const rpPackData = fs.readFileSync(rpPackPath, 'utf8');
       return JSON.parse(rpPackData);
     } catch (error) {
       console.error(`Error loading RP pack ${rpPackId} for character ${character}:`, error);
-      return null;
+      return this.getDefaultRpPackData(rpPackId);
     }
   }
 

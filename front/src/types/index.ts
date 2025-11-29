@@ -44,7 +44,11 @@ export interface Message {
   narration?: string;
   inner_thoughts?: string;
   isUser: boolean;
+  emotion?: string;
+  affinity?: string;
 }
+
+export type DisplayMode = 'mode1' | 'mode2' | 'mode3';
 
 export interface ShopItem {
   id: string;

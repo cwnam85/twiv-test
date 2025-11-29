@@ -12,10 +12,15 @@ class ResponseService {
 
   async processLLMResponse(requestHistory, userMessage, currentModel, systemPrompt) {
     try {
+      // 현재 affinity 가져오기 (Tool Use 스키마 생성에 필요)
+      const currentAffinity = affinityService.getData().affinity || 0;
+      console.log(`[RESPONSE SERVICE] Current affinity: ${currentAffinity}`);
+
       const responseLLM = await getLLMResponse(
         [...requestHistory, { role: 'user', content: [{ type: 'text', text: userMessage }] }],
         currentModel,
         systemPrompt,
+        currentAffinity, // affinity 전달
       );
 
       console.log('LLM Output:\n', responseLLM);

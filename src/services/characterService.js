@@ -55,6 +55,25 @@ class CharacterService {
     return characterStateService.getCurrentAppearance(this.activeCharacter);
   }
 
+  // 기본 appearance 데이터 생성
+  getDefaultAppearanceData() {
+    return {
+      current_appearance: 'default',
+      parts: {
+        hair: { name: 'default_hair', enabled: true },
+        bra: { name: 'default_bra', enabled: true },
+        top: { name: 'default_top', enabled: true },
+        outerwear: null,
+        panty: { name: 'default_panty', enabled: true },
+        bottom: { name: 'default_bottom', enabled: true },
+        shoes: { name: 'default_shoes', enabled: true },
+        hat: null,
+        necklace: null,
+        belt: null,
+      },
+    };
+  }
+
   loadAppearanceData() {
     try {
       // 의상 템플릿 로드
@@ -67,7 +86,10 @@ class CharacterService {
         const appearanceTemplate = JSON.parse(fs.readFileSync(appearancePath, 'utf8'));
 
         if (!appearanceTemplate) {
-          return null;
+          console.warn(
+            `[CHARACTER SERVICE] Appearance template is empty, using default appearance`,
+          );
+          return this.getDefaultAppearanceData();
         }
 
         // 템플릿과 상태를 병합하여 완전한 의상 데이터 생성
@@ -107,11 +129,16 @@ class CharacterService {
         }
 
         return currentAppearance;
+      } else {
+        console.warn(
+          `[CHARACTER SERVICE] Appearance file not found: ${appearancePath}, using default appearance`,
+        );
+        return this.getDefaultAppearanceData();
       }
     } catch (e) {
       console.error('outfit data 로드 오류:', e);
+      return this.getDefaultAppearanceData();
     }
-    return null;
   }
 
   loadSystemPrompt(appearanceData = null, context = {}) {

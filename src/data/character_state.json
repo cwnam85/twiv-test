@@ -46,5 +46,53 @@
     "hat": false,
     "necklace": true,
     "belt": true
+  },
+  "ferna": {
+    "current_appearance": "casual",
+    "current_background": "default",
+    "last_pose": "Stand",
+    "last_action": "",
+    "hair": true,
+    "bra": true,
+    "top": true,
+    "outerwear": true,
+    "panty": true,
+    "bottom": true,
+    "shoes": true,
+    "hat": false,
+    "necklace": true,
+    "belt": true
+  },
+  "suzu": {
+    "current_appearance": "casual",
+    "current_background": "default",
+    "last_pose": "Stand",
+    "last_action": "",
+    "hair": true,
+    "bra": true,
+    "top": true,
+    "outerwear": true,
+    "panty": true,
+    "bottom": true,
+    "shoes": true,
+    "hat": false,
+    "necklace": true,
+    "belt": true
+  },
+  "belle": {
+    "current_appearance": "casual",
+    "current_background": "default",
+    "last_pose": "Stand",
+    "last_action": "",
+    "hair": true,
+    "bra": true,
+    "top": true,
+    "outerwear": true,
+    "panty": true,
+    "bottom": true,
+    "shoes": true,
+    "hat": false,
+    "necklace": true,
+    "belt": true
   }
 }
