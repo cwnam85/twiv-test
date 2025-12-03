@@ -48,7 +48,7 @@ export interface Message {
   affinity?: string;
 }
 
-export type DisplayMode = 'mode1' | 'mode2' | 'mode3';
+export type DisplayMode = 'mode1' | 'mode2';
 
 export interface ShopItem {
   id: string;

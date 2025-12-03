@@ -98,8 +98,8 @@
   "rabbitholemiku": {
     "current_appearance": "casual",
     "current_background": "default",
-    "last_pose": "stand",
-    "last_action": "SpeakNatural",
+    "last_pose": "Sit",
+    "last_action": "",
     "hair": true,
     "bra": true,
     "top": true,

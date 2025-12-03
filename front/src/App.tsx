@@ -55,8 +55,8 @@ function App() {
     setAutoChatSpeed,
     startAutoChat,
     stopAutoChat,
-    // 스토리 포인트
-    storyPoint, // ✅ 스토리 포인트 추가
+    // 협박도
+    coercionPoint, // ✅ 협박도 추가
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -66,7 +66,11 @@ function App() {
   // 디스플레이 모드 상태 (localStorage에서 불러오기)
   const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
     const savedMode = localStorage.getItem('chatDisplayMode');
-    return (savedMode as DisplayMode) || 'mode3';
+    // mode3은 폐기되었으므로 mode1으로 fallback
+    if (savedMode === 'mode1' || savedMode === 'mode2') {
+      return savedMode;
+    }
+    return 'mode1';
   });
 
   // 디스플레이 모드 변경 시 localStorage에 저장
@@ -168,7 +172,7 @@ function App() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Chat with {currentCharacter}</h1>
             <div className="flex items-center gap-2">
-              {displayMode === 'mode3' && (
+              {displayMode === 'mode2' && (
                 <button
                   onClick={() => setIsInnerThoughtsModalOpen(true)}
                   className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 flex items-center gap-2"
@@ -208,20 +212,9 @@ function App() {
                       ? 'bg-purple-500 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
-                  title="내면 + 호감도 + 감정 (나레이션 숨김)"
+                  title="나레이션 표시 + 💭 버튼으로 내면 확인"
                 >
                   2안
-                </button>
-                <button
-                  onClick={() => setDisplayMode('mode3')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    displayMode === 'mode3'
-                      ? 'bg-purple-500 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                  title="대화만 표시 + 💭 버튼으로 상세 확인"
-                >
-                  3안
                 </button>
               </div>
             </div>
@@ -231,8 +224,8 @@ function App() {
             <div className="bg-blue-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-blue-800 font-semibold">💫 포인트: {point}</span>
             </div>
-            <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
-              <span className="text-purple-800 font-semibold">📖 스토리: {storyPoint}</span>
+            <div className="bg-gray-800 px-4 py-2 rounded-lg flex-1">
+              <span className="text-red-400 font-semibold">🔗 협박도: {coercionPoint}</span>
             </div>
           </div>
           <div className="flex gap-2">
@@ -313,33 +306,19 @@ function App() {
                     </div>
                   )}
 
-                  {/* Mode 2: 내면 + 호감도 + 감정 (나레이션 숨김) */}
+                  {/* Mode 2: 나레이션만 표시 (내면의 생각은 💭 버튼으로 확인) */}
                   {displayMode === 'mode2' && (
                     <div className="mt-1 text-left space-y-1">
-                      {message.inner_thoughts && (
-                        <div className="inline-block rounded-lg px-3 py-2 bg-purple-100 text-purple-700 text-sm">
-                          <div className="font-semibold text-xs text-purple-500 mb-1">
-                            💭 내면의 생각
+                      {message.narration && (
+                        <div className="inline-block rounded-lg px-3 py-2 bg-gray-200 text-gray-700 text-sm">
+                          <div className="font-semibold text-xs text-gray-500 mb-1">
+                            📝 나레이션
                           </div>
-                          <div>{message.inner_thoughts}</div>
+                          <div className="italic">{message.narration}</div>
                         </div>
                       )}
-                      <div className="flex gap-1 mt-1">
-                        {message.emotion && (
-                          <span className="inline-block rounded-lg px-2 py-1 bg-pink-100 text-pink-700 text-xs font-medium">
-                            😊 {message.emotion}
-                          </span>
-                        )}
-                        {message.affinity && (
-                          <span className="inline-block rounded-lg px-2 py-1 bg-red-100 text-red-700 text-xs font-medium">
-                            ❤️ {message.affinity}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   )}
-
-                  {/* Mode 3: 아무것도 표시하지 않음 (모달에서만 확인) */}
                 </>
               )}
             </div>
@@ -496,6 +475,7 @@ function App() {
         onClose={() => setIsInnerThoughtsModalOpen(false)}
         messages={messages}
         affinity={affinity}
+        coercionPoint={coercionPoint}
         currentEmotion={emotion}
       />
     </div>

@@ -92,6 +92,7 @@ export function processAIResponse(rawResponse) {
         pose: 'stand',
         action: 'SpeakNatural',
         affinity: '0',
+        coercion: '0',
         outfitToWear: [],
         outfitToRemove: [],
         matureTags: [],
@@ -147,6 +148,7 @@ export function processAIResponse(rawResponse) {
           pose: jsonData.pose || 'stand',
           action: jsonData.action || null, // action 필드 추가
           affinity: jsonData.affinity || '0',
+          coercion: jsonData.coercion || '0', // 협박도 변화량 추가
           outfitToWear: jsonData.outfitToWear || [], // 새로운 형식
           outfitToRemove: jsonData.outfitToRemove || [], // 새로운 형식
           spot: jsonData.spot || null, // RP팩 위치 정보
@@ -179,6 +181,7 @@ export function processAIResponse(rawResponse) {
       pose: 'stand',
       action: 'SpeakNatural', // 기본 action 추가
       affinity: '0',
+      coercion: '0', // 협박도 변화량 추가
       outfitToWear: [],
       outfitToRemove: [],
       spot: null, // RP팩 위치 정보
@@ -196,6 +199,7 @@ export function processAIResponse(rawResponse) {
       pose: 'stand',
       action: 'SpeakNatural',
       affinity: '0',
+      coercion: '0',
       outfitToWear: [],
       outfitToRemove: [],
       spot: null, // RP팩 위치 정보

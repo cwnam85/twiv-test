@@ -19,7 +19,7 @@ interface ChatAPIHandlers {
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
-  onStoryPointUpdate: (storyPoint: number) => void; // ✅ 스토리 포인트 추가
+  onCoercionPointUpdate: (coercionPoint: number) => void; // ✅ 협박도 추가
   onPoseUpdate: (pose: string) => void;
   onEmotionUpdate: (emotion: string) => void;
   onActionUpdate: (action: string) => void;
@@ -35,7 +35,7 @@ const useChatAPI = ({
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
-  onStoryPointUpdate, // ✅ 스토리 포인트 추가
+  onCoercionPointUpdate, // ✅ 협박도 추가
   onPoseUpdate,
   onEmotionUpdate,
   onActionUpdate,
@@ -141,9 +141,9 @@ const useChatAPI = ({
       if (data.point !== undefined) {
         onPointUpdate(data.point);
       }
-      // 스토리 포인트 업데이트
-      if (data.storyPoint !== undefined) {
-        onStoryPointUpdate(data.storyPoint);
+      // 협박도 업데이트
+      if (data.coercionPoint !== undefined) {
+        onCoercionPointUpdate(data.coercionPoint);
       }
       // pose, emotion, action 업데이트
       if (data.pose) {

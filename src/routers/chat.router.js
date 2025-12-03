@@ -10,7 +10,7 @@ import conversationService from '../services/conversationService.js';
 import responseService from '../services/responseService.js';
 import shopService from '../services/shopService.js';
 import characterStateService from '../services/characterStateService.js';
-import storyPointService from '../services/storyPointService.js';
+import coercionPointService from '../services/coercionPointService.js';
 import {
   processAIResponse,
   isValidResponse,
@@ -120,7 +120,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       isPaid: false,
       isPointDepleted: true,
       ...affinityService.getData(),
-      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+      coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
       pose: characterMessage.pose,
       emotion: randomMessage.emotion,
     };
@@ -130,8 +130,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
 
-    // ✅ 스토리 포인트: 채팅 입력 시 무조건 +1
-    storyPointService.addChatInputPoint();
+    // 협박도는 LLM 응답에서 처리됨
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
     const systemPromptContext = {
@@ -264,10 +263,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       characterStateService.setLastAction(activeCharacter, '');
     }
 
-    // ✅ 스토리 포인트: 감정에 따라 추가 포인트 증가
-    if (response.emotion) {
-      storyPointService.addEmotionPoint(response.emotion);
-    }
+    // ✅ 협박도: LLM 응답에서 coercion 변화량으로 업데이트 (responseService에서 이미 처리됨)
+    // 주의: responseService.processCoercionChange에서 addCoercionPoint가 호출되므로 여기서 중복 처리하지 않음
 
     const affinityData = affinityService.getData();
     return {
@@ -281,7 +278,8 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       maxAffinity: affinityData.maxAffinity,
       boosterActive: affinityData.boosterActive,
       boosterRemainingTime: affinityData.boosterRemainingTime,
-      storyPoint: storyPointService.getStoryPoint(),
+      coercionPoint: coercionPointService.getCoercionPoint(), // 총 협박도
+      coercionChange: response.coercion, // ✅ 협박도 변화량 (별도 필드)
       pose: response.pose,
       action: response.action,
       emotion: response.emotion,
@@ -305,22 +303,16 @@ router.get('/affinity', (req, res) => {
   res.json(data);
 });
 
-// 스토리 포인트 가져오기
-router.get('/story-point', (req, res) => {
-  const storyPoint = storyPointService.getStoryPoint();
-  res.json({ storyPoint });
+// 협박도 가져오기
+router.get('/coercion-point', (req, res) => {
+  const coercionPoint = coercionPointService.getCoercionPoint();
+  res.json({ coercionPoint });
 });
 
-// 스토리 포인트 리셋 (관리자용)
-router.post('/story-point/reset', (req, res) => {
-  const storyPoint = storyPointService.resetStoryPoint();
-  res.json({ storyPoint, message: 'Story point reset to 0' });
-});
-
-// 감정별 포인트 맵핑 가져오기
-router.get('/story-point/mapping', (req, res) => {
-  const mapping = storyPointService.getEmotionPointMapping();
-  res.json({ mapping });
+// 협박도 리셋 (관리자용)
+router.post('/coercion-point/reset', (req, res) => {
+  const coercionPoint = coercionPointService.resetCoercionPoint();
+  res.json({ coercionPoint, message: 'Coercion point reset to 0' });
 });
 
 // 호감도 정보 API
@@ -414,7 +406,7 @@ router.post('/purchase', async (req, res) => {
       affinityChange: purchaseResponse.affinity, // ✅ 호감도 변화량
       point: affinityService.getData().point,
       maxAffinity: affinityService.getData().maxAffinity,
-      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+      coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
       purchaseCompleted: true,
       purchasedContent: requestedContent,
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
@@ -585,7 +577,7 @@ router.post('/chat', async (req, res) => {
       isPaid: false,
       isPointDepleted: true,
       ...affinityService.getData(),
-      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+      coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
       pose: characterMessage.pose,
       emotion: randomMessage.emotion,
     });
@@ -595,8 +587,7 @@ router.post('/chat', async (req, res) => {
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
 
-    // ✅ 스토리 포인트: 채팅 입력 시 무조건 +1
-    storyPointService.addChatInputPoint();
+    // 협박도는 LLM 응답에서 처리됨
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
     const systemPromptContext = {
@@ -732,7 +723,7 @@ router.post('/chat', async (req, res) => {
       maxAffinity: affinityData.maxAffinity,
       boosterActive: affinityData.boosterActive,
       boosterRemainingTime: affinityData.boosterRemainingTime,
-      storyPoint: storyPointService.getStoryPoint(),
+      coercionPoint: coercionPointService.getCoercionPoint(),
       pose: response.pose,
       action: response.action,
       emotion: response.emotion,
@@ -763,10 +754,7 @@ router.post('/chat', async (req, res) => {
       characterStateService.setLastAction(activeCharacter, '');
     }
 
-    // ✅ 스토리 포인트: 감정에 따라 추가 포인트 증가
-    if (response.emotion) {
-      storyPointService.addEmotionPoint(response.emotion);
-    }
+    // ✅ 협박도: responseService.processCoercionChange에서 이미 처리됨 (중복 제거)
   } catch (error) {
     console.error(`Error calling ${conversationService.getCurrentModel()} API:`, error);
     if (!res.headersSent) {

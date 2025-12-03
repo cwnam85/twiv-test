@@ -2,6 +2,7 @@ import { getLLMResponse } from './llmService.js';
 import { playTTSSupertone } from './ttsService.js';
 import characterService from './characterService.js';
 import affinityService from './affinityService.js';
+import coercionPointService from './coercionPointService.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -12,15 +13,17 @@ class ResponseService {
 
   async processLLMResponse(requestHistory, userMessage, currentModel, systemPrompt) {
     try {
-      // 현재 affinity 가져오기 (Tool Use 스키마 생성에 필요)
+      // 현재 affinity와 coercionPoint 가져오기 (Tool Use 스키마 생성에 필요)
       const currentAffinity = affinityService.getData().affinity || 0;
-      console.log(`[RESPONSE SERVICE] Current affinity: ${currentAffinity}`);
+      const currentCoercionPoint = coercionPointService.getCoercionPoint() || 0;
+      console.log(`[RESPONSE SERVICE] Current affinity: ${currentAffinity}, coercion: ${currentCoercionPoint}`);
 
       const responseLLM = await getLLMResponse(
         [...requestHistory, { role: 'user', content: [{ type: 'text', text: userMessage }] }],
         currentModel,
         systemPrompt,
         currentAffinity, // affinity 전달
+        currentCoercionPoint, // coercionPoint 전달
       );
 
       console.log('LLM Output:\n', responseLLM);
@@ -55,6 +58,7 @@ class ResponseService {
       pose = processedResponse.pose;
       const action = processedResponse.action; // action 필드 추가
       const affinity = processedResponse.affinity;
+      const coercion = processedResponse.coercion; // 협박도 변화량 추가
       const outfitToWear = processedResponse.outfitToWear || [];
       const outfitToRemove = processedResponse.outfitToRemove || [];
       const spot = processedResponse.spot || null; // 위치 정보 추가
@@ -65,6 +69,11 @@ class ResponseService {
       // affinity 처리
       if (affinity) {
         this.processAffinityChange(affinity);
+      }
+
+      // coercion 처리
+      if (coercion) {
+        this.processCoercionChange(coercion);
       }
 
       usage = responseLLM.usage;
@@ -78,6 +87,7 @@ class ResponseService {
         action, // action 필드 추가
         usage,
         affinity,
+        coercion, // 협박도 변화량 추가
         outfitToWear,
         outfitToRemove,
         spot, // 위치 정보 추가
@@ -146,6 +156,14 @@ class ResponseService {
         await characterService.updateSystemPrompt();
         console.log(`Affinity changed to ${result.newAffinity}`);
       }
+    }
+  }
+
+  processCoercionChange(coercionChange) {
+    const change = parseInt(coercionChange);
+    if (!isNaN(change)) {
+      const newCoercion = coercionPointService.addCoercionPoint(change);
+      console.log(`Coercion changed by ${change} to ${newCoercion}`);
     }
   }
 

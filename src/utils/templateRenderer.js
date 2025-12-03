@@ -4,7 +4,7 @@ import nunjucks from 'nunjucks';
 import characterStateService from '../services/characterStateService.js';
 import backgroundService from '../services/backgroundService.js';
 import shopService from '../services/shopService.js';
-import storyPointService from '../services/storyPointService.js';
+import coercionPointService from '../services/coercionPointService.js';
 
 // poseList.json 로드
 function loadPoseList() {
@@ -238,7 +238,7 @@ export function generateChatPrompt(context) {
     userInput: context.userInput || '',
     lastMessage: context.lastMessage || 'none',
     affinity: context.affinity || 0,
-    storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+    coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
     currentBackground: generateBackgroundInfo(context.currentBackground),
     currentBackgroundId: context.currentBackground || 'default',
     location: {
@@ -284,7 +284,7 @@ export function generateThankYouPrompt(context) {
   const templateContext = {
     userInput: context.userInput || '',
     affinity: context.affinity || 0,
-    storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+    coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
     currentBackground: generateBackgroundInfo(context.currentBackground),
     currentAppearance: generateAppearanceInfo(context.appearanceData),
     appearanceDetail: generateAppearanceDetail(context.appearanceData),

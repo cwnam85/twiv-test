@@ -13,9 +13,10 @@ const claudeClient = new Anthropic({
 /**
  * Creates a tool definition for structured character responses
  * @param {number} currentAffinity - Current affinity level to determine if outfitAction should be available
+ * @param {number} currentCoercionPoint - Current coercion point to determine if outfitAction should be available
  * @returns {object} Tool definition with conditional schema
  */
-function createChatResponseTool(currentAffinity) {
+function createChatResponseTool(currentAffinity, currentCoercionPoint) {
   const baseSchema = {
     type: 'object',
     properties: {
@@ -61,31 +62,49 @@ function createChatResponseTool(currentAffinity) {
         type: 'string',
         description: "Affinity change value (e.g., '+3', '0', '-3')",
       },
+      coercion: {
+        type: 'string',
+        description:
+          "Coercion change value (e.g., '+3', '0', '-3') - How much the user's coercion/intimidation affects the character",
+      },
       spot: {
         type: 'string',
         description: 'Current location spot. Only include when location changes.',
       },
     },
-    required: ['dialogue', 'narration', 'inner_thoughts', 'emotion', 'pose', 'action', 'affinity'],
+    required: [
+      'dialogue',
+      'narration',
+      'inner_thoughts',
+      'emotion',
+      'pose',
+      'action',
+      'affinity',
+      'coercion',
+    ],
   };
 
-  // affinity >= 100일 때만 outfitAction 필드 추가
-  if (currentAffinity >= 100) {
+  // affinity >= 100 또는 coercionPoint >= 100일 때 outfitAction 필드 추가
+  if (currentAffinity >= 30 || currentCoercionPoint >= 30) {
     baseSchema.properties.outfitAction = {
       type: 'string',
       enum: ['Dress', 'Undress'],
       description:
         "Outfit change command. ONLY include this field when user explicitly requests outfit change. 'Undress' removes all clothing except panties. 'Dress' puts all clothing back on.",
     };
-    console.log(`[TOOL SCHEMA] outfitAction field ENABLED (affinity: ${currentAffinity})`);
+    console.log(
+      `[TOOL SCHEMA] outfitAction field ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+    );
   } else {
-    console.log(`[TOOL SCHEMA] outfitAction field DISABLED (affinity: ${currentAffinity})`);
+    console.log(
+      `[TOOL SCHEMA] outfitAction field DISABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+    );
   }
 
   return {
     name: 'respond_as_character',
     description:
-      'Generate a character response in the structured format with dialogue, narration, inner thoughts, emotion, pose, action, and affinity. This tool ensures proper JSON structure and type validation.',
+      'Generate a character response in the structured format with dialogue, narration, inner thoughts, emotion, pose, action, affinity, and coercion. This tool ensures proper JSON structure and type validation.',
     input_schema: baseSchema,
   };
 }
@@ -95,14 +114,15 @@ export async function getLLMResponse(
   model = 'claude',
   systemPrompt,
   currentAffinity = 0,
+  currentCoercionPoint = 0,
 ) {
   // RP팩 활성화 상태에 따라 max_tokens 조정
   const activeRpPack = shopService.getActiveRpPack();
   const maxTokens = activeRpPack ? 2000 : 800;
 
   try {
-    // Tool 정의 생성 (affinity에 따라 동적으로 스키마 생성)
-    const chatTool = createChatResponseTool(currentAffinity);
+    // Tool 정의 생성 (affinity 또는 coercionPoint에 따라 동적으로 스키마 생성)
+    const chatTool = createChatResponseTool(currentAffinity, currentCoercionPoint);
 
     const requestBody = {
       model: 'claude-sonnet-4-20250514',

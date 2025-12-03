@@ -5,7 +5,20 @@ import nunjucks from 'nunjucks';
 import shopService from '../src/services/shopService.js';
 import backgroundService from '../src/services/backgroundService.js';
 import characterStateService from '../src/services/characterStateService.js';
-import storyPointService from '../src/services/storyPointService.js';
+import coercionPointService from '../src/services/coercionPointService.js';
+
+// poseList.json 로드
+function loadPoseList() {
+  const poseListPath = path.join(process.cwd(), 'src', 'data', 'poseList.json');
+  try {
+    const data = fs.readFileSync(poseListPath, 'utf8');
+    const parsed = JSON.parse(data);
+    return parsed.poseList || [];
+  } catch (error) {
+    console.error('Error loading poseList.json:', error);
+    return [];
+  }
+}
 
 class SectionLoader {
   constructor(character) {
@@ -206,12 +219,20 @@ class SectionLoader {
       }
     }
 
+    // poseList 로드
+    const poseList = loadPoseList();
+
+    // rpPack 구조 생성 (chat_template.md와 동일한 구조)
+    const rpPack = {
+      poseList: poseList,
+    };
+
     // 템플릿 컨텍스트 구성
     const templateContext = {
       isNSFW,
       currentAppearance,
       affinity,
-      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
+      coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
       user,
       character: this.character,
       appearanceDescription: currentAppearance
@@ -225,6 +246,8 @@ class SectionLoader {
       location,
       userLastResponses: (userLastResponses || []).join('\n\n'),
       llmLastResponses: (llmLastResponses || []).join('\n\n'),
+      rpPack, // ✅ rpPack.poseList 추가
+      poseList, // ✅ 직접 접근용
     };
 
     // 캐릭터별 main_template.md 우선 사용, 없으면 공통 템플릿 사용
