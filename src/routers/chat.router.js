@@ -1,7 +1,6 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { playMP3 } from '../services/audioService.js';
 import { CHARACTER_MESSAGES } from '../data/characterMessages.js';
 import { CHARACTER_SETTINGS } from '../../vtuber_prompts/character_settings.js';
 import affinityService from '../services/affinityService.js';
@@ -441,13 +440,6 @@ router.post('/purchase', async (req, res) => {
 
 // 현재 활성화된 캐릭터 정보를 반환하는 엔드포인트
 router.get('/active-character', (req, res) => {
-  // 캐릭터 정보 반환 시 음성 재생
-  try {
-    playMP3(`yuara_greeting.mp3`);
-  } catch (error) {
-    console.error('Error playing greeting TTS:', error);
-  }
-
   res.json({ activeCharacter: characterService.getActiveCharacter() });
 });
 
