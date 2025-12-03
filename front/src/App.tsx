@@ -55,12 +55,14 @@ function App() {
     setAutoChatSpeed,
     startAutoChat,
     stopAutoChat,
+    // 스토리 포인트
+    storyPoint, // ✅ 스토리 포인트 추가
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [boosterStartTime, setBoosterStartTime] = useState<number | null>(null);
   const [isInnerThoughtsModalOpen, setIsInnerThoughtsModalOpen] = useState(false);
-  
+
   // 디스플레이 모드 상태 (localStorage에서 불러오기)
   const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
     const savedMode = localStorage.getItem('chatDisplayMode');
@@ -166,9 +168,6 @@ function App() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Chat with {currentCharacter}</h1>
             <div className="flex items-center gap-2">
-              <div className="bg-blue-100 px-4 py-2 rounded-lg">
-                <span className="text-blue-800 font-semibold">포인트: {point}</span>
-              </div>
               {displayMode === 'mode3' && (
                 <button
                   onClick={() => setIsInnerThoughtsModalOpen(true)}
@@ -185,7 +184,7 @@ function App() {
               </button>
             </div>
           </div>
-          
+
           {/* 디스플레이 모드 토글 */}
           <div className="bg-white rounded-lg p-3 shadow-sm">
             <div className="flex items-center justify-between gap-2">
@@ -229,6 +228,14 @@ function App() {
           </div>
           {renderBoosterStatus()}
           <div className="flex gap-2">
+            <div className="bg-blue-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-blue-800 font-semibold">💫 포인트: {point}</span>
+            </div>
+            <div className="bg-purple-100 px-4 py-2 rounded-lg flex-1">
+              <span className="text-purple-800 font-semibold">📖 스토리: {storyPoint}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
             <div className="bg-red-100 px-4 py-2 rounded-lg flex-1">
               <span className="text-red-800 font-semibold">❤️ 호감도: {affinity}</span>
             </div>
@@ -268,7 +275,7 @@ function App() {
                   {message.text}
                 </span>
               </div>
-              
+
               {/* 모드별 추가 정보 표시 */}
               {!message.isUser && (
                 <>
@@ -277,13 +284,17 @@ function App() {
                     <div className="mt-1 text-left space-y-1">
                       {message.narration && (
                         <div className="inline-block rounded-lg px-3 py-2 bg-gray-200 text-gray-700 text-sm">
-                          <div className="font-semibold text-xs text-gray-500 mb-1">📝 나레이션</div>
+                          <div className="font-semibold text-xs text-gray-500 mb-1">
+                            📝 나레이션
+                          </div>
                           <div className="italic">{message.narration}</div>
                         </div>
                       )}
                       {message.inner_thoughts && (
                         <div className="inline-block rounded-lg px-3 py-2 bg-purple-100 text-purple-700 text-sm mt-1">
-                          <div className="font-semibold text-xs text-purple-500 mb-1">💭 내면의 생각</div>
+                          <div className="font-semibold text-xs text-purple-500 mb-1">
+                            💭 내면의 생각
+                          </div>
                           <div>{message.inner_thoughts}</div>
                         </div>
                       )}
@@ -307,7 +318,9 @@ function App() {
                     <div className="mt-1 text-left space-y-1">
                       {message.inner_thoughts && (
                         <div className="inline-block rounded-lg px-3 py-2 bg-purple-100 text-purple-700 text-sm">
-                          <div className="font-semibold text-xs text-purple-500 mb-1">💭 내면의 생각</div>
+                          <div className="font-semibold text-xs text-purple-500 mb-1">
+                            💭 내면의 생각
+                          </div>
                           <div>{message.inner_thoughts}</div>
                         </div>
                       )}

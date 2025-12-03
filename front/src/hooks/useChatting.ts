@@ -9,6 +9,7 @@ import usePurchase from './usePurchase';
 import useShop from './useShop';
 import { useAudioPlayer } from './useAudioPlayer';
 import useAutoChat from './useAutoChat';
+import useStoryPoint from './useStoryPoint';
 
 const useChatting = () => {
   const [input, setInput] = useState('');
@@ -25,6 +26,8 @@ const useChatting = () => {
     useCharacter();
 
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
+
+  const { storyPoint, updateStoryPoint } = useStoryPoint();
 
   const {
     appearance,
@@ -98,6 +101,7 @@ const useChatting = () => {
     onMessageAdd: addBotMessageFromMessage,
     onAffinityUpdate: updateAffinity,
     onPointUpdate: updatePoint,
+    onStoryPointUpdate: updateStoryPoint, // ✅ 스토리 포인트 업데이트
     onPoseUpdate: updatePose,
     onEmotionUpdate: updateEmotion,
     onActionUpdate: updateAction,
@@ -221,6 +225,8 @@ const useChatting = () => {
     setAutoChatSpeed,
     startAutoChat: () => startAutoChat(sendMessage),
     stopAutoChat,
+    // 스토리 포인트
+    storyPoint, // ✅ 스토리 포인트 추가
   };
 };
 

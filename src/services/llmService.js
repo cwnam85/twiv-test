@@ -22,7 +22,7 @@ function createChatResponseTool(currentAffinity) {
       dialogue: {
         type: 'string',
         description:
-          "The character's spoken words. Minimum 15 characters, maximum 80 characters (Korean).",
+          "The character's spoken words. Minimum 30 characters, maximum 200 characters (Korean).",
       },
       narration: {
         type: 'string',

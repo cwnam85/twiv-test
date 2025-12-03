@@ -19,6 +19,7 @@ interface ChatAPIHandlers {
   onMessageAdd: (message: Message) => void;
   onAffinityUpdate: (affinity: number) => void;
   onPointUpdate: (point: number) => void;
+  onStoryPointUpdate: (storyPoint: number) => void; // ✅ 스토리 포인트 추가
   onPoseUpdate: (pose: string) => void;
   onEmotionUpdate: (emotion: string) => void;
   onActionUpdate: (action: string) => void;
@@ -34,6 +35,7 @@ const useChatAPI = ({
   onMessageAdd,
   onAffinityUpdate,
   onPointUpdate,
+  onStoryPointUpdate, // ✅ 스토리 포인트 추가
   onPoseUpdate,
   onEmotionUpdate,
   onActionUpdate,
@@ -113,20 +115,21 @@ const useChatAPI = ({
         onPurchaseModalOpen(data.requestedContent, userInput);
       }
 
-      // 벨라의 응답 추가 (narration, inner_thoughts, emotion, affinity 포함)
+      // 벨라의 응답 추가 (narration, inner_thoughts, emotion, affinityChange 포함)
       console.log('📨 Adding message to UI:');
       console.log('  - message:', data.message);
       console.log('  - narration:', data.narration);
       console.log('  - inner_thoughts:', data.inner_thoughts);
       console.log('  - emotion:', data.emotion);
-      console.log('  - affinity:', data.affinity);
+      console.log('  - affinityChange:', data.affinityChange); // 변화량
+      console.log('  - affinity (total):', data.affinity); // 총합
       
       onMessageAdd({ 
         text: data.message, 
         narration: data.narration,
         inner_thoughts: data.inner_thoughts,
         emotion: data.emotion,
-        affinity: data.affinity !== undefined ? `${data.affinity > 0 ? '+' : ''}${data.affinity}` : undefined,
+        affinity: data.affinityChange, // ✅ 변화량 사용 ("+3", "-1" 등)
         isUser: false 
       });
 
@@ -137,6 +140,10 @@ const useChatAPI = ({
       // 포인트 업데이트
       if (data.point !== undefined) {
         onPointUpdate(data.point);
+      }
+      // 스토리 포인트 업데이트
+      if (data.storyPoint !== undefined) {
+        onStoryPointUpdate(data.storyPoint);
       }
       // pose, emotion, action 업데이트
       if (data.pose) {

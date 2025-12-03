@@ -94,5 +94,21 @@
     "hat": false,
     "necklace": true,
     "belt": true
+  },
+  "rabbitholemiku": {
+    "current_appearance": "casual",
+    "current_background": "default",
+    "last_pose": "stand",
+    "last_action": "SpeakNatural",
+    "hair": true,
+    "bra": true,
+    "top": true,
+    "outerwear": true,
+    "panty": true,
+    "bottom": true,
+    "shoes": true,
+    "hat": false,
+    "necklace": true,
+    "belt": true
   }
 }

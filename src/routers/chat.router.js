@@ -10,6 +10,7 @@ import conversationService from '../services/conversationService.js';
 import responseService from '../services/responseService.js';
 import shopService from '../services/shopService.js';
 import characterStateService from '../services/characterStateService.js';
+import storyPointService from '../services/storyPointService.js';
 import {
   processAIResponse,
   isValidResponse,
@@ -119,6 +120,7 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       isPaid: false,
       isPointDepleted: true,
       ...affinityService.getData(),
+      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
       pose: characterMessage.pose,
       emotion: randomMessage.emotion,
     };
@@ -127,6 +129,9 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
   try {
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
+
+    // ✅ 스토리 포인트: 채팅 입력 시 무조건 +1
+    storyPointService.addChatInputPoint();
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
     const systemPromptContext = {
@@ -259,12 +264,24 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
       characterStateService.setLastAction(activeCharacter, '');
     }
 
+    // ✅ 스토리 포인트: 감정에 따라 추가 포인트 증가
+    if (response.emotion) {
+      storyPointService.addEmotionPoint(response.emotion);
+    }
+
+    const affinityData = affinityService.getData();
     return {
       message: response.dialogue,
       narration: response.narration,
       inner_thoughts: response.inner_thoughts,
       isPaid: false,
-      ...affinityService.getData(),
+      affinity: affinityData.affinity, // 총 호감도
+      affinityChange: response.affinity, // ✅ 호감도 변화량 (별도 필드)
+      point: affinityData.point,
+      maxAffinity: affinityData.maxAffinity,
+      boosterActive: affinityData.boosterActive,
+      boosterRemainingTime: affinityData.boosterRemainingTime,
+      storyPoint: storyPointService.getStoryPoint(),
       pose: response.pose,
       action: response.action,
       emotion: response.emotion,
@@ -286,6 +303,24 @@ export async function processChatMessage(userMessage, realMessage, skipPointChec
 router.get('/affinity', (req, res) => {
   const data = affinityService.getData();
   res.json(data);
+});
+
+// 스토리 포인트 가져오기
+router.get('/story-point', (req, res) => {
+  const storyPoint = storyPointService.getStoryPoint();
+  res.json({ storyPoint });
+});
+
+// 스토리 포인트 리셋 (관리자용)
+router.post('/story-point/reset', (req, res) => {
+  const storyPoint = storyPointService.resetStoryPoint();
+  res.json({ storyPoint, message: 'Story point reset to 0' });
+});
+
+// 감정별 포인트 맵핑 가져오기
+router.get('/story-point/mapping', (req, res) => {
+  const mapping = storyPointService.getEmotionPointMapping();
+  res.json({ mapping });
 });
 
 // 호감도 정보 API
@@ -375,7 +410,11 @@ router.post('/purchase', async (req, res) => {
       emotion: purchaseResponse.emotion,
       pose: purchaseResponse.pose,
       action: purchaseResponse.action,
-      ...affinityService.getData(),
+      affinity: affinityService.getData().affinity, // 총 호감도
+      affinityChange: purchaseResponse.affinity, // ✅ 호감도 변화량
+      point: affinityService.getData().point,
+      maxAffinity: affinityService.getData().maxAffinity,
+      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
       purchaseCompleted: true,
       purchasedContent: requestedContent,
       audioData: clientAudioData, // 클라이언트용 오디오 데이터 추가
@@ -546,6 +585,7 @@ router.post('/chat', async (req, res) => {
       isPaid: false,
       isPointDepleted: true,
       ...affinityService.getData(),
+      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
       pose: characterMessage.pose,
       emotion: randomMessage.emotion,
     });
@@ -554,6 +594,9 @@ router.post('/chat', async (req, res) => {
   try {
     const requestHistory = conversationService.getRequestHistory();
     const currentModel = conversationService.getCurrentModel();
+
+    // ✅ 스토리 포인트: 채팅 입력 시 무조건 +1
+    storyPointService.addChatInputPoint();
 
     // 시스템 프롬프트는 캐릭터의 main_template.md 사용
     const systemPromptContext = {
@@ -677,12 +720,19 @@ router.post('/chat', async (req, res) => {
     }
 
     // 클라이언트에 응답 전송
+    const affinityData = affinityService.getData();
     res.json({
       message: response.dialogue,
       narration: response.narration,
       inner_thoughts: response.inner_thoughts,
       isPaid: false,
-      ...affinityService.getData(),
+      affinity: affinityData.affinity, // 총 호감도
+      affinityChange: response.affinity, // ✅ 호감도 변화량 (별도 필드)
+      point: affinityData.point,
+      maxAffinity: affinityData.maxAffinity,
+      boosterActive: affinityData.boosterActive,
+      boosterRemainingTime: affinityData.boosterRemainingTime,
+      storyPoint: storyPointService.getStoryPoint(),
       pose: response.pose,
       action: response.action,
       emotion: response.emotion,
@@ -711,6 +761,11 @@ router.post('/chat', async (req, res) => {
       // 19금 포즈일 때는 action을 빈 문자열로 저장
       console.log('💾 메인채팅 19금 포즈로 액션 빈 문자열 저장');
       characterStateService.setLastAction(activeCharacter, '');
+    }
+
+    // ✅ 스토리 포인트: 감정에 따라 추가 포인트 증가
+    if (response.emotion) {
+      storyPointService.addEmotionPoint(response.emotion);
     }
   } catch (error) {
     console.error(`Error calling ${conversationService.getCurrentModel()} API:`, error);

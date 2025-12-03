@@ -5,6 +5,7 @@ import nunjucks from 'nunjucks';
 import shopService from '../src/services/shopService.js';
 import backgroundService from '../src/services/backgroundService.js';
 import characterStateService from '../src/services/characterStateService.js';
+import storyPointService from '../src/services/storyPointService.js';
 
 class SectionLoader {
   constructor(character) {
@@ -210,6 +211,7 @@ class SectionLoader {
       isNSFW,
       currentAppearance,
       affinity,
+      storyPoint: storyPointService.getStoryPoint(), // ✅ 스토리 포인트 추가
       user,
       character: this.character,
       appearanceDescription: currentAppearance
