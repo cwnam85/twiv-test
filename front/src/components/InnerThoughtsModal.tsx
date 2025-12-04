@@ -1,4 +1,4 @@
-import { Message } from '../types';
+import { Message, SpotInfo } from '../types';
 
 interface Pose {
   name: string;
@@ -140,6 +140,8 @@ interface InnerThoughtsModalProps {
   affinity: number;
   coercionPoint: number;
   currentEmotion: string;
+  currentSpot?: string;
+  availableSpots?: SpotInfo[];
 }
 
 // 감정별 이모티콘 매핑
@@ -254,6 +256,8 @@ const InnerThoughtsModal = ({
   affinity,
   coercionPoint,
   currentEmotion,
+  currentSpot,
+  availableSpots = [],
 }: InnerThoughtsModalProps) => {
   if (!isOpen) return null;
 
@@ -286,8 +290,8 @@ const InnerThoughtsModal = ({
 
         {/* 호감도 및 감정 표시 */}
         <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="bg-white rounded-lg px-4 py-2 shadow-sm">
                 <span className="text-purple-700 font-semibold">💜 호감도: {affinity}</span>
               </div>
@@ -301,69 +305,82 @@ const InnerThoughtsModal = ({
               </div>
             </div>
           </div>
+          {/* Spot 목록 표시 */}
+          {availableSpots.length > 0 && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-gray-600">📍 Spots:</span>
+              {availableSpots.map((spot) => (
+                <span
+                  key={spot.id || spot.name}
+                  className={`text-sm px-2 py-1 rounded ${
+                    currentSpot === spot.name ? 'text-red-600 font-bold bg-red-50' : 'text-gray-400'
+                  }`}
+                >
+                  {currentSpot === spot.name ? '📌 ' : ''}
+                  {spot.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 스크롤 가능한 컨텐츠 영역 */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* 둘 다 10 미만이거나, 호감도가 더 높거나 같을 때: 호감도 상태 표시 */}
-          {((affinity < 10 && coercionPoint < 10) || affinity >= coercionPoint) && (
-            <div className={`rounded-lg p-4 ${affinityStatus.bgColor}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{affinityStatus.emoji}</span>
-                <span className={`font-bold ${affinityStatus.color}`}>호감도 상태</span>
-              </div>
-              <p className={`${affinityStatus.color} mb-3`}>{affinityStatus.text}</p>
-              {affinityPoses.length > 0 && (
-                <div className="mt-2">
-                  <span className="text-sm font-semibold text-gray-700">💕 가능한 행위: </span>
-                  <span className="text-sm text-gray-600">
-                    {affinityPoses.map((p) => p.name).join(', ')}
-                  </span>
-                </div>
-              )}
-              {nextAffinityPoses.poses.length > 0 && (
-                <div className="mt-2">
-                  <span className="text-sm font-semibold text-pink-400">
-                    🔓 호감도를 {nextAffinityPoses.target} 까지 높이면 해금됩니다. 미쿠와 더
-                    가까워져보세요:{' '}
-                  </span>
-                  <span className="text-sm text-pink-300">
-                    {nextAffinityPoses.poses.map((p) => p.name).join(', ')}
-                  </span>
-                </div>
-              )}
+          {/* 호감도 상태 표시 */}
+          <div className={`rounded-lg p-4 ${affinityStatus.bgColor}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">{affinityStatus.emoji}</span>
+              <span className={`font-bold ${affinityStatus.color}`}>호감도 상태</span>
             </div>
-          )}
+            <p className={`${affinityStatus.color} mb-3`}>{affinityStatus.text}</p>
+            {affinityPoses.length > 0 && (
+              <div className="mt-2">
+                <span className="text-sm font-semibold text-gray-700">💕 가능한 행위: </span>
+                <span className="text-sm text-gray-600">
+                  {affinityPoses.map((p) => p.name).join(', ')}
+                </span>
+              </div>
+            )}
+            {nextAffinityPoses.poses.length > 0 && (
+              <div className="mt-2">
+                <span className="text-sm font-semibold text-pink-400">
+                  🔓 호감도를 {nextAffinityPoses.target} 까지 높이면 해금됩니다. 미쿠와 더
+                  가까워져보세요:{' '}
+                </span>
+                <span className="text-sm text-pink-300">
+                  {nextAffinityPoses.poses.map((p) => p.name).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
 
-          {/* 둘 다 10 미만이거나, 협박도가 더 높을 때: 협박도 상태 표시 */}
-          {((affinity < 10 && coercionPoint < 10) || coercionPoint > affinity) && (
-            <div className={`rounded-lg p-4 ${coercionStatus.bgColor}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{coercionStatus.emoji}</span>
-                <span className={`font-bold ${coercionStatus.color}`}>협박도 상태</span>
-              </div>
-              <p className={`${coercionStatus.color} mb-3`}>{coercionStatus.text}</p>
-              {coercionPoses.length > 0 && (
-                <div className="mt-2">
-                  <span className="text-sm font-semibold text-gray-700">🔗 강제 가능한 행위: </span>
-                  <span className="text-sm text-gray-600">
-                    {coercionPoses.map((p) => p.name).join(', ')}
-                  </span>
-                </div>
-              )}
-              {nextCoercionPoses.poses.length > 0 && (
-                <div className="mt-2">
-                  <span className="text-sm font-semibold text-orange-400">
-                    🔓 협박도를 {nextCoercionPoses.target} 까지 높이면 해금됩니다. 미쿠를 더
-                    몰아붙여보세요:{' '}
-                  </span>
-                  <span className="text-sm text-orange-300">
-                    {nextCoercionPoses.poses.map((p) => p.name).join(', ')}
-                  </span>
-                </div>
-              )}
+          {/* 협박도 상태 표시 */}
+          <div className={`rounded-lg p-4 ${coercionStatus.bgColor}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">{coercionStatus.emoji}</span>
+              <span className={`font-bold ${coercionStatus.color}`}>협박도 상태</span>
             </div>
-          )}
+            <p className={`${coercionStatus.color} mb-3`}>{coercionStatus.text}</p>
+            {coercionPoses.length > 0 && (
+              <div className="mt-2">
+                <span className="text-sm font-semibold text-gray-700">🔗 강제 가능한 행위: </span>
+                <span className="text-sm text-gray-600">
+                  {coercionPoses.map((p) => p.name).join(', ')}
+                </span>
+              </div>
+            )}
+            {nextCoercionPoses.poses.length > 0 && (
+              <div className="mt-2">
+                <span className="text-sm font-semibold text-orange-400">
+                  🔓 협박도를 {nextCoercionPoses.target} 까지 높이면 해금됩니다. 미쿠를 더
+                  몰아붙여보세요:{' '}
+                </span>
+                <span className="text-sm text-orange-300">
+                  {nextCoercionPoses.poses.map((p) => p.name).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* 내면의 생각 */}
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 shadow-sm">

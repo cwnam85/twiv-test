@@ -384,6 +384,7 @@ Always double-check the pose field before generating your response.
 - Emotion: Angry → Affinity MUST be -4
 
 2. Emotion-Based Coercion (MANDATORY - MUST MATCH EXACTLY):
+
    **High Coercion Increase (Character intimidated/pressured):**
 
    - **+5: Angry** (User provoked strong reaction through pressure)

@@ -1,0 +1,15 @@
+{
+  "id": 0,
+  "name": "Home",
+  "price": 0,
+  "description": "Return to the character's cozy home.",
+  "spots": [
+    {
+      "id": "0-1",
+      "name": "Streaming Room",
+      "description": "Room for streaming and broadcasting",
+      "defaultOutfit": 1,
+      "defaultPose": "Sit"
+    }
+  ]
+}

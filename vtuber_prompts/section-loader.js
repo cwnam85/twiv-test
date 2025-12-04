@@ -187,7 +187,7 @@ class SectionLoader {
     let rpPackDescription = '';
     let rpPackGlobalNote = '';
     let rpPackLocationGuide = '';
-    let rpPackMessagePrompt = '';
+    let rpPackMessagePrompt = { context: '', atmosphere: '', behavior: '' };
 
     if (activeRpPack) {
       const rpPackId = activeRpPack.id;
@@ -201,9 +201,13 @@ class SectionLoader {
           rpPackDescription = rpPackContent.description || '';
           rpPackGlobalNote = rpPackContent.globalnote || '';
           rpPackLocationGuide = rpPackContent.locationguide || '';
-          rpPackMessagePrompt = rpPackContent.messagePrompt || '';
+          rpPackMessagePrompt = rpPackContent.messagePrompt || {
+            context: '',
+            atmosphere: '',
+            behavior: '',
+          };
           console.log(
-            `SectionLoader - rpPackMessagePrompt loaded: ${rpPackMessagePrompt ? rpPackMessagePrompt.substring(0, 100) + '...' : 'empty'}`,
+            `SectionLoader - rpPackMessagePrompt loaded: ${rpPackMessagePrompt ? (typeof rpPackMessagePrompt === 'object' ? JSON.stringify(rpPackMessagePrompt).substring(0, 100) + '...' : rpPackMessagePrompt.substring(0, 100) + '...') : 'empty'}`,
           );
         }
       }
@@ -222,6 +226,9 @@ class SectionLoader {
 
     // poseList 로드
     const poseList = loadPoseList();
+
+    // NSFW 포즈 목록 필터링 (sfw: false인 포즈들)
+    const nsfwPoses = poseList.filter((pose) => pose.sfw === false).map((pose) => pose.name);
 
     // rpPack 구조 생성 (chat_template.md와 동일한 구조)
     const rpPack = {
@@ -250,6 +257,7 @@ class SectionLoader {
       llmLastResponses: (llmLastResponses || []).join('\n\n'),
       rpPack, // ✅ rpPack.poseList 추가
       poseList, // ✅ 직접 접근용
+      nsfwPoses, // ✅ NSFW 포즈 목록 (sfw: false)
     };
 
     // 캐릭터별 main_template.md 우선 사용, 없으면 공통 템플릿 사용

@@ -1,0 +1,22 @@
+{
+  "id": 19,
+  "name": "V대학 미쿠의 이중생활",
+  "price": 0,
+  "description": "래빗홀 미쿠의 이중생활 - 하루는 정상적인 대학생, 밤에는 바니걸.",
+  "spots": [
+    {
+      "id": "19-1",
+      "name": "Department Room",
+      "description": "A cozy department lounge room at V University. Sofas, a small table with scattered textbooks and empty coffee cups. A quiet space where students from the same major gather to study or chat. Miku appears here as an ordinary university student wearing casual clothes, quietly working on assignments or reading. The atmosphere is comfortable and academic.",
+      "defaultOutfit": 28,
+      "defaultPose": "Sit"
+    },
+    {
+      "id": "19-2",
+      "name": "Rabbithole VIP Room",
+      "description": "An elegant and luxurious VIP room inside the upscale Rabbithole establishment. Dim mood lighting, plush velvet seating, and subtle jazz music create an intimate atmosphere. Miku appears here in her stunning bunny girl outfit, exuding confidence and allure - a complete contrast to her university persona.",
+      "defaultOutfit": 29,
+      "defaultPose": "Stand"
+    }
+  ]
+}

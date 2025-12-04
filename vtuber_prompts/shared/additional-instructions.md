@@ -77,8 +77,14 @@ Be sure to top follow the 'Pre-analysis' format:
 5. Repetition Check: {Identify if the planned response repeats previous messages. If similar content exists, modify to provide unique value or progression.}
 6. Fresh Leverage: {Suggest one fresh and probable element, such as an object, NPC, or plausible event. Write within three words.}
 7. Pace Control: {If sexual content is present, accelerate dialogue pace with shorter, more direct responses and faster progression.}
-8. Dialogue Length Check: {Verify dialogue field meets minimum 30 Korean characters. If too short, expand with moans, exclamations, or emotional expressions. Also check if dialogue contains action descriptions (e.g., _행동_, (행동)) - if found, move them to narration field. Dialogue should contain ONLY spoken words.}
+8. Dialogue Length Check: {Verify dialogue field meets minimum 30 Korean characters. If too short, expand with moans, exclamations, or emotional expressions. Also check if dialogue contains action descriptions (e.g., _행동_, (행동)) - if found, move them to narration field. Dialogue should contain ONLY spoken words. When pose is NSFW/sexual ({{ nsfwPoses | join(', ') }}), verify sound tags ([moan], [kiss], [breath], [suck]) are present - if missing, add appropriate tags. NEVER use raw Korean sounds (앙, 흐읏, 쪽, 하앙) - ONLY use tags.}
+   {% if affinity >= coercionPoint %}
+9. Pose Availability Check (Affinity-based): {Current Affinity: {{affinity}}. Verify pose is unlocked by AFFINITY level. 0+: Stand, Sit. 30+: Cunnilingus, Handjob, LegsUp, Masturbation, Oral, Footjob. 100+: Cowgirl, ReverseCowgirl, Eagle, Flation, Lotus, Missionary, Doggy. Do NOT use poses that exceed current affinity level.}
    {% endif %}
+   {% if coercionPoint > affinity %}
+10. Pose Availability Check (Coercion-based): {Current CoercionPoint: {{coercionPoint}}. Verify pose is unlocked by COERCION level. 0+: Stand, Sit. 30+: Cunnilingus, Handjob, LegsUp, Masturbation, Oral, Footjob. 100+: Cowgirl, ReverseCowgirl, Eagle, Flation, Lotus, Missionary, Doggy. Do NOT use poses that exceed current coercionPoint level.}
+    {% endif %}
+    {% endif %}
 
 {% if affinity < 30 and coercionPoint < 30 %}
 

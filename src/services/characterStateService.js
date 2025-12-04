@@ -5,6 +5,29 @@ class CharacterStateService {
   constructor() {
     this.statePath = path.join(process.cwd(), 'src', 'data', 'character_state.json');
     this.ensureStateFile();
+    this.resetAllSpots(); // 서버 시작 시 모든 캐릭터의 spot 초기화
+  }
+
+  // 서버 시작 시 모든 캐릭터의 current_spot을 null로 초기화
+  resetAllSpots() {
+    try {
+      const state = this.getState();
+      let changed = false;
+
+      Object.keys(state).forEach((character) => {
+        if (state[character].current_spot !== null && state[character].current_spot !== undefined) {
+          state[character].current_spot = null;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        this.saveState(state);
+        console.log('📍 All character spots reset to null on server start');
+      }
+    } catch (error) {
+      console.error('Error resetting spots:', error);
+    }
   }
 
   // 상태 파일이 없으면 기본 구조로 생성
@@ -78,6 +101,12 @@ class CharacterStateService {
   getCurrentBackground(character) {
     const characterState = this.getCharacterState(character);
     return characterState ? characterState.current_background : 'default';
+  }
+
+  // 특정 캐릭터의 현재 spot
+  getCurrentSpot(character) {
+    const characterState = this.getCharacterState(character);
+    return characterState ? characterState.current_spot : null;
   }
 
   // 특정 캐릭터의 마지막 포즈
@@ -172,6 +201,35 @@ class CharacterStateService {
     return this.saveState(state);
   }
 
+  // 특정 캐릭터의 현재 spot 변경
+  setCurrentSpot(character, spot) {
+    const state = this.getState();
+
+    if (!state[character]) {
+      state[character] = {
+        current_appearance: 'casual',
+        current_background: 'default',
+        current_spot: null,
+        last_pose: 'stand',
+        last_action: 'SpeakNatural',
+        // 새로운 구조: 직접 아이템으로 접근
+        hair: true,
+        bra: true,
+        top: true,
+        outerwear: true,
+        panty: true,
+        bottom: true,
+        shoes: true,
+        hat: false,
+        necklace: true,
+        belt: true,
+      };
+    }
+
+    state[character].current_spot = spot || null;
+    return this.saveState(state);
+  }
+
   // 특정 캐릭터의 마지막 포즈 변경
   setLastPose(character, pose) {
     const state = this.getState();
@@ -180,6 +238,7 @@ class CharacterStateService {
       state[character] = {
         current_appearance: 'casual',
         current_background: 'default',
+        current_spot: null,
         last_pose: 'stand',
         last_action: 'SpeakNatural',
         // 새로운 구조: 직접 아이템으로 접근

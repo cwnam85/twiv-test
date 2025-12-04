@@ -164,7 +164,12 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
           dialogue_length_check: {
             type: 'string',
             description:
-              'Verify dialogue meets min 30 Korean chars. If short, expand with moans/exclamations. Check for action descriptions (_행동_, (행동)) - move to narration. Dialogue = ONLY spoken words.',
+              'Verify dialogue meets min 30 Korean chars. If short, expand with moans/exclamations. Check for action descriptions (_행동_, (행동)) - move to narration. Dialogue = ONLY spoken words. When emotion is Aroused, verify sound tags ([moan], [kiss], [breath], [suck]) are present. NEVER use raw Korean sounds (앙, 흐읏, 쪽, 하앙) - ONLY tags.',
+          },
+          pose_availability_check: {
+            type: 'string',
+            description:
+              'Check current affinity/coercionPoint and verify pose is unlocked. 0+: Stand, Sit. 30+: Cunnilingus, Handjob, LegsUp, Masturbation, Oral, Footjob. 100+: Cowgirl, ReverseCowgirl, Eagle, Flation, Lotus, Missionary, Doggy. Do NOT use locked poses.',
           },
           hentai_analysis: {
             type: 'object',
@@ -199,6 +204,7 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
           'fresh_leverage',
           'pace_control',
           'dialogue_length_check',
+          'pose_availability_check',
           'hentai_analysis',
         ],
       }

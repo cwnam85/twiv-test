@@ -25,40 +25,8 @@
       "nsfw": true
     },
     {
-      "name": "Handjob",
-      "description": "Handjob pose (character(woman) performing manual stimulation on user(man), suitable for intimate manual activities)",
-      "unlock_affinity": 30,
-      "unlock_coercionPoint": 30,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "LegsUp",
-      "description": "Legs up pose (lying down with legs raised, suitable for showing underwear/panties, suitable for intimate sexual activities)",
-      "unlock_affinity": 30,
-      "unlock_coercionPoint": 30,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "Masturbation",
-      "description": "Masturbation pose (self-stimulation position, suitable for intimate solo activities)",
-      "unlock_affinity": 30,
-      "unlock_coercionPoint": 30,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
       "name": "Oral",
       "description": "Oral pose (character(woman) performing oral sex on user(man), prioritize this pose when character is performing oral activities on user, suitable for intimate oral activities)",
-      "unlock_affinity": 30,
-      "unlock_coercionPoint": 30,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "Footjob",
-      "description": "Footjob pose (character(woman) using feet to stimulate or step on user(man)'s genitals, '유저(man)의 '풋잡' or '발로' or '밟아' 요청에 해당하는 포즈', suitable for intimate sexual activities using feet including stepping)",
       "unlock_affinity": 30,
       "unlock_coercionPoint": 30,
       "sfw": false,
@@ -75,30 +43,6 @@
     {
       "name": "ReverseCowgirl",
       "description": "Reverse cowgirl pose (user(man) lying down with character(woman) on top, '유저(man)의 '정상위' 요청에 해당하는 포즈', facing back, suitable for intimate sexual situations like insertion or intercourse)",
-      "unlock_affinity": 100,
-      "unlock_coercionPoint": 100,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "Eagle",
-      "description": "Eagle pose (standing position with legs spread, '유저(man)의 '정상위' 요청에 해당하는 포즈', suitable for intimate sexual activities)",
-      "unlock_affinity": 100,
-      "unlock_coercionPoint": 100,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "Flation",
-      "description": "Flation pose (rear position, '유저(man)의 '후배위' 요청에 해당하는 포즈', suitable for intimate sexual activities like insertion or intercourse, facing back)",
-      "unlock_affinity": 100,
-      "unlock_coercionPoint": 100,
-      "sfw": false,
-      "nsfw": true
-    },
-    {
-      "name": "Lotus",
-      "description": "Lotus pose (character(woman) sitting on top of user(man), '유저(man)의 '정상위' 요청에 해당하는 포즈',both facing each other while embracing, sitting cross-legged position, suitable for intimate sexual activities)",
       "unlock_affinity": 100,
       "unlock_coercionPoint": 100,
       "sfw": false,

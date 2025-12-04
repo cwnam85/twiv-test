@@ -516,6 +516,12 @@ function App() {
         affinity={affinity}
         coercionPoint={coercionPoint}
         currentEmotion={emotion}
+        currentSpot={
+          appearanceStateData?.[currentCharacter]?.current_spot ||
+          appearanceStateData?.[currentCharacter]?.available_spots?.[0]?.name ||
+          undefined
+        }
+        availableSpots={appearanceStateData?.[currentCharacter]?.available_spots || []}
       />
     </div>
   );

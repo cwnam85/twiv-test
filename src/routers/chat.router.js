@@ -11,6 +11,7 @@ import shopService from '../services/shopService.js';
 import characterStateService from '../services/characterStateService.js';
 import coercionPointService from '../services/coercionPointService.js';
 import cotService from '../services/cotService.js';
+import backgroundService from '../services/backgroundService.js';
 import {
   processAIResponse,
   isValidResponse,
@@ -498,10 +499,25 @@ router.get('/appearance-state', (req, res) => {
       return res.status(404).json({ error: 'Character state not found' });
     }
 
+    // 현재 배경의 spots 정보 가져오기
+    const currentBackground = characterState.current_background || 'default';
+    const spots = backgroundService.getBackgroundSpots(activeCharacter, currentBackground) || [];
+    const spotsArray = Array.isArray(spots) ? spots : Object.values(spots);
+
+    // current_spot이 없으면 첫 번째 spot으로 자동 초기화
+    let currentSpot = characterState.current_spot;
+    if (!currentSpot && spotsArray.length > 0) {
+      currentSpot = spotsArray[0].name;
+      characterStateService.setCurrentSpot(activeCharacter, currentSpot);
+      console.log(`📍 Spot auto-initialized to first spot: ${currentSpot}`);
+    }
+
     res.json({
       [activeCharacter]: {
         current_appearance: characterState.current_appearance,
         current_background: characterState.current_background,
+        current_spot: currentSpot || null,
+        available_spots: spotsArray,
         // 새로운 구조: 직접 아이템으로 접근
         hair: characterState.hair || false,
         bra: characterState.bra || false,
@@ -773,6 +789,12 @@ router.post('/chat', async (req, res) => {
     } else {
       // 19금 포즈일 때는 action을 빈 문자열로 저장
       characterStateService.setLastAction(activeCharacter, '');
+    }
+
+    // 캐릭터 상태에 현재 spot 저장
+    if (response.spot) {
+      console.log('📍 현재 spot 저장:', response.spot);
+      characterStateService.setCurrentSpot(activeCharacter, response.spot);
     }
 
     // ✅ 협박도: responseService.processCoercionChange에서 이미 처리됨 (중복 제거)

@@ -96,8 +96,8 @@
     "belt": true
   },
   "rabbitholemiku": {
-    "current_appearance": "casual",
-    "current_background": "default",
+    "current_appearance": "casual_miku",
+    "current_background": "mikudate",
     "last_pose": "Stand",
     "last_action": "",
     "hair": true,
@@ -109,6 +109,7 @@
     "shoes": true,
     "hat": false,
     "necklace": true,
-    "belt": true
+    "belt": true,
+    "current_spot": "Department Room"
   }
 }

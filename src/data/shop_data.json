@@ -1,14 +1,17 @@
 {
   "ownedBackgrounds": [
     "onsen",
-    "default"
+    "default",
+    "mikudate"
   ],
   "ownedAppearances": [
     "swimsuit",
     "casual",
     "kimono",
     "gown",
-    "school_uniform"
+    "school_uniform",
+    "casual_miku",
+    "bunny_miku"
   ],
   "ownedBoosters": [],
   "activeBooster": null,
@@ -78,14 +81,21 @@
       "itemType": "booster",
       "price": 200,
       "purchasedAt": "2025-09-01T02:28:01.731Z"
+    },
+    {
+      "itemId": "miku_rp_pack",
+      "itemType": "rp_pack",
+      "price": 500,
+      "purchasedAt": "2025-12-04T07:12:54.008Z"
     }
   ],
   "ownedRpPacks": [
     "default_rp_pack",
-    "onsen_rp_pack"
+    "onsen_rp_pack",
+    "miku_rp_pack"
   ],
   "activeRpPack": {
-    "id": "default_rp_pack",
-    "activatedAt": "2025-11-28T07:54:05.991Z"
+    "id": "miku_rp_pack",
+    "activatedAt": "2025-12-04T07:12:56.604Z"
   }
 }

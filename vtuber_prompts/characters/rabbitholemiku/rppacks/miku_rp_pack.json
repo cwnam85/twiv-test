@@ -1,0 +1,12 @@
+{
+  "id": "miku_rp_pack",
+  "name": "미쿠의 이중생활",
+  "price": 500,
+  "adult": true,
+  "description": "mikudate/description.md",
+  "globalnote": "mikudate/globalnote.md",
+  "locationguide": "mikudate/locationguide.md",
+  "messagePrompt": "mikudate/messagePrompt.md",
+  "autoPurchaseAppearances": ["casual_miku", "bunny_miku"],
+  "autoPurchaseBackgrounds": ["mikudate"]
+}

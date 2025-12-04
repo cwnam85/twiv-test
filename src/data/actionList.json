@@ -7,61 +7,6 @@
       "notAllowedPoses" : ["lying"]
     },
     {
-      "name": "PointToScreen",
-      "description": "Pointing finger energetically toward the user (screen) as if saying \"It's you!\"",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "Nod",
-      "description": "Nodding head in agreement - use when affirming or agreeing with something",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "ShakeHead",
-      "description": "Shaking head side to side as if saying \"No no!\" - use when denying or disagreeing with something",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "ThumbsUp",
-      "description": "Giving a thumbs up toward the screen as if saying \"Great!\"",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "FistUp",
-      "description": "Raising fist up in the air with joy and excitement",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "PeaceSign",
-      "description": "Making a V-sign with one hand in an excited manner",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "HandToMouth",
-      "description": "Covering mouth slightly in surprise while exclaiming",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "SlumpShoulders",
-      "description": "Slumping shoulders and hanging head down in disappointment",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "Sigh",
-      "description": "Letting out a big sigh while shaking head in frustration",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
-      "name": "HighFive",
-      "description": "Energetically giving a high-five toward the screen (user)",
-      "allowedPoses": ["stand"]
-    },
-    {
-      "name": "WaveArm",
-      "description": "Waving one arm widely and energetically for greeting",
-      "allowedPoses": ["stand", "sit"]
-    },
-    {
       "name": "WaveBothHands",
       "description": "Waving both hands cheerfully in greeting",
       "allowedPoses": ["stand", "sit"]

@@ -164,6 +164,8 @@ const useChatAPI = ({
       // RP팩 위치 업데이트 (RP팩이 활성화된 경우에만)
       if (data.spot && onLocationUpdate) {
         onLocationUpdate(data.spot);
+        // spot이 변경되면 appearanceStateData 새로고침 (current_spot 업데이트)
+        await onAppearanceRefresh();
       }
     } catch (error) {
       console.error('Error:', error);

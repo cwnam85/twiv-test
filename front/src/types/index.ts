@@ -9,9 +9,19 @@ export interface AppearanceParts {
 }
 
 // 새로운 백엔드 구조에 맞는 타입 정의
+export interface SpotInfo {
+  id?: string;
+  name: string;
+  description?: string;
+  defaultOutfit?: number;
+  defaultPose?: string;
+}
+
 export interface CharacterAppearanceState {
   current_appearance: string;
   current_background: string;
+  current_spot?: string | null;
+  available_spots?: SpotInfo[];
   // 새로운 구조: 직접 아이템으로 접근
   hair: boolean;
   bra: boolean;
@@ -23,7 +33,7 @@ export interface CharacterAppearanceState {
   hat: boolean;
   necklace: boolean;
   belt: boolean;
-  [key: string]: string | boolean; // 인덱스 시그니처 추가
+  [key: string]: string | boolean | null | undefined | SpotInfo[]; // 인덱스 시그니처 추가
 }
 
 export interface AppearanceStateData {

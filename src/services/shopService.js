@@ -267,6 +267,13 @@ class ShopService {
 
     if (itemType === 'background') {
       characterStateService.setCurrentBackground(activeCharacter, itemId);
+      // 배경 변경 시 첫 번째 spot으로 자동 설정
+      const spots = backgroundService.getBackgroundSpots(activeCharacter, itemId);
+      if (spots && spots.length > 0) {
+        const firstSpotName = Array.isArray(spots) ? spots[0].name : Object.keys(spots)[0];
+        characterStateService.setCurrentSpot(activeCharacter, firstSpotName);
+        console.log(`Spot auto-set to first spot: ${firstSpotName}`);
+      }
     } else if (itemType === 'appearance') {
       characterStateService.setCurrentAppearance(activeCharacter, itemId);
     }
@@ -316,6 +323,15 @@ class ShopService {
           description: '온천에서의 특별한 롤플레잉을 경험해보세요.',
           globalnoteFile: 'onsendate/globalnote.md',
           autoPurchaseOutfits: ['kimono', 'gown'],
+        },
+        {
+          id: 'miku_rp_pack',
+          name: '미쿠의 이중생활',
+          type: 'rp_pack',
+          price: 500,
+          description: '대학생과 바니걸, 미쿠의 비밀스러운 이중생활을 경험해보세요.',
+          globalnoteFile: 'mikudate/globalnote.md',
+          autoPurchaseOutfits: ['casual_miku', 'bunny_miku'],
         },
       ],
     };
@@ -495,11 +511,13 @@ class ShopService {
     const rpPackBackgrounds = {
       default_rp_pack: 'default',
       onsen_rp_pack: 'onsen',
+      miku_rp_pack: 'mikudate',
     };
 
     const rpPackOutfits = {
       default_rp_pack: 'casual',
       onsen_rp_pack: 'kimono',
+      miku_rp_pack: 'casual_miku',
     };
 
     // RP팩 활성화
@@ -521,6 +539,14 @@ class ShopService {
       }
       characterStateService.setCurrentBackground(activeCharacter, newBackground);
       console.log(`Background changed to ${newBackground} for RP pack ${rpPackId}`);
+
+      // RP팩 활성화 시 첫 번째 spot으로 자동 설정
+      const spots = backgroundService.getBackgroundSpots(activeCharacter, newBackground);
+      if (spots && spots.length > 0) {
+        const firstSpotName = Array.isArray(spots) ? spots[0].name : Object.keys(spots)[0];
+        characterStateService.setCurrentSpot(activeCharacter, firstSpotName);
+        console.log(`Spot auto-set to first spot: ${firstSpotName}`);
+      }
     }
 
     if (newAppearance) {
@@ -562,6 +588,14 @@ class ShopService {
     // RP팩 비활성화 시 무조건 기본 배경과 기본 의상으로 되돌리기
     shopData.activeRpPack = null;
     characterStateService.setCurrentBackground(activeCharacter, 'default');
+
+    // 기본 배경의 첫 번째 spot으로 자동 설정
+    const spots = backgroundService.getBackgroundSpots(activeCharacter, 'default');
+    if (spots && spots.length > 0) {
+      const firstSpotName = Array.isArray(spots) ? spots[0].name : Object.keys(spots)[0];
+      characterStateService.setCurrentSpot(activeCharacter, firstSpotName);
+      console.log(`Spot auto-set to first spot: ${firstSpotName}`);
+    }
 
     // RP 팩 비활성화 시 의상 변경
     characterStateService.setCurrentAppearance(activeCharacter, 'casual');
@@ -672,15 +706,15 @@ class ShopService {
         }
       }
 
-      // messagePrompt 파일 읽기
+      // messagePrompt 파일 읽기 및 파싱
       if (rpPack.messagePrompt) {
         const messagePromptPath = path.join(process.cwd(), rpPack.messagePrompt);
         console.log(`Loading messagePrompt from: ${messagePromptPath}`);
         if (fs.existsSync(messagePromptPath)) {
-          content.messagePrompt = fs.readFileSync(messagePromptPath, 'utf8');
-          console.log(
-            `messagePrompt loaded successfully: ${content.messagePrompt.substring(0, 100)}...`,
-          );
+          const rawContent = fs.readFileSync(messagePromptPath, 'utf8');
+          // messagePrompt.md를 객체로 파싱
+          content.messagePrompt = this.parseMessagePrompt(rawContent);
+          console.log(`messagePrompt parsed successfully:`, content.messagePrompt);
         } else {
           console.warn(`messagePrompt file not found: ${messagePromptPath}`);
         }
@@ -691,6 +725,37 @@ class ShopService {
       console.error(`Error loading RP pack content for ${rpPackId}:`, error);
       return null;
     }
+  }
+
+  // messagePrompt.md 파일을 객체로 파싱
+  parseMessagePrompt(rawContent) {
+    const result = {
+      context: '',
+      atmosphere: '',
+      behavior: '',
+    };
+
+    const lines = rawContent.split('\n').filter((line) => line.trim());
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.includes('**Current RP Context**') || trimmedLine.includes('**RP Context**')) {
+        result.context = trimmedLine;
+      } else if (
+        trimmedLine.includes('**Location Atmosphere**') ||
+        trimmedLine.includes('**Atmosphere**') ||
+        trimmedLine.includes('**Onsen Atmosphere**')
+      ) {
+        result.atmosphere = trimmedLine;
+      } else if (
+        trimmedLine.includes('**Character Behavior**') ||
+        trimmedLine.includes('**Behavior**')
+      ) {
+        result.behavior = trimmedLine;
+      }
+    }
+
+    return result;
   }
 }
 
