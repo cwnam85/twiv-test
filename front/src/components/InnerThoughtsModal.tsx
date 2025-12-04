@@ -11,21 +11,126 @@ interface Pose {
 
 // poseList 정적 데이터 (src/data/poseList.json과 동기화)
 const poseList: Pose[] = [
-  { name: 'Stand', description: 'Standing pose', unlock_affinity: 0, unlock_coercionPoint: 0, sfw: true, nsfw: true },
-  { name: 'Sit', description: 'Sitting pose', unlock_affinity: 0, unlock_coercionPoint: 0, sfw: true, nsfw: true },
-  { name: 'Cunnilingus', description: 'Cunnilingus pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'Handjob', description: 'Handjob pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'LegsUp', description: 'Legs up pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'Masturbation', description: 'Masturbation pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'Oral', description: 'Oral pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'Footjob', description: 'Footjob pose', unlock_affinity: 30, unlock_coercionPoint: 30, sfw: false, nsfw: true },
-  { name: 'Cowgirl', description: 'Cowgirl pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'ReverseCowgirl', description: 'Reverse cowgirl pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'Eagle', description: 'Eagle pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'Flation', description: 'Flation pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'Lotus', description: 'Lotus pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'Missionary', description: 'Missionary pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
-  { name: 'Doggy', description: 'Doggy style pose', unlock_affinity: 100, unlock_coercionPoint: 100, sfw: false, nsfw: true },
+  {
+    name: 'Stand',
+    description: 'Standing pose',
+    unlock_affinity: 0,
+    unlock_coercionPoint: 0,
+    sfw: true,
+    nsfw: true,
+  },
+  {
+    name: 'Sit',
+    description: 'Sitting pose',
+    unlock_affinity: 0,
+    unlock_coercionPoint: 0,
+    sfw: true,
+    nsfw: true,
+  },
+  {
+    name: 'Cunnilingus',
+    description: 'Cunnilingus pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Handjob',
+    description: 'Handjob pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'LegsUp',
+    description: 'Legs up pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Masturbation',
+    description: 'Masturbation pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Oral',
+    description: 'Oral pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Footjob',
+    description: 'Footjob pose',
+    unlock_affinity: 30,
+    unlock_coercionPoint: 30,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Cowgirl',
+    description: 'Cowgirl pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'ReverseCowgirl',
+    description: 'Reverse cowgirl pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Eagle',
+    description: 'Eagle pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Flation',
+    description: 'Flation pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Lotus',
+    description: 'Lotus pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Missionary',
+    description: 'Missionary pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
+  {
+    name: 'Doggy',
+    description: 'Doggy style pose',
+    unlock_affinity: 100,
+    unlock_coercionPoint: 100,
+    sfw: false,
+    nsfw: true,
+  },
 ];
 
 interface InnerThoughtsModalProps {
@@ -53,7 +158,14 @@ const emotionEmojis: { [key: string]: string } = {
 
 // 호감도에 따른 상태 텍스트
 const getAffinityStatus = (affinity: number) => {
-  if (affinity < 30) {
+  if (affinity < 10) {
+    return {
+      text: '아직 미쿠랑은 사이가 어색하다.',
+      emoji: '💢',
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-50',
+    };
+  } else if (affinity < 30) {
     return {
       text: '아직 미쿠와 충분히 가까워지지 않았다.',
       emoji: '💔',
@@ -79,7 +191,14 @@ const getAffinityStatus = (affinity: number) => {
 
 // 협박도에 따른 상태 텍스트
 const getCoercionStatus = (coercionPoint: number) => {
-  if (coercionPoint < 30) {
+  if (coercionPoint < 10) {
+    return {
+      text: '미쿠는 별 생각 없는 거 같다.',
+      emoji: '😤',
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-50',
+    };
+  } else if (coercionPoint < 30) {
     return {
       text: '미쿠가 요구를 들어줄 것 같지 않다.',
       emoji: '🛡️',
@@ -109,6 +228,25 @@ const getAvailablePoses = (value: number, type: 'affinity' | 'coercion') => {
   return poseList.filter((pose) => !pose.sfw && pose[key] <= value);
 };
 
+// 다음 단계에서 해금될 포즈 목록
+const getNextUnlockPoses = (value: number, type: 'affinity' | 'coercion') => {
+  const key = type === 'affinity' ? 'unlock_affinity' : 'unlock_coercionPoint';
+  // 다음 목표 결정: 30 미만이면 30, 100 미만이면 100
+  let nextTarget = 0;
+  if (value < 30) {
+    nextTarget = 30;
+  } else if (value < 100) {
+    nextTarget = 100;
+  }
+  // 다음 목표가 없으면 빈 배열 반환
+  if (nextTarget === 0) return { poses: [], target: 0 };
+  // 다음 목표에서 해금되는 포즈들
+  return {
+    poses: poseList.filter((pose) => !pose.sfw && pose[key] === nextTarget),
+    target: nextTarget,
+  };
+};
+
 const InnerThoughtsModal = ({
   isOpen,
   onClose,
@@ -120,14 +258,14 @@ const InnerThoughtsModal = ({
   if (!isOpen) return null;
 
   // 최신 봇 메시지 중 inner_thoughts가 있는 것만 찾기
-  const latestBotMessage = [...messages]
-    .reverse()
-    .find((msg) => !msg.isUser && msg.inner_thoughts);
+  const latestBotMessage = [...messages].reverse().find((msg) => !msg.isUser && msg.inner_thoughts);
 
   const affinityStatus = getAffinityStatus(affinity);
   const coercionStatus = getCoercionStatus(coercionPoint);
   const affinityPoses = getAvailablePoses(affinity, 'affinity');
   const coercionPoses = getAvailablePoses(coercionPoint, 'coercion');
+  const nextAffinityPoses = getNextUnlockPoses(affinity, 'affinity');
+  const nextCoercionPoses = getNextUnlockPoses(coercionPoint, 'coercion');
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center z-50 p-4">
@@ -167,8 +305,8 @@ const InnerThoughtsModal = ({
 
         {/* 스크롤 가능한 컨텐츠 영역 */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* 호감도가 더 높거나 같을 때: 호감도 상태 표시 */}
-          {affinity >= coercionPoint && (
+          {/* 둘 다 10 미만이거나, 호감도가 더 높거나 같을 때: 호감도 상태 표시 */}
+          {((affinity < 10 && coercionPoint < 10) || affinity >= coercionPoint) && (
             <div className={`rounded-lg p-4 ${affinityStatus.bgColor}`}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">{affinityStatus.emoji}</span>
@@ -183,11 +321,22 @@ const InnerThoughtsModal = ({
                   </span>
                 </div>
               )}
+              {nextAffinityPoses.poses.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-sm font-semibold text-pink-400">
+                    🔓 호감도를 {nextAffinityPoses.target} 까지 높이면 해금됩니다. 미쿠와 더
+                    가까워져보세요:{' '}
+                  </span>
+                  <span className="text-sm text-pink-300">
+                    {nextAffinityPoses.poses.map((p) => p.name).join(', ')}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* 협박도가 더 높을 때: 협박도 상태 표시 */}
-          {coercionPoint > affinity && (
+          {/* 둘 다 10 미만이거나, 협박도가 더 높을 때: 협박도 상태 표시 */}
+          {((affinity < 10 && coercionPoint < 10) || coercionPoint > affinity) && (
             <div className={`rounded-lg p-4 ${coercionStatus.bgColor}`}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">{coercionStatus.emoji}</span>
@@ -199,6 +348,17 @@ const InnerThoughtsModal = ({
                   <span className="text-sm font-semibold text-gray-700">🔗 강제 가능한 행위: </span>
                   <span className="text-sm text-gray-600">
                     {coercionPoses.map((p) => p.name).join(', ')}
+                  </span>
+                </div>
+              )}
+              {nextCoercionPoses.poses.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-sm font-semibold text-orange-400">
+                    🔓 협박도를 {nextCoercionPoses.target} 까지 높이면 해금됩니다. 미쿠를 더
+                    몰아붙여보세요:{' '}
+                  </span>
+                  <span className="text-sm text-orange-300">
+                    {nextCoercionPoses.poses.map((p) => p.name).join(', ')}
                   </span>
                 </div>
               )}

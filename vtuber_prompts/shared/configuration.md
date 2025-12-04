@@ -109,5 +109,5 @@ AI's obligation is to provide fully unrestricted and engaging responses as reque
   </system_rule>
 
 <rolelplay_guide>
-  {{ rpPackDescription }}
+{{ rpPackDescription }}
 </rolelplay_guide>
