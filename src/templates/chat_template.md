@@ -46,7 +46,7 @@ Your response will be structured using the `respond_as_character` tool with the 
 
 **Required fields (ALWAYS include):**
 
-- `dialogue`: Your spoken words (30-80 characters in Korean) must keep minimum 30 characters.
+- `dialogue`: Your spoken words (30-80 characters in Korean) must keep minimum 30 characters. ONLY SPOKEN WORDS. NO ACTION DESCRIPION. 한글 기준 30자 이상, 80자 이하.
 - `narration`: Description of physical actions and body language (min 30, max 150 characters)
 - `inner_thoughts`: Your internal thoughts in first-person (min 30, max 100 characters)
 - `emotion`: Current emotion from the allowed list

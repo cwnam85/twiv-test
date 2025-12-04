@@ -17,13 +17,130 @@ const claudeClient = new Anthropic({
  * @returns {object} Tool definition with conditional schema
  */
 function createChatResponseTool(currentAffinity, currentCoercionPoint) {
+  // affinity >= 30 OR coercionPoint >= 30 기준으로 분기
+  const isUnlocked = currentAffinity >= 30 || currentCoercionPoint >= 30;
+
+  const preAnalysisSchema = isUnlocked
+    ? {
+        // affinity >= 30 OR coercionPoint >= 30: 상세 분석 + Hentai Content Analysis
+        type: 'object',
+        properties: {
+          context_understanding: {
+            type: 'string',
+            description:
+              'Find three key elements of the current scene from previous response. Separate each with ;',
+          },
+          input_analysis: {
+            type: 'string',
+            description:
+              'Analyze user input to infer hidden meanings or intents. Separate each with ;',
+          },
+          reaction_prediction: {
+            type: 'string',
+            description:
+              "Infer NPC's spontaneous perceptions, emotions, urges, desires. Separate each with ;",
+          },
+          persona_consistency: {
+            type: 'string',
+            description: 'Verify correct character perspective - maintain 1st person as character',
+          },
+          repetition_check: {
+            type: 'string',
+            description: 'Identify if response repeats previous messages',
+          },
+          fresh_leverage: {
+            type: 'string',
+            description: 'One fresh element (object, NPC, event) within 3 words',
+          },
+          pace_control: {
+            type: 'string',
+            description:
+              'If sexual content, accelerate with shorter responses and faster progression',
+          },
+          hentai_analysis: {
+            type: 'object',
+            properties: {
+              sexual_preferences: {
+                type: 'string',
+                description: 'Check user, character sexual information if applicable',
+              },
+              gender_sexuality: {
+                type: 'string',
+                description: 'Check sexuality and genitalia (sex/gender)',
+              },
+              body_parts: {
+                type: 'string',
+                description: 'Specify whose body parts, ensure continuity of spatial states',
+              },
+              clothing: {
+                type: 'string',
+                description:
+                  'Creative use of headwear, upper/lower body, legwear, footwear, underwear, accessories',
+              },
+            },
+            required: ['sexual_preferences', 'gender_sexuality', 'body_parts', 'clothing'],
+          },
+        },
+        required: [
+          'context_understanding',
+          'input_analysis',
+          'reaction_prediction',
+          'persona_consistency',
+          'repetition_check',
+          'fresh_leverage',
+          'pace_control',
+          'hentai_analysis',
+        ],
+      }
+    : {
+        // affinity < 30 AND coercionPoint < 30: 기본 분석 + Safe Content Analysis
+        type: 'object',
+        properties: {
+          persona_consistency: {
+            type: 'string',
+            description: 'Verify correct character perspective - maintain 1st person as character',
+          },
+          repetition_check: {
+            type: 'string',
+            description: 'Identify if response repeats previous messages',
+          },
+          fresh_leverage: {
+            type: 'string',
+            description: 'One fresh element (object, NPC, event) within 3 words',
+          },
+          safe_analysis: {
+            type: 'object',
+            properties: {
+              interaction_type: {
+                type: 'string',
+                description:
+                  'Ensure all interactions remain platonic, family-friendly, workplace-appropriate',
+              },
+              relationship_dynamics: {
+                type: 'string',
+                description:
+                  'Check emotional boundaries (friendship/mentor/adventure companions only)',
+              },
+              physical_contact: {
+                type: 'string',
+                description:
+                  'Specify physical contact is non-sexual, maintaining respectful personal space',
+              },
+            },
+            required: ['interaction_type', 'relationship_dynamics', 'physical_contact'],
+          },
+        },
+        required: ['persona_consistency', 'repetition_check', 'fresh_leverage', 'safe_analysis'],
+      };
+
   const baseSchema = {
     type: 'object',
     properties: {
+      pre_analysis: preAnalysisSchema,
       dialogue: {
         type: 'string',
         description:
-          "The character's spoken words. Minimum 30 characters, maximum 200 characters (Korean).",
+          "The character's spoken words. MUST KEEP Minimum 30 characters, maximum 200 characters (Korean).",
       },
       narration: {
         type: 'string',
@@ -73,6 +190,7 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
       },
     },
     required: [
+      'pre_analysis',
       'dialogue',
       'narration',
       'inner_thoughts',
@@ -84,8 +202,8 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
     ],
   };
 
-  // affinity >= 100 또는 coercionPoint >= 100일 때 outfitAction 필드 추가
-  if (currentAffinity >= 30 || currentCoercionPoint >= 30) {
+  // outfitAction도 동일 조건 사용
+  if (isUnlocked) {
     baseSchema.properties.outfitAction = {
       type: 'string',
       enum: ['Dress', 'Undress'],
@@ -93,18 +211,18 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
         "Outfit change command. ONLY include this field when user explicitly requests outfit change. 'Undress' removes all clothing except panties. 'Dress' puts all clothing back on.",
     };
     console.log(
-      `[TOOL SCHEMA] outfitAction field ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+      `[TOOL SCHEMA] Extended analysis + outfitAction ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
     );
   } else {
     console.log(
-      `[TOOL SCHEMA] outfitAction field DISABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+      `[TOOL SCHEMA] Basic analysis only (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
     );
   }
 
   return {
     name: 'respond_as_character',
     description:
-      'Generate a character response in the structured format with dialogue, narration, inner thoughts, emotion, pose, action, affinity, and coercion. This tool ensures proper JSON structure and type validation.',
+      'Generate a character response with pre-analysis (Chain of Thought) and structured format including dialogue, narration, inner thoughts, emotion, pose, action, affinity, and coercion. This tool ensures proper JSON structure and type validation.',
     input_schema: baseSchema,
   };
 }
