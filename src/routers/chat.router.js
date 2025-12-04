@@ -10,6 +10,7 @@ import responseService from '../services/responseService.js';
 import shopService from '../services/shopService.js';
 import characterStateService from '../services/characterStateService.js';
 import coercionPointService from '../services/coercionPointService.js';
+import cotService from '../services/cotService.js';
 import {
   processAIResponse,
   isValidResponse,
@@ -312,6 +313,35 @@ router.get('/coercion-point', (req, res) => {
 router.post('/coercion-point/reset', (req, res) => {
   const coercionPoint = coercionPointService.resetCoercionPoint();
   res.json({ coercionPoint, message: 'Coercion point reset to 0' });
+});
+
+// ========== CoT (Chain of Thought) 토글 API ==========
+
+// CoT 상태 조회
+router.get('/cot-status', (req, res) => {
+  const cotEnabled = cotService.isCotEnabled();
+  res.json({ cotEnabled });
+});
+
+// CoT 활성화
+router.post('/cot/enable', (req, res) => {
+  const cotEnabled = cotService.enableCot();
+  res.json({ cotEnabled, message: 'Chain of Thought ENABLED' });
+});
+
+// CoT 비활성화
+router.post('/cot/disable', (req, res) => {
+  const cotEnabled = cotService.disableCot();
+  res.json({ cotEnabled, message: 'Chain of Thought DISABLED' });
+});
+
+// CoT 토글
+router.post('/cot/toggle', (req, res) => {
+  const cotEnabled = cotService.toggleCot();
+  res.json({
+    cotEnabled,
+    message: `Chain of Thought ${cotEnabled ? 'ENABLED' : 'DISABLED'}`,
+  });
 });
 
 // 호감도 정보 API
@@ -742,7 +772,6 @@ router.post('/chat', async (req, res) => {
       characterStateService.setLastAction(activeCharacter, actionToSave);
     } else {
       // 19금 포즈일 때는 action을 빈 문자열로 저장
-      console.log('💾 메인채팅 19금 포즈로 액션 빈 문자열 저장');
       characterStateService.setLastAction(activeCharacter, '');
     }
 
@@ -771,17 +800,14 @@ router.post('/delete-tts', (req, res) => {
 
     // 파일 존재 확인
     if (!fs.existsSync(filePath)) {
-      console.log(`[TTS DELETE] File not found: ${fileName}`);
       return res.json({ success: true, message: 'File already deleted or not found' });
     }
 
     // 파일 삭제
     fs.unlinkSync(filePath);
-    console.log(`[TTS DELETE] Successfully deleted: ${fileName}`);
 
     res.json({ success: true, message: 'TTS file deleted successfully' });
   } catch (error) {
-    console.error('[TTS DELETE] Error deleting TTS file:', error);
     res.status(500).json({ error: 'Failed to delete TTS file' });
   }
 });

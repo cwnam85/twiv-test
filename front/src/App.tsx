@@ -57,6 +57,10 @@ function App() {
     stopAutoChat,
     // 협박도
     coercionPoint, // ✅ 협박도 추가
+    // CoT (Chain of Thought)
+    cotEnabled,
+    isCotLoading,
+    toggleCot,
   } = useChatting();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -217,6 +221,41 @@ function App() {
                   2안
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* CoT (Chain of Thought) 토글 */}
+          <div className="bg-white rounded-lg p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">🧠 CoT 모드:</span>
+                <span className="text-xs text-gray-500">
+                  {cotEnabled ? 'cot 활성화됨' : 'cot 비활성화됨'}
+                </span>
+              </div>
+              <button
+                onClick={toggleCot}
+                disabled={isCotLoading || isLoading}
+                className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                  isCotLoading || isLoading
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : cotEnabled
+                      ? 'bg-indigo-500'
+                      : 'bg-gray-300'
+                }`}
+                title={cotEnabled ? 'CoT 비활성화' : 'CoT 활성화'}
+              >
+                <span
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
+                    cotEnabled ? 'left-8' : 'left-1'
+                  }`}
+                />
+                {isCotLoading && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </span>
+                )}
+              </button>
             </div>
           </div>
           {renderBoosterStatus()}

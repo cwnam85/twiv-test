@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import shopService from './shopService.js';
+import cotService from './cotService.js';
 
 dotenv.config();
 
@@ -11,12 +12,115 @@ const claudeClient = new Anthropic({
 });
 
 /**
- * Creates a tool definition for structured character responses
- * @param {number} currentAffinity - Current affinity level to determine if outfitAction should be available
- * @param {number} currentCoercionPoint - Current coercion point to determine if outfitAction should be available
- * @returns {object} Tool definition with conditional schema
+ * Creates a tool definition for structured character responses (WITHOUT CoT)
+ * This is the original schema without pre_analysis field
+ * @param {number} currentAffinity - Current affinity level
+ * @param {number} currentCoercionPoint - Current coercion point
+ * @returns {object} Tool definition without pre_analysis
  */
-function createChatResponseTool(currentAffinity, currentCoercionPoint) {
+function createBasicChatResponseTool(currentAffinity, currentCoercionPoint) {
+  const isUnlocked = currentAffinity >= 30 || currentCoercionPoint >= 30;
+
+  const baseSchema = {
+    type: 'object',
+    properties: {
+      dialogue: {
+        type: 'string',
+        description:
+          "The character's spoken words. Minimum 30 characters, maximum 200 characters (Korean).",
+      },
+      narration: {
+        type: 'string',
+        description:
+          "Description of character's physical actions, gestures, and body language. Maximum 150 characters.",
+      },
+      inner_thoughts: {
+        type: 'string',
+        description: "Character's internal thoughts in first-person. Maximum 100 characters.",
+      },
+      emotion: {
+        type: 'string',
+        enum: [
+          'Neutral',
+          'Happy',
+          'Funny',
+          'Affectionate',
+          'Annoyed',
+          'Sad',
+          'Embarrassed',
+          'Dominating',
+          'Aroused',
+          'Angry',
+        ],
+        description: "Character's current emotion from the allowed list.",
+      },
+      pose: {
+        type: 'string',
+        description: "Character's current pose from the allowed pose list.",
+      },
+      action: {
+        type: 'string',
+        description: "Character's current action from the allowed action list.",
+      },
+      affinity: {
+        type: 'string',
+        description: "Affinity change value (e.g., '+3', '0', '-3')",
+      },
+      coercion: {
+        type: 'string',
+        description:
+          "Coercion change value (e.g., '+3', '0', '-3') - How much the user's coercion/intimidation affects the character",
+      },
+      spot: {
+        type: 'string',
+        description: 'Current location spot. Only include when location changes.',
+      },
+    },
+    required: [
+      'dialogue',
+      'narration',
+      'inner_thoughts',
+      'emotion',
+      'pose',
+      'action',
+      'affinity',
+      'coercion',
+    ],
+  };
+
+  // outfitAction 조건부 추가
+  if (isUnlocked) {
+    baseSchema.properties.outfitAction = {
+      type: 'string',
+      enum: ['Dress', 'Undress'],
+      description:
+        "Outfit change command. ONLY include this field when user explicitly requests outfit change. 'Undress' removes all clothing except panties. 'Dress' puts all clothing back on.",
+    };
+    console.log(
+      `[TOOL SCHEMA - BASIC] outfitAction ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+    );
+  } else {
+    console.log(
+      `[TOOL SCHEMA - BASIC] outfitAction DISABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+    );
+  }
+
+  return {
+    name: 'respond_as_character',
+    description:
+      'Generate a character response in the structured format with dialogue, narration, inner thoughts, emotion, pose, action, affinity, and coercion. This tool ensures proper JSON structure and type validation.',
+    input_schema: baseSchema,
+  };
+}
+
+/**
+ * Creates a tool definition for structured character responses (WITH CoT)
+ * This includes pre_analysis field for Chain of Thought reasoning
+ * @param {number} currentAffinity - Current affinity level
+ * @param {number} currentCoercionPoint - Current coercion point
+ * @returns {object} Tool definition with pre_analysis
+ */
+function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
   // affinity >= 30 OR coercionPoint >= 30 기준으로 분기
   const isUnlocked = currentAffinity >= 30 || currentCoercionPoint >= 30;
 
@@ -57,6 +161,11 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
             description:
               'If sexual content, accelerate with shorter responses and faster progression',
           },
+          dialogue_length_check: {
+            type: 'string',
+            description:
+              'Verify dialogue meets min 30 Korean chars. If short, expand with moans/exclamations. Check for action descriptions (_행동_, (행동)) - move to narration. Dialogue = ONLY spoken words.',
+          },
           hentai_analysis: {
             type: 'object',
             properties: {
@@ -89,6 +198,7 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
           'repetition_check',
           'fresh_leverage',
           'pace_control',
+          'dialogue_length_check',
           'hentai_analysis',
         ],
       }
@@ -107,6 +217,11 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
           fresh_leverage: {
             type: 'string',
             description: 'One fresh element (object, NPC, event) within 3 words',
+          },
+          dialogue_length_check: {
+            type: 'string',
+            description:
+              'Verify dialogue meets min 30 Korean chars. If short, expand with natural expressions/reactions. Check for action descriptions (_행동_, (행동)) - move to narration. Dialogue = ONLY spoken words.',
           },
           safe_analysis: {
             type: 'object',
@@ -130,7 +245,13 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
             required: ['interaction_type', 'relationship_dynamics', 'physical_contact'],
           },
         },
-        required: ['persona_consistency', 'repetition_check', 'fresh_leverage', 'safe_analysis'],
+        required: [
+          'persona_consistency',
+          'repetition_check',
+          'fresh_leverage',
+          'dialogue_length_check',
+          'safe_analysis',
+        ],
       };
 
   const baseSchema = {
@@ -211,11 +332,11 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
         "Outfit change command. ONLY include this field when user explicitly requests outfit change. 'Undress' removes all clothing except panties. 'Dress' puts all clothing back on.",
     };
     console.log(
-      `[TOOL SCHEMA] Extended analysis + outfitAction ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+      `[TOOL SCHEMA - COT] Extended analysis + outfitAction ENABLED (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
     );
   } else {
     console.log(
-      `[TOOL SCHEMA] Basic analysis only (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
+      `[TOOL SCHEMA - COT] Basic analysis only (affinity: ${currentAffinity}, coercion: ${currentCoercionPoint})`,
     );
   }
 
@@ -225,6 +346,23 @@ function createChatResponseTool(currentAffinity, currentCoercionPoint) {
       'Generate a character response with pre-analysis (Chain of Thought) and structured format including dialogue, narration, inner thoughts, emotion, pose, action, affinity, and coercion. This tool ensures proper JSON structure and type validation.',
     input_schema: baseSchema,
   };
+}
+
+/**
+ * Creates the appropriate tool based on CoT setting
+ * @param {number} currentAffinity - Current affinity level
+ * @param {number} currentCoercionPoint - Current coercion point
+ * @returns {object} Tool definition
+ */
+function createChatResponseTool(currentAffinity, currentCoercionPoint) {
+  const isCotEnabled = cotService.isCotEnabled();
+  console.log(`[TOOL SCHEMA] CoT Mode: ${isCotEnabled ? 'ENABLED' : 'DISABLED'}`);
+
+  if (isCotEnabled) {
+    return createCotChatResponseTool(currentAffinity, currentCoercionPoint);
+  } else {
+    return createBasicChatResponseTool(currentAffinity, currentCoercionPoint);
+  }
 }
 
 export async function getLLMResponse(

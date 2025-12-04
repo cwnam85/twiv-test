@@ -202,7 +202,6 @@ class CharacterStateService {
 
   // 특정 캐릭터의 마지막 액션 변경
   setLastAction(character, action) {
-    console.log(`🔧 setLastAction 호출됨: character=${character}, action=${action}`);
     const state = this.getState();
 
     if (!state[character]) {
@@ -225,12 +224,8 @@ class CharacterStateService {
       };
     }
 
-    const oldAction = state[character].last_action;
     state[character].last_action = action || '';
-    console.log(`💾 액션 업데이트: ${oldAction} → ${state[character].last_action}`);
-    const result = this.saveState(state);
-    console.log(`💾 파일 저장 결과: ${result}`);
-    return result;
+    return this.saveState(state);
   }
 
   // 특정 캐릭터의 복장 파트 상태 변경

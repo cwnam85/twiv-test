@@ -6,6 +6,7 @@ import shopService from '../src/services/shopService.js';
 import backgroundService from '../src/services/backgroundService.js';
 import characterStateService from '../src/services/characterStateService.js';
 import coercionPointService from '../src/services/coercionPointService.js';
+import cotService from '../src/services/cotService.js';
 
 // poseList.json 로드
 function loadPoseList() {
@@ -233,6 +234,7 @@ class SectionLoader {
       currentAppearance,
       affinity,
       coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
+      cotEnabled: cotService.isCotEnabled(), // ✅ CoT 활성화 상태 추가
       user,
       character: this.character,
       appearanceDescription: currentAppearance

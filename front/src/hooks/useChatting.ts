@@ -10,6 +10,7 @@ import useShop from './useShop';
 import { useAudioPlayer } from './useAudioPlayer';
 import useAutoChat from './useAutoChat';
 import useCoercionPoint from './useCoercionPoint';
+import useCot from './useCot';
 
 const useChatting = () => {
   const [input, setInput] = useState('');
@@ -28,6 +29,9 @@ const useChatting = () => {
   const { affinity, point, maxAffinity, updateAffinity, updatePoint, addPoints } = useAffinity();
 
   const { coercionPoint, updateCoercionPoint } = useCoercionPoint();
+
+  // CoT (Chain of Thought) 훅
+  const { cotEnabled, isCotLoading, toggleCot } = useCot();
 
   const {
     appearance,
@@ -227,6 +231,10 @@ const useChatting = () => {
     stopAutoChat,
     // 협박도
     coercionPoint, // ✅ 협박도 추가
+    // CoT (Chain of Thought)
+    cotEnabled,
+    isCotLoading,
+    toggleCot,
   };
 };
 

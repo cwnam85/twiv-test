@@ -5,6 +5,7 @@ import characterStateService from '../services/characterStateService.js';
 import backgroundService from '../services/backgroundService.js';
 import shopService from '../services/shopService.js';
 import coercionPointService from '../services/coercionPointService.js';
+import cotService from '../services/cotService.js';
 
 // poseList.json 로드
 function loadPoseList() {
@@ -239,6 +240,7 @@ export function generateChatPrompt(context) {
     lastMessage: context.lastMessage || 'none',
     affinity: context.affinity || 0,
     coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
+    cotEnabled: cotService.isCotEnabled(), // ✅ CoT 활성화 상태 추가
     currentBackground: generateBackgroundInfo(context.currentBackground),
     currentBackgroundId: context.currentBackground || 'default',
     location: {
@@ -285,6 +287,7 @@ export function generateThankYouPrompt(context) {
     userInput: context.userInput || '',
     affinity: context.affinity || 0,
     coercionPoint: coercionPointService.getCoercionPoint(), // ✅ 협박도 추가
+    cotEnabled: cotService.isCotEnabled(), // ✅ CoT 활성화 상태 추가
     currentBackground: generateBackgroundInfo(context.currentBackground),
     currentAppearance: generateAppearanceInfo(context.appearanceData),
     appearanceDetail: generateAppearanceDetail(context.appearanceData),

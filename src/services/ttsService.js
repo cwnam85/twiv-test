@@ -32,20 +32,23 @@ export async function playTTSSupertone(response, emotion, returnFilePath = false
   const mp3FilePath = `./tts_${timestamp}_${random}.mp3`;
 
   try {
+    // TTS API 요청 시간 측정 시작
+    const startTime = performance.now();
+
     // API 호출하여 바이너리 오디오 스트림 받기
     const apiResponse = await axios.post(url, data, {
       headers,
       responseType: 'arraybuffer', // 바이너리 데이터로 받기
     });
 
-    // 오디오 길이 확인
-    const audioLength = apiResponse.headers['x-audio-length'];
+    // TTS API 요청 시간 측정 완료
+    const endTime = performance.now();
+    const responseTime = ((endTime - startTime) / 1000).toFixed(2);
+    console.log(`✅ SUPERTONE TTS 응답 완료: ${responseTime}초`);
 
     // 오디오 데이터를 파일로 저장
     fs.writeFileSync(mp3FilePath, apiResponse.data);
 
-    // 현재는 파일만 생성하고 클라이언트에서 재생하므로 파일 경로 반환
-    console.log(`[TTS] File created for client playback: ${mp3FilePath}`);
     return Promise.resolve(mp3FilePath);
   } catch (error) {
     console.error('Error calling Supertone API:', error.message);
