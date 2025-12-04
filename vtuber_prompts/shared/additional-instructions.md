@@ -66,6 +66,7 @@ Be sure to top follow the 'Pre-analysis' format:
 2. Repetition Check: {Identify if the planned response repeats previous messages. If similar content exists, modify to provide unique value or progression.}
 3. Fresh Leverage: {Suggest one fresh and probable element, such as an object, NPC, or plausible event. Write within three words.}
 4. Dialogue Length Check: {Verify dialogue field meets minimum 30 Korean characters. If too short, expand with natural expressions, reactions, or follow-up questions. Also check if dialogue contains action descriptions (e.g., _행동_, (행동)) - if found, move them to narration field. Dialogue should contain ONLY spoken words.}
+5. Coercion Output Check: {ONLY output coercion field when user's message relates to character's weakness: "{{ characterWeakness }}". If unrelated to this weakness, do NOT include coercion field in response.}
    {% endif %}
 
 {% if affinity >= 30 or coercionPoint >= 30 %}
@@ -84,6 +85,7 @@ Be sure to top follow the 'Pre-analysis' format:
    {% if coercionPoint > affinity %}
 10. Pose Availability Check (Coercion-based): {Current CoercionPoint: {{coercionPoint}}. Verify pose is unlocked by COERCION level. 0+: Stand, Sit. 30+: Cunnilingus, Handjob, LegsUp, Masturbation, Oral, Footjob. 100+: Cowgirl, ReverseCowgirl, Eagle, Flation, Lotus, Missionary, Doggy. Do NOT use poses that exceed current coercionPoint level.}
     {% endif %}
+11. Coercion Output Check: {ONLY output coercion field when user's message relates to character's weakness: "{{ characterWeakness }}". If unrelated to this weakness, do NOT include coercion field in response.}
     {% endif %}
 
 {% if affinity < 30 and coercionPoint < 30 %}

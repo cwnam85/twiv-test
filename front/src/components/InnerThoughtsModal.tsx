@@ -142,6 +142,7 @@ interface InnerThoughtsModalProps {
   currentEmotion: string;
   currentSpot?: string;
   availableSpots?: SpotInfo[];
+  characterWeakness?: string;
 }
 
 // 감정별 이모티콘 매핑
@@ -258,6 +259,7 @@ const InnerThoughtsModal = ({
   currentEmotion,
   currentSpot,
   availableSpots = [],
+  characterWeakness,
 }: InnerThoughtsModalProps) => {
   if (!isOpen) return null;
 
@@ -381,6 +383,20 @@ const InnerThoughtsModal = ({
               </div>
             )}
           </div>
+
+          {/* 캐릭터 약점 표시 */}
+          {characterWeakness && (
+            <div className="rounded-lg p-4 bg-red-50 border border-red-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🔓</span>
+                <span className="font-bold text-red-700">캐릭터 약점</span>
+              </div>
+              <p className="text-red-600 text-sm">{characterWeakness}</p>
+              <p className="text-red-400 text-xs mt-2">
+                💡 이 약점과 관련된 대화를 하면 협박도가 상승합니다.
+              </p>
+            </div>
+          )}
 
           {/* 내면의 생각 */}
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 shadow-sm">

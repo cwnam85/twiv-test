@@ -46,6 +46,7 @@ const useShop = ({
   const [currentBackground, setCurrentBackground] = useState<string>('');
   const [currentAppearance, setCurrentAppearance] = useState<string>('');
   const [boosterStatus, setBoosterStatus] = useState<BoosterStatus | null>(null);
+  const [characterWeakness, setCharacterWeakness] = useState<string | null>(null);
   const [activeRpPack, setActiveRpPack] = useState<{ id: string; activatedAt: string } | null>(
     null,
   );
@@ -89,6 +90,7 @@ const useShop = ({
         const data = await response.json();
         setBoosterStatus(data);
         setActiveRpPack(data.activeRpPack);
+        setCharacterWeakness(data.characterWeakness || null);
       }
     } catch (error) {
       console.error('Error fetching booster status:', error);
@@ -363,6 +365,7 @@ const useShop = ({
     currentAppearance,
     boosterStatus,
     activeRpPack,
+    characterWeakness,
     purchaseItem,
     useBooster,
     activateRpPack,

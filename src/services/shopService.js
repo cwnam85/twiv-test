@@ -709,14 +709,21 @@ class ShopService {
       // messagePrompt 파일 읽기 및 파싱
       if (rpPack.messagePrompt) {
         const messagePromptPath = path.join(process.cwd(), rpPack.messagePrompt);
-        console.log(`Loading messagePrompt from: ${messagePromptPath}`);
         if (fs.existsSync(messagePromptPath)) {
           const rawContent = fs.readFileSync(messagePromptPath, 'utf8');
           // messagePrompt.md를 객체로 파싱
           content.messagePrompt = this.parseMessagePrompt(rawContent);
-          console.log(`messagePrompt parsed successfully:`, content.messagePrompt);
         } else {
           console.warn(`messagePrompt file not found: ${messagePromptPath}`);
+        }
+      }
+
+      // additionalInfo JSON 파일 읽기
+      if (rpPack.additionalInfo) {
+        const additionalInfoPath = path.join(process.cwd(), rpPack.additionalInfo);
+        if (fs.existsSync(additionalInfoPath)) {
+          const rawContent = fs.readFileSync(additionalInfoPath, 'utf8');
+          content.additionalInfo = JSON.parse(rawContent);
         }
       }
 
@@ -739,7 +746,10 @@ class ShopService {
 
     for (const line of lines) {
       const trimmedLine = line.trim();
-      if (trimmedLine.includes('**Current RP Context**') || trimmedLine.includes('**RP Context**')) {
+      if (
+        trimmedLine.includes('**Current RP Context**') ||
+        trimmedLine.includes('**RP Context**')
+      ) {
         result.context = trimmedLine;
       } else if (
         trimmedLine.includes('**Location Atmosphere**') ||

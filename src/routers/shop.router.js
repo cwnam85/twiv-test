@@ -138,6 +138,16 @@ router.get('/booster-status', (req, res) => {
     const boosterStatus = shopService.checkBoosterExpiration();
     const affinityData = affinityService.getData();
     const activeRpPack = shopService.getActiveRpPack();
+    const activeCharacter = process.env.ACTIVE_CHARACTER?.toLowerCase() || 'shaki';
+
+    // 활성 RP팩이 있으면 additionalInfo 로드
+    let characterWeakness = null;
+    if (activeRpPack) {
+      const rpPackContent = shopService.loadRpPackContent(activeRpPack.id, activeCharacter);
+      if (rpPackContent?.additionalInfo?.weakness_ko) {
+        characterWeakness = rpPackContent.additionalInfo.weakness_ko;
+      }
+    }
 
     res.json({
       shopBoosterStatus: boosterStatus,
@@ -146,6 +156,7 @@ router.get('/booster-status', (req, res) => {
         boosterRemainingTime: affinityData.boosterRemainingTime,
       },
       activeRpPack: activeRpPack,
+      characterWeakness: characterWeakness,
     });
   } catch (error) {
     console.error('Error checking booster status:', error);

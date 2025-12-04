@@ -69,23 +69,14 @@ function createBasicChatResponseTool(currentAffinity, currentCoercionPoint) {
       coercion: {
         type: 'string',
         description:
-          "Coercion change value (e.g., '+3', '0', '-3') - How much the user's coercion/intimidation affects the character",
+          "OPTIONAL - Coercion change value (e.g., '+3', '-3'). ONLY include when user's message relates to character's weakness (e.g., Rabbithole secret, threatening, blackmail). Do NOT include for normal conversations.",
       },
       spot: {
         type: 'string',
         description: 'Current location spot. Only include when location changes.',
       },
     },
-    required: [
-      'dialogue',
-      'narration',
-      'inner_thoughts',
-      'emotion',
-      'pose',
-      'action',
-      'affinity',
-      'coercion',
-    ],
+    required: ['dialogue', 'narration', 'inner_thoughts', 'emotion', 'pose', 'action', 'affinity'],
   };
 
   // outfitAction 조건부 추가
@@ -171,6 +162,11 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
             description:
               'Check current affinity/coercionPoint and verify pose is unlocked. 0+: Stand, Sit. 30+: Cunnilingus, Handjob, LegsUp, Masturbation, Oral, Footjob. 100+: Cowgirl, ReverseCowgirl, Eagle, Flation, Lotus, Missionary, Doggy. Do NOT use locked poses.',
           },
+          coercion_output_check: {
+            type: 'string',
+            description:
+              "ONLY output coercion field when user's message relates to character's weakness (secret job, threatening to expose, blackmail about double life). If unrelated to weakness, do NOT include coercion field in response.",
+          },
           hentai_analysis: {
             type: 'object',
             properties: {
@@ -205,6 +201,7 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
           'pace_control',
           'dialogue_length_check',
           'pose_availability_check',
+          'coercion_output_check',
           'hentai_analysis',
         ],
       }
@@ -228,6 +225,11 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
             type: 'string',
             description:
               'Verify dialogue meets min 30 Korean chars. If short, expand with natural expressions/reactions. Check for action descriptions (_행동_, (행동)) - move to narration. Dialogue = ONLY spoken words.',
+          },
+          coercion_output_check: {
+            type: 'string',
+            description:
+              "ONLY output coercion field when user's message relates to character's weakness (secret job, threatening to expose, blackmail). If unrelated to weakness, do NOT include coercion field in response.",
           },
           safe_analysis: {
             type: 'object',
@@ -256,6 +258,7 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
           'repetition_check',
           'fresh_leverage',
           'dialogue_length_check',
+          'coercion_output_check',
           'safe_analysis',
         ],
       };
@@ -309,7 +312,7 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
       coercion: {
         type: 'string',
         description:
-          "Coercion change value (e.g., '+3', '0', '-3') - How much the user's coercion/intimidation affects the character",
+          "OPTIONAL - Coercion change value (e.g., '+3', '-3'). ONLY include when user's message relates to character's weakness (e.g., Rabbithole secret, threatening, blackmail). Do NOT include for normal conversations.",
       },
       spot: {
         type: 'string',
@@ -325,7 +328,6 @@ function createCotChatResponseTool(currentAffinity, currentCoercionPoint) {
       'pose',
       'action',
       'affinity',
-      'coercion',
     ],
   };
 

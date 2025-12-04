@@ -188,6 +188,7 @@ class SectionLoader {
     let rpPackGlobalNote = '';
     let rpPackLocationGuide = '';
     let rpPackMessagePrompt = { context: '', atmosphere: '', behavior: '' };
+    let rpPackAdditionalInfo = null;
 
     if (activeRpPack) {
       const rpPackId = activeRpPack.id;
@@ -206,9 +207,13 @@ class SectionLoader {
             atmosphere: '',
             behavior: '',
           };
+          rpPackAdditionalInfo = rpPackContent.additionalInfo || null;
           console.log(
             `SectionLoader - rpPackMessagePrompt loaded: ${rpPackMessagePrompt ? (typeof rpPackMessagePrompt === 'object' ? JSON.stringify(rpPackMessagePrompt).substring(0, 100) + '...' : rpPackMessagePrompt.substring(0, 100) + '...') : 'empty'}`,
           );
+          if (rpPackAdditionalInfo) {
+            console.log(`SectionLoader - additionalInfo loaded:`, rpPackAdditionalInfo);
+          }
         }
       }
     }
@@ -258,6 +263,7 @@ class SectionLoader {
       rpPack, // ✅ rpPack.poseList 추가
       poseList, // ✅ 직접 접근용
       nsfwPoses, // ✅ NSFW 포즈 목록 (sfw: false)
+      characterWeakness: rpPackAdditionalInfo?.weakness_en || null, // ✅ 캐릭터 약점 (영어)
     };
 
     // 캐릭터별 main_template.md 우선 사용, 없으면 공통 템플릿 사용

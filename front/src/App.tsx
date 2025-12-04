@@ -36,6 +36,7 @@ function App() {
     currentAppearance,
     boosterStatus,
     activeRpPack,
+    characterWeakness,
     purchaseItem,
     useBooster,
     activateRpPack,
@@ -522,6 +523,7 @@ function App() {
           undefined
         }
         availableSpots={appearanceStateData?.[currentCharacter]?.available_spots || []}
+        characterWeakness={characterWeakness || undefined}
       />
     </div>
   );
